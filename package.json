@@ -1,6 +1,7 @@
 {
   "name": "yasp",
   "private": true,
+  "license": "MIT",
   "workspaces": ["shared", "server", "client"],
   "scripts": {
     "build": "npm run build:shared && npm run build:server && npm run build:client",
