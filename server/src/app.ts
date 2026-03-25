@@ -34,8 +34,17 @@ export async function createApp() {
       prefix: "/",
     });
 
-    // SPA fallback: serve index.html for client-side routes (not asset files)
-    app.setNotFoundHandler(async (_request, reply) => {
+    // SPA fallback: serve index.html only for navigation requests to client-side routes.
+    // Do NOT rewrite asset paths (/assets/), API paths (/api/), or socket.io paths.
+    app.setNotFoundHandler(async (request, reply) => {
+      const url = request.url;
+      if (
+        url.startsWith("/api/") ||
+        url.startsWith("/socket.io/") ||
+        url.startsWith("/assets/")
+      ) {
+        return reply.code(404).send({ error: "Not found" });
+      }
       return reply.sendFile("index.html");
     });
   }
