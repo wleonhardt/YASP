@@ -212,6 +212,4 @@ Potential future improvements (contributions welcome):
 
 ## License
 
-<!-- TODO: Add a LICENSE file and update this section -->
-
-No license specified yet. See `LICENSE` file when added.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
