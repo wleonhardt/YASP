@@ -1,0 +1,423 @@
+import type {
+  RoomId,
+  SessionId,
+  SocketId,
+  ParticipantRole,
+  VoteValue,
+  Deck,
+  RoomSettings,
+  AckResult,
+  ServerErrorEvent,
+} from "@yasp/shared";
+import { DEFAULT_ROOM_SETTINGS } from "@yasp/shared";
+import type { DeckInput } from "@yasp/shared";
+import type { Room, Participant } from "../domain/types.js";
+import { RoomStore } from "./room-store.js";
+import { resolveDeck } from "../domain/deck.js";
+import { reassignModeratorIfNeeded, hasConnectedParticipants } from "../domain/room.js";
+import * as permissions from "../domain/permissions.js";
+import { generateRoomId } from "../utils/id.js";
+import { now } from "../utils/time.js";
+import { ROOM_TTL_MS } from "../config.js";
+import { logger } from "../utils/logger.js";
+import {
+  validateName,
+  sanitizeName,
+  validateRole,
+  validateDeckInput,
+  normalizeDeckInput,
+  validateVote,
+  validateSettingsUpdate,
+} from "../transport/validators.js";
+
+function fail(error: ServerErrorEvent): AckResult<never> {
+  return { ok: false, error };
+}
+
+function success<T>(data: T): AckResult<T> {
+  return { ok: true, data };
+}
+
+function touchRoom(room: Room): void {
+  const t = now();
+  room.lastActivityAt = t;
+  room.expiresAt = t + ROOM_TTL_MS;
+}
+
+export class RoomService {
+  constructor(private store: RoomStore) {}
+
+  createRoom(
+    sessionId: SessionId,
+    socketId: SocketId,
+    displayName: string,
+    requestedRole: ParticipantRole,
+    deckInput?: DeckInput
+  ): AckResult<{ room: Room; participantId: string }> {
+    const nameCheck = validateName(displayName);
+    if (!nameCheck.valid) return fail(nameCheck.error);
+
+    const roleCheck = validateRole(requestedRole);
+    if (!roleCheck.valid) return fail(roleCheck.error);
+
+    if (deckInput) {
+      const deckCheck = validateDeckInput(deckInput);
+      if (!deckCheck.valid) return fail(deckCheck.error);
+      deckInput = normalizeDeckInput(deckInput);
+    }
+
+    const roomId = this.generateUniqueRoomId();
+    const t = now();
+    const participantId = sessionId; // v1: participantId === sessionId
+
+    const participant: Participant = {
+      id: participantId,
+      sessionId,
+      name: sanitizeName(displayName),
+      role: requestedRole,
+      connected: true,
+      socketId,
+      joinedAt: t,
+      lastSeenAt: t,
+    };
+
+    const room: Room = {
+      id: roomId,
+      createdAt: t,
+      lastActivityAt: t,
+      expiresAt: t + ROOM_TTL_MS,
+      revealed: false,
+      roundNumber: 1,
+      deck: resolveDeck(deckInput),
+      settings: { ...DEFAULT_ROOM_SETTINGS },
+      moderatorId: participantId,
+      participants: new Map([[participantId, participant]]),
+      votes: new Map(),
+    };
+
+    this.store.set(room);
+    logger.info("Room created", { roomId, moderator: participantId });
+    return success({ room, participantId });
+  }
+
+  joinRoom(
+    roomId: RoomId,
+    sessionId: SessionId,
+    socketId: SocketId,
+    displayName: string,
+    requestedRole: ParticipantRole
+  ): AckResult<{ room: Room; participantId: string; replacedSocketId: SocketId | null }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+
+    const nameCheck = validateName(displayName);
+    if (!nameCheck.valid) return fail(nameCheck.error);
+
+    const roleCheck = validateRole(requestedRole);
+    if (!roleCheck.valid) return fail(roleCheck.error);
+
+    if (requestedRole === "spectator" && !room.settings.allowSpectators) {
+      return fail({ code: "SPECTATORS_DISABLED", message: "Spectators are not allowed in this room" });
+    }
+
+    const participantId = sessionId;
+    const existing = room.participants.get(participantId);
+    let replacedSocketId: SocketId | null = null;
+
+    if (existing) {
+      // Reconnect / tab takeover
+      replacedSocketId = existing.socketId;
+      existing.socketId = socketId;
+      existing.connected = true;
+      existing.lastSeenAt = now();
+      // Only update name on reconnect if name changes are allowed
+      if (room.settings.allowNameChange) {
+        existing.name = sanitizeName(displayName);
+      }
+      // Preserve prior vote for current round
+    } else {
+      // New participant
+      const participant: Participant = {
+        id: participantId,
+        sessionId,
+        name: sanitizeName(displayName),
+        role: requestedRole,
+        connected: true,
+        socketId,
+        joinedAt: now(),
+        lastSeenAt: now(),
+      };
+      room.participants.set(participantId, participant);
+    }
+
+    // Assign moderator if none
+    if (!room.moderatorId) {
+      room.moderatorId = participantId;
+    }
+
+    touchRoom(room);
+    logger.info("Participant joined", { roomId, participantId });
+    return success({ room, participantId, replacedSocketId });
+  }
+
+  leaveRoom(
+    roomId: RoomId,
+    participantId: string
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+
+    const participant = room.participants.get(participantId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+
+    // Remove participant and their vote
+    room.participants.delete(participantId);
+    room.votes.delete(participantId);
+
+    // Reassign moderator if needed
+    if (room.moderatorId === participantId) {
+      room.moderatorId = null;
+      reassignModeratorIfNeeded(room);
+    }
+
+    // If no connected participants, reset expiry
+    if (!hasConnectedParticipants(room)) {
+      room.expiresAt = now() + ROOM_TTL_MS;
+    }
+
+    touchRoom(room);
+    return success({ room });
+  }
+
+  disconnectParticipant(
+    roomId: RoomId,
+    participantId: string
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+
+    const participant = room.participants.get(participantId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+
+    participant.connected = false;
+    participant.socketId = null;
+    participant.lastSeenAt = now();
+
+    // If no connected participants remain, reset expiry
+    if (!hasConnectedParticipants(room)) {
+      room.expiresAt = now() + ROOM_TTL_MS;
+    }
+
+    logger.info("Participant disconnected", { roomId, participantId });
+    return success({ room });
+  }
+
+  castVote(
+    roomId: RoomId,
+    participantId: string,
+    value: VoteValue
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+
+    const participant = room.participants.get(participantId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!participant.connected) return fail({ code: "NOT_ALLOWED", message: "Participant is not connected" });
+    if (participant.role !== "voter") return fail({ code: "NOT_ALLOWED", message: "Spectators cannot vote" });
+    if (room.revealed) return fail({ code: "ALREADY_REVEALED", message: "Votes have already been revealed" });
+
+    const voteCheck = validateVote(value, room.deck.cards);
+    if (!voteCheck.valid) return fail(voteCheck.error);
+
+    room.votes.set(participantId, value);
+    touchRoom(room);
+    return success({ room });
+  }
+
+  clearVote(
+    roomId: RoomId,
+    participantId: string
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+
+    const participant = room.participants.get(participantId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (room.revealed) return fail({ code: "ALREADY_REVEALED", message: "Cannot clear vote after reveal" });
+
+    room.votes.delete(participantId);
+    touchRoom(room);
+    return success({ room });
+  }
+
+  revealVotes(
+    roomId: RoomId,
+    participantId: string
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (room.revealed) return fail({ code: "ALREADY_REVEALED", message: "Already revealed" });
+    if (!permissions.canReveal(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Not allowed to reveal votes" });
+    }
+
+    room.revealed = true;
+    touchRoom(room);
+    return success({ room });
+  }
+
+  resetRound(
+    roomId: RoomId,
+    participantId: string
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.canReset(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Not allowed to reset round" });
+    }
+
+    room.votes.clear();
+    room.revealed = false;
+    touchRoom(room);
+    return success({ room });
+  }
+
+  nextRound(
+    roomId: RoomId,
+    participantId: string
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.canNextRound(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Not allowed to advance round" });
+    }
+
+    room.votes.clear();
+    room.revealed = false;
+    room.roundNumber += 1;
+    touchRoom(room);
+    return success({ room });
+  }
+
+  changeName(
+    roomId: RoomId,
+    participantId: string,
+    name: string
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.canChangeName(room)) {
+      return fail({ code: "NAME_CHANGE_DISABLED", message: "Name changes are disabled" });
+    }
+
+    const nameCheck = validateName(name);
+    if (!nameCheck.valid) return fail(nameCheck.error);
+
+    const participant = room.participants.get(participantId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+
+    participant.name = sanitizeName(name);
+    touchRoom(room);
+    return success({ room });
+  }
+
+  changeRole(
+    roomId: RoomId,
+    participantId: string,
+    role: ParticipantRole
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.canChangeRole(room)) {
+      return fail({ code: "ROLE_CHANGE_DISABLED", message: "Role changes are disabled" });
+    }
+
+    const roleCheck = validateRole(role);
+    if (!roleCheck.valid) return fail(roleCheck.error);
+
+    if (role === "spectator" && !permissions.canBeSpectator(room)) {
+      return fail({ code: "SPECTATORS_DISABLED", message: "Spectators are not allowed" });
+    }
+
+    const participant = room.participants.get(participantId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+
+    participant.role = role;
+
+    // If switching to spectator, remove their vote
+    if (role === "spectator") {
+      room.votes.delete(participantId);
+    }
+
+    touchRoom(room);
+    return success({ room });
+  }
+
+  changeDeck(
+    roomId: RoomId,
+    participantId: string,
+    deckInput: DeckInput
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.canChangeDeck(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Not allowed to change deck" });
+    }
+
+    const deckCheck = validateDeckInput(deckInput);
+    if (!deckCheck.valid) return fail(deckCheck.error);
+
+    const normalized = normalizeDeckInput(deckInput);
+    room.deck = resolveDeck(normalized);
+
+    // Clear votes and reset reveal since deck changed
+    room.votes.clear();
+    room.revealed = false;
+
+    touchRoom(room);
+    return success({ room });
+  }
+
+  updateSettings(
+    roomId: RoomId,
+    participantId: string,
+    settingsUpdate: Partial<RoomSettings>
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.canUpdateSettings(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can update settings" });
+    }
+
+    const settingsCheck = validateSettingsUpdate(settingsUpdate);
+    if (!settingsCheck.valid) return fail(settingsCheck.error);
+
+    Object.assign(room.settings, settingsUpdate);
+    touchRoom(room);
+    return success({ room });
+  }
+
+  /**
+   * Check if all connected voters have voted (for auto-reveal).
+   */
+  allConnectedVotersVoted(room: Room): boolean {
+    for (const p of room.participants.values()) {
+      if (p.connected && p.role === "voter" && !room.votes.has(p.id)) {
+        return false;
+      }
+    }
+    // Need at least one connected voter
+    for (const p of room.participants.values()) {
+      if (p.connected && p.role === "voter") return true;
+    }
+    return false;
+  }
+
+  private generateUniqueRoomId(): string {
+    let id: string;
+    do {
+      id = generateRoomId();
+    } while (this.store.get(id));
+    return id;
+  }
+}

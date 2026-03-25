@@ -1,0 +1,21 @@
+{
+  "name": "yasp",
+  "private": true,
+  "workspaces": ["shared", "server", "client"],
+  "scripts": {
+    "build": "npm run build:shared && npm run build:server && npm run build:client",
+    "build:shared": "npm run build -w shared",
+    "build:server": "npm run build -w server",
+    "build:client": "npm run build -w client",
+    "dev:server": "npm run dev -w server",
+    "dev:client": "npm run dev -w client",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "test": "npm run test -w server",
+    "start": "npm run start -w server",
+    "clean": "rm -rf shared/dist server/dist client/dist node_modules"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.4.5"
+  }
+}
