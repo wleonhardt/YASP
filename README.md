@@ -94,7 +94,7 @@ yasp/
 ### Install
 
 ```bash
-git clone <repo-url> yasp
+git clone https://github.com/wleonhardt/YASP.git yasp
 cd yasp
 npm install
 ```
