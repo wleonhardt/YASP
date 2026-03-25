@@ -111,22 +111,22 @@ export const DEFAULT_DECKS: Record<Exclude<DeckType, "custom">, Deck> = {
   fibonacci: {
     type: "fibonacci",
     label: "Fibonacci",
-    cards: ["0", "1", "2", "3", "5", "8", "13", "21", "34", "55", "89", "?", "coffee"],
+    cards: ["0", "1", "2", "3", "5", "8", "13", "21", "?"],
   },
   modified_fibonacci: {
     type: "modified_fibonacci",
     label: "Modified Fibonacci",
-    cards: ["0", "0.5", "1", "2", "3", "5", "8", "13", "20", "40", "100", "?", "coffee"],
+    cards: ["0", "0.5", "1", "2", "3", "5", "8", "13", "20", "40", "100", "?"],
   },
   tshirt: {
     type: "tshirt",
     label: "T-Shirt",
-    cards: ["XS", "S", "M", "L", "XL", "XXL", "?", "coffee"],
+    cards: ["XS", "S", "M", "L", "XL", "XXL", "?"],
   },
   powers_of_two: {
     type: "powers_of_two",
     label: "Powers of Two",
-    cards: ["1", "2", "4", "8", "16", "32", "64", "?", "coffee"],
+    cards: ["1", "2", "4", "8", "16", "32", "64", "?"],
   },
 };
 
