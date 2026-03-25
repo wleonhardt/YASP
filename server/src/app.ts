@@ -32,10 +32,9 @@ export async function createApp() {
     await app.register(fastifyStatic, {
       root: clientDistPath,
       prefix: "/",
-      wildcard: false,
     });
 
-    // SPA fallback
+    // SPA fallback: serve index.html for client-side routes (not asset files)
     app.setNotFoundHandler(async (_request, reply) => {
       return reply.sendFile("index.html");
     });
