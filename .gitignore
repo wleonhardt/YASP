@@ -4,3 +4,10 @@ dist/
 *.tsbuildinfo
 .vite/
 .dockerignore
+
+# CDK
+cdk.out/
+cdk/cdk.out/
+cdk/dist/
+cdk.context.json
+cdk/cdk.context.json

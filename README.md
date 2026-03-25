@@ -143,27 +143,66 @@ In production mode, Fastify serves the client bundle as static files from `clien
 
 ## Docker
 
-### Build
+### Run the published image
 
 ```bash
-docker build -t yasp .
-```
-
-### Run
-
-```bash
-docker run -p 3001:3001 yasp
+docker pull wleonhardt/yasp:latest
+docker run --rm -p 3001:3001 wleonhardt/yasp:latest
 ```
 
 Open [http://localhost:3001](http://localhost:3001).
 
-To use a different port:
+### Important note
+
+YASP stores all room state in memory only. Stopping or restarting the container permanently clears all rooms, participants, and votes. This is by design — YASP is built for ephemeral planning sessions.
+
+### Build locally
 
 ```bash
-docker run -p 8080:8080 -e PORT=8080 yasp
+docker build -t yasp:local .
+docker run --rm -p 3001:3001 yasp:local
 ```
 
-The image is based on `node:20-alpine` and runs as a single process with no external service dependencies.
+### Health check
+
+The container exposes a health endpoint at `/api/health`:
+
+```json
+{ "ok": true }
+```
+
+Use this for Docker health checks, load balancer probes, or orchestrator liveness checks.
+
+### Run in the background
+
+```bash
+docker run -d --name yasp -p 3001:3001 wleonhardt/yasp:latest
+docker stop yasp
+docker rm yasp
+```
+
+### Publish a new image
+
+```bash
+docker build -t wleonhardt/yasp:latest .
+docker push wleonhardt/yasp:latest
+```
+
+To publish a versioned tag alongside `latest`:
+
+```bash
+docker tag wleonhardt/yasp:latest wleonhardt/yasp:0.1.0
+docker push wleonhardt/yasp:0.1.0
+docker push wleonhardt/yasp:latest
+```
+
+### Troubleshooting
+
+- **Port not reachable**: confirm port 3001 is not blocked by a firewall or already in use.
+- **Blank UI from another device**: YASP binds to `0.0.0.0` by default. If the page shell loads but the UI is empty, open the browser console on the remote device and check for JavaScript errors or failed asset requests.
+- **Static assets not loading**: verify that requests to `/assets/*` return the correct files and not `index.html`. Check the server logs for 404s.
+
+For AWS deployment via App Runner and CloudFront, see [cdk/README.md](./cdk/README.md).
 
 ## API / Health Endpoints
 
@@ -186,6 +225,10 @@ Lifecycle details:
 - **Disconnected grace period**: disconnected participants are kept for **30 minutes** before being removed by the cleanup service.
 - **Room expiry**: rooms with no connected participants are cleaned up on a **5-minute** interval.
 - **Moderator reassignment**: if the moderator leaves or is cleaned up, the server automatically promotes the next participant.
+
+## AWS Deployment (Optional)
+
+An AWS CDK stack is available under [`cdk/`](./cdk/) for deploying YASP to AWS App Runner with CloudFront and WAF-based access control. See the [CDK README](./cdk/README.md) for architecture details, prerequisites, and deploy commands.
 
 ## Non-Goals
 
