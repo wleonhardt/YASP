@@ -517,6 +517,10 @@ select.input {
   font-weight: 500;
 }
 
+.connection-badge__label--short {
+  display: none;
+}
+
 .connection-badge__dot {
   width: 8px;
   height: 8px;
@@ -651,12 +655,36 @@ select.input {
   gap: var(--space-2);
 }
 
+.topbar__room-link {
+  justify-content: flex-start;
+  padding: 0.35rem 0.4rem;
+  gap: 0.55rem;
+}
+
+.topbar__room-link--mobile {
+  display: none;
+}
+
+.topbar__room-link .topbar__room-code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
 .topbar__room-code {
   font-family: var(--font-mono);
   font-size: 0.9375rem;
   padding: 0.4rem 0.7rem;
   border: 1px solid var(--color-border);
   background: rgba(6, 10, 16, 0.65);
+}
+
+.topbar__copy-label--short {
+  display: none;
+}
+
+.topbar__leave-icon {
+  display: none;
 }
 
 .topbar__actions {
@@ -1216,25 +1244,126 @@ select.input {
   .topbar {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
-    gap: var(--space-3);
+    top: var(--space-3);
+    gap: var(--space-2);
+    padding: var(--space-3);
   }
 
   .topbar__room {
     grid-column: 1;
+    grid-row: 1;
+    gap: var(--space-1);
   }
 
   .topbar__actions {
     grid-column: 2;
+    grid-row: 1;
     justify-content: flex-end;
     align-self: start;
+    gap: 6px;
+    flex-wrap: nowrap;
   }
 
   .room-status {
     grid-column: 1 / -1;
+    grid-row: 2;
+    gap: 6px;
   }
 
   .topbar__room-row {
+    flex-wrap: nowrap;
+    gap: 0;
+  }
+
+  .topbar__label,
+  .room-status__eyebrow {
+    display: none;
+  }
+
+  .topbar__room-code {
+    font-size: 0.875rem;
+    padding: 0.35rem 0.6rem;
+  }
+
+  .topbar__room-code--desktop,
+  .topbar__copy-button--desktop {
+    display: none;
+  }
+
+  .topbar__room-link--mobile {
+    display: inline-flex;
+  }
+
+  .topbar__room-link {
+    min-height: 36px;
+    padding: 0.25rem 0.45rem;
+    gap: 0.5rem;
+    border-color: rgba(148, 172, 204, 0.18);
+    background: rgba(10, 16, 26, 0.62);
+    box-shadow: inset 0 1px 0 rgba(148, 172, 204, 0.04);
+  }
+
+  .topbar__room-link .topbar__room-code {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .topbar__room-link .topbar__copy-label {
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+  }
+
+  .topbar__actions .button,
+  .topbar__actions .connection-badge {
+    min-height: 36px;
+    padding: 0.4rem 0.55rem;
+    font-size: 0.75rem;
+  }
+
+  .topbar__actions .theme-toggle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .topbar__actions .connection-badge {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    min-height: 28px;
+    padding: 0;
+    gap: 0;
+    justify-content: center;
+    border-radius: 999px;
+  }
+
+  .topbar__actions .connection-badge__label--full,
+  .topbar__actions .connection-badge__label--short {
+    display: none;
+  }
+
+  .topbar__actions .topbar__leave-label {
+    display: none;
+  }
+
+  .topbar__actions .topbar__leave-icon {
+    display: block;
+  }
+
+  .room-status__headline strong {
+    font-size: clamp(1.35rem, 6vw, 1.65rem);
+  }
+
+  .room-status__meta {
+    gap: 6px;
     flex-wrap: wrap;
+    justify-content: center;
+    font-size: 0.75rem;
+  }
+
+  .room-status__progress {
+    height: 4px;
   }
 
   .page-shell {
@@ -1311,24 +1440,49 @@ select.input {
 }
 
 @media (max-width: 520px) {
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
   .session-panel__actions,
   .ui-banner {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .topbar {
-    grid-template-columns: 1fr;
-  }
-
-  .topbar__room,
-  .topbar__actions,
-  .room-status {
-    grid-column: 1;
-  }
-
   .topbar__actions {
-    justify-content: flex-start;
+    justify-content: flex-end;
+  }
+
+  .topbar__copy-label--full {
+    display: none;
+  }
+
+  .topbar__copy-label--short {
+    display: inline;
+  }
+
+  .topbar__room-link {
+    min-height: 34px;
+    padding: 0.25rem 0.4rem;
+    gap: 0.35rem;
+  }
+
+  .topbar__room-link .topbar__copy-label {
+    padding-left: 0.4rem;
+  }
+
+  .topbar__actions .button,
+  .topbar__actions .connection-badge {
+    min-height: 34px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.72rem;
+  }
+
+  .topbar__actions .theme-toggle {
+    width: 34px;
+    height: 34px;
   }
 
   .stats-grid {
