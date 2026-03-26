@@ -132,6 +132,19 @@ export function useRoom(socket: Socket, sessionId: string) {
     [socket]
   );
 
+  const transferModerator = useCallback(
+    async (roomId: string, targetParticipantId: string): Promise<AckResult> => {
+      return new Promise((resolve) => {
+        socket.emit(
+          "transfer_moderator",
+          { roomId, targetParticipantId },
+          (res: AckResult) => resolve(surfaceAckError(res))
+        );
+      });
+    },
+    [socket]
+  );
+
   const changeName = useCallback(
     async (roomId: string, name: string): Promise<AckResult> => {
       return new Promise((resolve) => {
@@ -180,6 +193,7 @@ export function useRoom(socket: Socket, sessionId: string) {
     revealVotes,
     resetRound,
     nextRound,
+    transferModerator,
     changeName,
     changeRole,
     changeDeck,

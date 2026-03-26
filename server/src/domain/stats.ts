@@ -32,7 +32,7 @@ export function computeStats(votes: Map<string, VoteValue>): RevealStats {
   }
   const numericAverage =
     numericValues.length > 0
-      ? numericValues.reduce((a, b) => a + b, 0) / numericValues.length
+      ? Math.round(numericValues.reduce((a, b) => a + b, 0) / numericValues.length)
       : null;
 
   // Consensus: all votes identical and at least one vote

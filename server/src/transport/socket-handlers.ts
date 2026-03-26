@@ -15,6 +15,7 @@ import type {
   RevealVotesInput,
   ResetRoundInput,
   NextRoundInput,
+  TransferModeratorInput,
   ChangeNameInput,
   ChangeRoleInput,
   ChangeDeckInput,
@@ -289,6 +290,24 @@ export function registerSocketHandlers(
 
       ack?.({ ok: true, data: undefined });
       timerService.cancel(input.roomId);
+      broadcastRoomState(io, roomService, input.roomId, store);
+    });
+
+    socket.on("transfer_moderator", (input: TransferModeratorInput, ack?: (res: AckResult) => void) => {
+      const caller = resolveCallerFromSocket(socket, sessionService, input.roomId, store, ack);
+      if (!caller) return;
+
+      const result = roomService.transferModerator(
+        input.roomId,
+        caller.participantId,
+        input.targetParticipantId
+      );
+      if (!result.ok) {
+        ack?.(result);
+        return;
+      }
+
+      ack?.({ ok: true, data: undefined });
       broadcastRoomState(io, roomService, input.roomId, store);
     });
 

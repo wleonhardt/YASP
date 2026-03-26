@@ -1,5 +1,6 @@
 import type {
   RoomId,
+  ParticipantId,
   SessionId,
   VoteValue,
   ParticipantRole,
@@ -64,6 +65,11 @@ export type ResetRoundInput = {
 
 export type NextRoundInput = {
   roomId: RoomId;
+};
+
+export type TransferModeratorInput = {
+  roomId: RoomId;
+  targetParticipantId: ParticipantId;
 };
 
 export type ChangeNameInput = {

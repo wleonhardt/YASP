@@ -31,6 +31,8 @@ export type Room = {
   deck: Deck;
   settings: RoomSettings;
   moderatorId: ParticipantId | null;
+  /** Set when moderator is auto-transferred on disconnect; cleared on restore or manual transfer. */
+  previousModeratorId: ParticipantId | null;
   participants: Map<ParticipantId, Participant>;
   votes: Map<ParticipantId, VoteValue>;
 };

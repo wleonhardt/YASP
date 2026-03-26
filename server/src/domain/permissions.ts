@@ -36,6 +36,10 @@ export function canUpdateSettings(room: Room, participantId: string): boolean {
   return isModerator(room, participantId);
 }
 
+export function canTransferModerator(room: Room, participantId: string): boolean {
+  return isModerator(room, participantId);
+}
+
 export function canChangeName(room: Room): boolean {
   return room.settings.allowNameChange;
 }

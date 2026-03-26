@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { RoomService } from "../services/room-service.js";
 import { RoomStore } from "../services/room-store.js";
+import { serializeRoom } from "../transport/serializers.js";
 
 let store: RoomStore;
 let service: RoomService;
@@ -183,6 +184,124 @@ describe("RoomService.disconnectParticipant", () => {
     expect(p!.connected).toBe(false);
     expect(p!.socketId).toBeNull();
   });
+
+  it("auto-transfers moderator to next connected participant on disconnect", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    service.joinRoom(roomId, "s3", "sock-3", "Carol", "voter");
+
+    // Alice is moderator, disconnects
+    const result = service.disconnectParticipant(roomId, "s1");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    // Moderator should transfer to Bob (next by join order)
+    expect(result.data.room.moderatorId).toBe("s2");
+  });
+
+  it("keeps moderator on disconnected participant if nobody else is connected", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    // Only participant disconnects — no one to hand off to
+    const result = service.disconnectParticipant(roomId, "s1");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    // Stays with Alice (she'll get it back on reconnect)
+    expect(result.data.room.moderatorId).toBe("s1");
+  });
+
+  it("new moderator can reveal after auto-transfer", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    service.castVote(roomId, "s2", "5");
+
+    // Moderator disconnects
+    service.disconnectParticipant(roomId, "s1");
+
+    // Bob should now be able to reveal
+    const reveal = service.revealVotes(roomId, "s2");
+    expect(reveal.ok).toBe(true);
+  });
+
+  it("does not transfer moderator when a non-moderator disconnects", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    // Bob (non-moderator) disconnects
+    const result = service.disconnectParticipant(roomId, "s2");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    // Alice stays moderator
+    expect(result.data.room.moderatorId).toBe("s1");
+  });
+
+  it("restores moderator on reconnect after auto-transfer", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    // Alice disconnects → Bob becomes moderator
+    service.disconnectParticipant(roomId, "s1");
+    expect(service.store.get(roomId)!.moderatorId).toBe("s2");
+
+    // Alice reconnects → gets moderator back
+    const rejoin = service.joinRoom(roomId, "s1", "sock-1b", "Alice", "voter");
+    expect(rejoin.ok).toBe(true);
+    if (!rejoin.ok) return;
+    expect(rejoin.data.room.moderatorId).toBe("s1");
+    expect(rejoin.data.room.previousModeratorId).toBeNull();
+  });
+
+  it("does not restore moderator if manual transfer happened while away", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    service.joinRoom(roomId, "s3", "sock-3", "Carol", "voter");
+
+    // Alice disconnects → Bob becomes moderator
+    service.disconnectParticipant(roomId, "s1");
+    expect(service.store.get(roomId)!.moderatorId).toBe("s2");
+
+    // Bob manually transfers to Carol (clears previousModeratorId)
+    service.transferModerator(roomId, "s2", "s3");
+    expect(service.store.get(roomId)!.moderatorId).toBe("s3");
+
+    // Alice reconnects → does NOT get moderator back
+    const rejoin = service.joinRoom(roomId, "s1", "sock-1b", "Alice", "voter");
+    expect(rejoin.ok).toBe(true);
+    if (!rejoin.ok) return;
+    expect(rejoin.data.room.moderatorId).toBe("s3");
+  });
+
+  it("does not restore moderator if previous moderator left instead of reconnecting", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    // Alice disconnects → Bob becomes moderator
+    service.disconnectParticipant(roomId, "s1");
+
+    // Alice leaves entirely
+    service.leaveRoom(roomId, "s1");
+
+    // Bob stays moderator, previousModeratorId is cleared
+    const room = service.store.get(roomId)!;
+    expect(room.moderatorId).toBe("s2");
+    expect(room.previousModeratorId).toBeNull();
+  });
 });
 
 describe("RoomService.castVote", () => {
@@ -327,6 +446,101 @@ describe("RoomService.nextRound", () => {
     expect(result.data.room.votes.size).toBe(0);
     expect(result.data.room.revealed).toBe(false);
     expect(result.data.room.roundNumber).toBe(2);
+  });
+});
+
+describe("RoomService.transferModerator", () => {
+  it("allows the moderator to transfer host to another participant", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    const result = service.transferModerator(roomId, "s1", "s2");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.data.room.moderatorId).toBe("s2");
+  });
+
+  it("reflects the new moderator in serialized room state", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    const result = service.transferModerator(roomId, "s1", "s2");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const previousModeratorState = serializeRoom(result.data.room, "s1");
+    const newModeratorState = serializeRoom(result.data.room, "s2");
+
+    expect(previousModeratorState.participants.find((participant) => participant.id === "s1")?.isModerator).toBe(false);
+    expect(newModeratorState.participants.find((participant) => participant.id === "s2")?.isModerator).toBe(true);
+  });
+
+  it("rejects transfer from a non-moderator", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    const result = service.transferModerator(roomId, "s2", "s1");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("NOT_ALLOWED");
+  });
+
+  it("rejects transfer to self", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+
+    const result = service.transferModerator(create.data.room.id, "s1", "s1");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("NOT_ALLOWED");
+  });
+
+  it("rejects transfer to a missing participant", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+
+    const result = service.transferModerator(create.data.room.id, "s1", "missing");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("PARTICIPANT_NOT_FOUND");
+  });
+
+  it("allows transfer to a disconnected participant", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    service.disconnectParticipant(roomId, "s2");
+
+    const result = service.transferModerator(roomId, "s1", "s2");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.data.room.moderatorId).toBe("s2");
+  });
+
+  it("moves moderator-only permissions immediately", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    const transfer = service.transferModerator(roomId, "s1", "s2");
+    expect(transfer.ok).toBe(true);
+    if (!transfer.ok) return;
+
+    const previousModeratorReveal = service.revealVotes(roomId, "s1");
+    expect(previousModeratorReveal.ok).toBe(false);
+    if (!previousModeratorReveal.ok) {
+      expect(previousModeratorReveal.error.code).toBe("NOT_ALLOWED");
+    }
+
+    const newModeratorReveal = service.revealVotes(roomId, "s2");
+    expect(newModeratorReveal.ok).toBe(true);
   });
 });
 

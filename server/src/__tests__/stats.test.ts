@@ -21,10 +21,35 @@ describe("computeStats", () => {
     ]);
     const stats = computeStats(votes);
     expect(stats.totalVotes).toBe(3);
-    expect(stats.numericAverage).toBeCloseTo(4.333, 2);
+    expect(stats.numericAverage).toBe(4);
     expect(stats.distribution).toEqual({ "3": 1, "5": 2 });
     expect(stats.consensus).toBe(false);
     expect(stats.mostCommon).toBe("5");
+  });
+
+  it("rounds fractional averages to the nearest whole number", () => {
+    const lowHalf = computeStats(
+      new Map([
+        ["a", "1"],
+        ["b", "2"],
+      ])
+    );
+    const highHalf = computeStats(
+      new Map([
+        ["a", "2"],
+        ["b", "3"],
+      ])
+    );
+    const higherRange = computeStats(
+      new Map([
+        ["a", "8"],
+        ["b", "13"],
+      ])
+    );
+
+    expect(lowHalf.numericAverage).toBe(2);
+    expect(highHalf.numericAverage).toBe(3);
+    expect(higherRange.numericAverage).toBe(11);
   });
 
   it("identifies consensus", () => {
@@ -73,7 +98,7 @@ describe("computeStats", () => {
       ["b", "0.5"],
     ]);
     const stats = computeStats(votes);
-    expect(stats.numericAverage).toBe(0.5);
+    expect(stats.numericAverage).toBe(1);
     expect(stats.consensus).toBe(true);
   });
 
@@ -125,5 +150,18 @@ describe("computeStats", () => {
     const votes = new Map([["a", "0"]]);
     const stats = computeStats(votes);
     expect(stats.numericAverage).toBe(0);
+  });
+
+  it("averages only numeric votes before rounding", () => {
+    const votes = new Map([
+      ["a", "1"],
+      ["b", "2"],
+      ["c", "?"],
+      ["d", "coffee"],
+    ]);
+    const stats = computeStats(votes);
+
+    expect(stats.numericAverage).toBe(2);
+    expect(stats.totalVotes).toBe(4);
   });
 });

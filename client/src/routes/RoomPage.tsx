@@ -265,6 +265,15 @@ export function RoomPage() {
     }
   };
 
+  const handleTransferModerator = async (targetParticipantId: string) => {
+    if (!roomId || actionsDisabled) {
+      return false;
+    }
+
+    const result = await room.transferModerator(roomId, targetParticipantId);
+    return result.ok;
+  };
+
   const handleLeave = async () => {
     if (!roomId || actionsDisabled) {
       return;
@@ -497,6 +506,7 @@ export function RoomPage() {
             onReveal={handleReveal}
             onReset={handleReset}
             onNextRound={handleNextRound}
+            onTransferModerator={handleTransferModerator}
             disabled={actionsDisabled}
           />
         </aside>

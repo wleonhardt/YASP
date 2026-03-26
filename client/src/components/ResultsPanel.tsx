@@ -42,9 +42,7 @@ export function ResultsPanel({ state }: Props) {
       <div className="stats-grid">
         <StatTile
           label="Average"
-          value={
-            stats.numericAverage !== null ? stats.numericAverage.toFixed(1) : "n/a"
-          }
+          value={stats.numericAverage !== null ? String(stats.numericAverage) : "n/a"}
         />
         <StatTile
           label="Median"

@@ -14,7 +14,7 @@ import type { DeckInput } from "@yasp/shared";
 import type { Room, Participant } from "../domain/types.js";
 import { RoomStore } from "./room-store.js";
 import { resolveDeck } from "../domain/deck.js";
-import { reassignModeratorIfNeeded, hasConnectedParticipants } from "../domain/room.js";
+import { reassignModeratorIfNeeded, findNextModerator, hasConnectedParticipants } from "../domain/room.js";
 import * as permissions from "../domain/permissions.js";
 import { generateRoomId } from "../utils/id.js";
 import { now } from "../utils/time.js";
@@ -91,6 +91,7 @@ export class RoomService {
       deck: resolveDeck(deckInput),
       settings: { ...DEFAULT_ROOM_SETTINGS },
       moderatorId: participantId,
+      previousModeratorId: null,
       participants: new Map([[participantId, participant]]),
       votes: new Map(),
     };
@@ -134,6 +135,12 @@ export class RoomService {
       if (room.settings.allowNameChange) {
         existing.name = sanitizeName(displayName);
       }
+      // Restore moderator status if this participant was auto-demoted on disconnect
+      if (room.previousModeratorId === participantId) {
+        room.moderatorId = participantId;
+        room.previousModeratorId = null;
+        logger.info("Moderator restored on reconnect", { roomId, participantId });
+      }
       // Preserve prior vote for current round
     } else {
       // New participant
@@ -174,6 +181,11 @@ export class RoomService {
     room.participants.delete(participantId);
     room.votes.delete(participantId);
 
+    // Clear auto-restore if the previous moderator is leaving
+    if (room.previousModeratorId === participantId) {
+      room.previousModeratorId = null;
+    }
+
     // Reassign moderator if needed
     if (room.moderatorId === participantId) {
       room.moderatorId = null;
@@ -202,6 +214,22 @@ export class RoomService {
     participant.connected = false;
     participant.socketId = null;
     participant.lastSeenAt = now();
+
+    // If the moderator disconnected, hand off to the next connected participant
+    // so the room isn't stuck without anyone who can reveal/reset.
+    // Track the previous moderator so we can restore them on reconnect.
+    if (room.moderatorId === participantId && hasConnectedParticipants(room)) {
+      const next = findNextModerator(room, participantId);
+      if (next && next.connected) {
+        room.previousModeratorId = participantId;
+        room.moderatorId = next.id;
+        logger.info("Moderator disconnected, auto-transferred", {
+          roomId,
+          from: participantId,
+          to: next.id,
+        });
+      }
+    }
 
     // If no connected participants remain, reset expiry
     if (!hasConnectedParticipants(room)) {
@@ -295,6 +323,34 @@ export class RoomService {
     room.votes.clear();
     room.revealed = false;
     room.roundNumber += 1;
+    touchRoom(room);
+    return success({ room });
+  }
+
+  transferModerator(
+    roomId: RoomId,
+    participantId: string,
+    targetParticipantId: string
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+
+    const participant = room.participants.get(participantId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canTransferModerator(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can transfer host" });
+    }
+    if (participantId === targetParticipantId) {
+      return fail({ code: "NOT_ALLOWED", message: "Choose another participant to transfer host" });
+    }
+
+    const targetParticipant = room.participants.get(targetParticipantId);
+    if (!targetParticipant) {
+      return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    }
+
+    room.moderatorId = targetParticipantId;
+    room.previousModeratorId = null; // Manual transfer clears auto-restore
     touchRoom(room);
     return success({ room });
   }
