@@ -1,270 +1,221 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSocket } from "../hooks/useSocket";
-import { useSession } from "../hooks/useSession";
-import { useRoom } from "../hooks/useRoom";
-import { setStoredDisplayName, setStoredRole } from "../lib/storage";
-import { ConnectionBadge } from "../components/ConnectionBadge";
-import type { ParticipantRole, DeckType } from "@yasp/shared";
+import type { DeckType, ParticipantRole } from "@yasp/shared";
 import { DEFAULT_DECKS } from "@yasp/shared";
+import { Banner } from "../components/Banner";
+import { ConnectionBadge } from "../components/ConnectionBadge";
+import { useRoom } from "../hooks/useRoom";
+import { useSession } from "../hooks/useSession";
+import { useSocket } from "../hooks/useSocket";
+import { setStoredDisplayName, setStoredRole } from "../lib/storage";
 
 export function LandingPage() {
   const navigate = useNavigate();
   const { socket, status } = useSocket();
-  const { storedName } = useSession();
-  const { createRoom, joinRoom, error } = useRoom(socket, useSession().sessionId);
+  const { sessionId, storedName } = useSession();
+  const { createRoom, joinRoom, error } = useRoom(socket, sessionId);
 
   const [name, setName] = useState(storedName || "");
   const [role, setRole] = useState<ParticipantRole>("voter");
-  const [deckType, setDeckType] = useState<DeckType>("fibonacci");
+  const [deckType, setDeckType] = useState<Exclude<DeckType, "custom">>(
+    "fibonacci"
+  );
   const [joinRoomId, setJoinRoomId] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"create" | "join" | null>(
+    null
+  );
 
-  const handleCreate = async () => {
-    if (!name.trim() || status !== "connected") return;
-    setLoading(true);
+  const connected = status === "connected";
+  const canSubmitIdentity = name.trim().length > 0 && connected;
+  const deckOptions = useMemo(() => Object.values(DEFAULT_DECKS), []);
+
+  const headlines = [
+    "Estimate together in seconds",
+    "One link. One room. Zero friction.",
+    "No accounts. No history. Just poker.",
+    "Point, vote, ship.",
+  ];
+  const headlineIndex = useRef(Math.floor(Math.random() * headlines.length));
+  const headline = headlines[headlineIndex.current];
+
+  async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canSubmitIdentity) {
+      return;
+    }
+
+    setPendingAction("create");
     setStoredDisplayName(name.trim());
     setStoredRole(role);
-    const result = await createRoom(name.trim(), role, { type: deckType } as any);
-    setLoading(false);
+
+    const result = await createRoom(name.trim(), role, { type: deckType });
+    setPendingAction(null);
+
     if (result.ok) {
       navigate(`/r/${result.data.roomId}`, { state: { role } });
     }
-  };
+  }
 
-  const handleJoin = async () => {
-    if (!name.trim() || !joinRoomId.trim() || status !== "connected") return;
-    setLoading(true);
+  async function handleJoin(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canSubmitIdentity || !joinRoomId.trim()) {
+      return;
+    }
+
+    const normalizedRoomId = joinRoomId.trim().toUpperCase();
+
+    setPendingAction("join");
     setStoredDisplayName(name.trim());
     setStoredRole(role);
-    const result = await joinRoom(joinRoomId.trim().toUpperCase(), name.trim(), role);
-    setLoading(false);
+
+    const result = await joinRoom(normalizedRoomId, name.trim(), role);
+    setPendingAction(null);
+
     if (result.ok) {
-      navigate(`/r/${joinRoomId.trim().toUpperCase()}`, { state: { role } });
+      navigate(`/r/${normalizedRoomId}`, { state: { role } });
     }
-  };
+  }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-    >
-      <div style={{ position: "fixed", top: 16, right: 16 }}>
-        <ConnectionBadge status={status} />
-      </div>
-
-      <h1 style={{ fontSize: 36, fontWeight: 700, marginBottom: 8 }}>YASP</h1>
-      <p style={{ color: "var(--color-text-muted)", marginBottom: 32 }}>
-        Yet Another Scrum Poker
-      </p>
-
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 400,
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-        }}
-      >
-        {/* Name */}
-        <div>
-          <label
-            style={{ display: "block", fontSize: 13, color: "var(--color-text-muted)", marginBottom: 4 }}
-          >
-            Display Name
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name"
-            maxLength={30}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "var(--radius)",
-              border: "1px solid var(--color-border)",
-              background: "var(--color-surface)",
-              color: "var(--color-text)",
-              outline: "none",
-            }}
-          />
+    <div className="page-shell page-shell--centered">
+      <div className="landing-page">
+        <div className="landing-page__status">
+          <ConnectionBadge status={status} />
         </div>
 
-        {/* Role */}
-        <div>
-          <label
-            style={{ display: "block", fontSize: 13, color: "var(--color-text-muted)", marginBottom: 4 }}
-          >
-            Role
-          </label>
-          <div style={{ display: "flex", gap: 8 }}>
-            {(["voter", "spectator"] as ParticipantRole[]).map((r) => (
-              <button
-                key={r}
-                onClick={() => setRole(r)}
-                style={{
-                  flex: 1,
-                  padding: "8px 16px",
-                  borderRadius: "var(--radius)",
-                  border:
-                    role === r
-                      ? "2px solid var(--color-primary)"
-                      : "1px solid var(--color-border)",
-                  background:
-                    role === r ? "var(--color-card-selected)" : "var(--color-surface)",
-                  color: "var(--color-text)",
-                  fontWeight: role === r ? 600 : 400,
-                  textTransform: "capitalize",
-                }}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        </div>
+        <header className="landing-page__hero">
+          <div className="landing-page__eyebrow">Yet Another Scrum Poker</div>
+          <h1>{headline}</h1>
+          <p>
+            Create a room and estimate together. No sign-up required.
+          </p>
+        </header>
 
-        {/* Deck selector */}
-        <div>
-          <label
-            style={{ display: "block", fontSize: 13, color: "var(--color-text-muted)", marginBottom: 4 }}
-          >
-            Deck
-          </label>
-          <select
-            value={deckType}
-            onChange={(e) => setDeckType(e.target.value as DeckType)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "var(--radius)",
-              border: "1px solid var(--color-border)",
-              background: "var(--color-surface)",
-              color: "var(--color-text)",
-              outline: "none",
-            }}
-          >
-            {Object.values(DEFAULT_DECKS).map((d) => (
-              <option key={d.type} value={d.type}>
-                {d.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Create button */}
-        <button
-          onClick={handleCreate}
-          disabled={!name.trim() || status !== "connected" || loading}
-          style={{
-            padding: "12px 24px",
-            borderRadius: "var(--radius)",
-            background:
-              name.trim() && status === "connected"
-                ? "var(--color-primary)"
-                : "var(--color-surface)",
-            color:
-              name.trim() && status === "connected"
-                ? "#fff"
-                : "var(--color-text-muted)",
-            fontWeight: 600,
-            fontSize: 16,
-            cursor:
-              name.trim() && status === "connected" ? "pointer" : "not-allowed",
-          }}
-        >
-          {loading ? "Creating..." : "Create Room"}
-        </button>
-
-        {/* Divider */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            color: "var(--color-text-muted)",
-          }}
-        >
-          <div
-            style={{ flex: 1, height: 1, background: "var(--color-border)" }}
-          />
-          <span style={{ fontSize: 13 }}>or join existing</span>
-          <div
-            style={{ flex: 1, height: 1, background: "var(--color-border)" }}
-          />
-        </div>
-
-        {/* Join */}
-        <div style={{ display: "flex", gap: 8 }}>
-          <input
-            type="text"
-            value={joinRoomId}
-            onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
-            placeholder="Room code"
-            maxLength={10}
-            style={{
-              flex: 1,
-              padding: "10px 12px",
-              borderRadius: "var(--radius)",
-              border: "1px solid var(--color-border)",
-              background: "var(--color-surface)",
-              color: "var(--color-text)",
-              outline: "none",
-              textTransform: "uppercase",
-              letterSpacing: 2,
-              fontWeight: 600,
-            }}
-          />
-          <button
-            onClick={handleJoin}
-            disabled={
-              !name.trim() ||
-              !joinRoomId.trim() ||
-              status !== "connected" ||
-              loading
-            }
-            style={{
-              padding: "10px 20px",
-              borderRadius: "var(--radius)",
-              background: "var(--color-primary)",
-              color: "#fff",
-              fontWeight: 600,
-              opacity:
-                name.trim() && joinRoomId.trim() && status === "connected"
-                  ? 1
-                  : 0.5,
-              cursor:
-                name.trim() && joinRoomId.trim() && status === "connected"
-                  ? "pointer"
-                  : "not-allowed",
-            }}
-          >
-            Join
-          </button>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div
-            style={{
-              padding: "10px 16px",
-              borderRadius: "var(--radius)",
-              background: "rgba(239, 68, 68, 0.15)",
-              border: "1px solid var(--color-danger)",
-              color: "var(--color-danger)",
-              fontSize: 14,
-            }}
-          >
-            {error.message}
-          </div>
+        {!connected && (
+          <Banner tone={status === "connecting" ? "info" : "warning"}>
+            {status === "connecting"
+              ? "Connecting to the room service…"
+              : "Disconnected. Trying to reconnect before you can create or join a room."}
+          </Banner>
         )}
+
+        {error && (
+          <Banner tone="error" title="Couldn’t continue">
+            {error.message}
+          </Banner>
+        )}
+
+        <section className="app-panel identity-panel">
+          <div className="section-header">
+            <div>
+              <h2>Who’s joining?</h2>
+            </div>
+          </div>
+
+          <label className="field">
+            <span className="field__label">Display name</span>
+            <input
+              className="input"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Enter your display name"
+              maxLength={30}
+            />
+          </label>
+
+          <div className="field">
+            <span className="field__label">Role</span>
+            <div className="segmented">
+              {(
+                [
+                  ["voter", "Choose a card"],
+                  ["spectator", "Watch only"],
+                ] as const
+              ).map(([value, helper]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={[
+                    "segmented__option",
+                    role === value ? "segmented__option--active" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onClick={() => setRole(value)}
+                >
+                  <span>{value === "voter" ? "Voter" : "Spectator"}</span>
+                  <small>{helper}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="landing-page__actions">
+          <form className="app-panel action-card" onSubmit={handleCreate}>
+            <div className="section-header">
+              <div>
+                <h2>Create room</h2>
+              </div>
+            </div>
+
+            <label className="field">
+              <span className="field__label">Deck</span>
+              <select
+                className="input"
+                value={deckType}
+                onChange={(event) =>
+                  setDeckType(event.target.value as Exclude<DeckType, "custom">)
+                }
+              >
+                {deckOptions.map((deck) => (
+                  <option key={deck.type} value={deck.type}>
+                    {deck.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button
+              className="button button--primary button--full"
+              type="submit"
+              disabled={!canSubmitIdentity || pendingAction !== null}
+            >
+              {pendingAction === "create" ? "Creating…" : "Create room"}
+            </button>
+          </form>
+
+          <form className="app-panel action-card action-card--secondary" onSubmit={handleJoin}>
+            <div className="section-header">
+              <div>
+                <h2>Join room</h2>
+              </div>
+            </div>
+
+            <label className="field">
+              <span className="field__label">Room code</span>
+              <input
+                className="input input--code"
+                type="text"
+                value={joinRoomId}
+                onChange={(event) => setJoinRoomId(event.target.value.toUpperCase())}
+                placeholder="Enter room code"
+                maxLength={10}
+              />
+            </label>
+
+            <button
+              className="button button--secondary button--full"
+              type="submit"
+              disabled={!canSubmitIdentity || !joinRoomId.trim() || pendingAction !== null}
+            >
+              {pendingAction === "join" ? "Joining…" : "Join room"}
+            </button>
+          </form>
+        </div>
+
+        <p className="landing-page__note">Rooms expire after inactivity. No data is stored.</p>
       </div>
     </div>
   );

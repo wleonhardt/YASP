@@ -13,22 +13,38 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
   const self = getSelf(state);
   const isVoter = self?.role === "voter";
   const canVote = isVoter && !state.revealed && !disabled;
+  const voteLabel = selectedCard
+    ? state.revealed
+      ? `Your vote: ${selectedCard}`
+      : `Your vote: ${selectedCard}`
+    : isVoter
+      ? "Choose a card"
+      : "Spectators can’t vote";
 
   return (
-    <div style={{ marginTop: 24 }}>
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 8,
-          justifyContent: "center",
-        }}
-      >
+    <section className="app-panel vote-deck">
+      <div className="section-header">
+        <div>
+          <div className="section-label">Your vote</div>
+          <h2>{voteLabel}</h2>
+        </div>
+      </div>
+
+      <p className="vote-deck__hint">
+        {isVoter
+          ? selectedCard && !state.revealed
+            ? "Tap the selected card again to clear it before reveal."
+            : "Pick a card when you’re ready."
+          : "Spectators can watch progress without taking part in the round."}
+      </p>
+
+      <div className="vote-deck__grid">
         {state.deck.cards.map((card) => {
           const isSelected = selectedCard === card;
           return (
             <button
               key={card}
+              type="button"
               disabled={!canVote}
               onClick={() => {
                 if (isSelected) {
@@ -37,53 +53,23 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
                   onVote(card);
                 }
               }}
-              style={{
-                width: 64,
-                height: 88,
-                borderRadius: "var(--radius)",
-                border: isSelected
-                  ? "2px solid var(--color-primary)"
-                  : "2px solid var(--color-border)",
-                background: isSelected
-                  ? "var(--color-card-selected)"
-                  : "var(--color-card)",
-                color: "var(--color-text)",
-                fontSize: card.length > 3 ? 14 : 18,
-                fontWeight: 600,
-                cursor: canVote ? "pointer" : "default",
-                opacity: canVote ? 1 : 0.5,
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                if (canVote && !isSelected) {
-                  (e.target as HTMLButtonElement).style.background =
-                    "var(--color-card-hover)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isSelected) {
-                  (e.target as HTMLButtonElement).style.background =
-                    "var(--color-card)";
-                }
-              }}
+              className={[
+                "vote-card",
+                isSelected ? "vote-card--selected" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-pressed={isSelected}
             >
-              {card}
+              <span className="vote-card__value">{card}</span>
             </button>
           );
         })}
       </div>
-      {!isVoter && (
-        <p
-          style={{
-            textAlign: "center",
-            color: "var(--color-text-muted)",
-            marginTop: 8,
-            fontSize: 14,
-          }}
-        >
-          Spectators cannot vote
-        </p>
+
+      {isVoter && !state.revealed && (
+        <div className="vote-deck__shortcut">Shortcuts: number keys to vote when applicable, Esc to clear</div>
       )}
-    </div>
+    </section>
   );
 }
