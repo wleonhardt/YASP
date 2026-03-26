@@ -83,7 +83,10 @@ jobs:
               --command-id "$COMMAND_ID" \
               --instance-id "$INSTANCE_ID" \
               --query 'Status' \
-              --output text 2>/dev/null || echo "Pending")
+              --output text 2>&1) || {
+              echo "Warning: get-command-invocation failed: $STATUS"
+              STATUS="Pending"
+            }
 
             echo "Attempt $i: $STATUS"
 
