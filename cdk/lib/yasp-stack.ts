@@ -1,40 +1,40 @@
 import * as cdk from "aws-cdk-lib";
-import * as ecr from "aws-cdk-lib/aws-ecr";
-import * as iam from "aws-cdk-lib/aws-iam";
-import * as apprunner from "aws-cdk-lib/aws-apprunner";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
-import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 import * as cloudwatch from "aws-cdk-lib/aws-cloudwatch";
 import * as cw_actions from "aws-cdk-lib/aws-cloudwatch-actions";
-import * as sns from "aws-cdk-lib/aws-sns";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as ecr from "aws-cdk-lib/aws-ecr";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as wafv2 from "aws-cdk-lib/aws-wafv2";
+import * as cr from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+import { buildEc2OriginUserData } from "./ec2-origin-bootstrap";
 
 const ORIGIN_SECRET_HEADER = "x-yasp-origin-secret";
-
-// ---------------------------------------------------------------------------
-// Stack props — non-secret configuration passed from bin/yasp.ts
-// ---------------------------------------------------------------------------
+const CLOUDFRONT_PREFIX_LIST_NAME =
+  "com.amazonaws.global.cloudfront.origin-facing";
+const DEFAULT_INSTANCE_TYPE = "t3.micro";
+const CONTAINER_PORT = 3001;
+const ORIGIN_PORT = 80;
+const CONTAINER_NAME = "yasp";
 
 export interface YaspStackProps extends cdk.StackProps {
   ecrRepoName?: string;
   serviceName?: string;
-  autoDeploymentsEnabled?: boolean;
   createRepository?: boolean;
   retainLogBucket?: boolean;
+  enableBasicAuth?: boolean;
   imageTag?: string;
   imageDigest?: string;
   alarmTopicArn?: string;
+  instanceType?: string;
+  domainName?: string;
+  certificateArn?: string;
 }
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 function resolveImageIdentifier(
   repoUri: string,
@@ -46,14 +46,16 @@ function resolveImageIdentifier(
       "Provide exactly one of imageTag or imageDigest, not both."
     );
   }
+
   if (digest) {
-    if (!digest.startsWith("sha256:")) {
+    if (!/^sha256:[A-Fa-f0-9]{64}$/.test(digest)) {
       throw new Error(
-        `imageDigest must start with "sha256:". Got: ${digest}`
+        `imageDigest must match sha256:<64 hex chars>. Got: ${digest}`
       );
     }
     return `${repoUri}@${digest}`;
   }
+
   if (tag) {
     if (tag === "latest") {
       throw new Error(
@@ -62,15 +64,53 @@ function resolveImageIdentifier(
     }
     return `${repoUri}:${tag}`;
   }
+
   throw new Error(
     "Missing image reference. Provide imageTag (e.g. -c imageTag=0.1.0) " +
       "or imageDigest (e.g. -c imageDigest=sha256:abc123...)."
   );
 }
 
-// ---------------------------------------------------------------------------
-// Stack
-// ---------------------------------------------------------------------------
+function lookupCloudFrontPrefixListId(
+  scope: Construct
+): cr.AwsCustomResource {
+  return new cr.AwsCustomResource(scope, "CloudFrontOriginPrefixListLookup", {
+    onCreate: {
+      service: "EC2",
+      action: "describeManagedPrefixLists",
+      parameters: {
+        Filters: [
+          {
+            Name: "prefix-list-name",
+            Values: [CLOUDFRONT_PREFIX_LIST_NAME],
+          },
+        ],
+      },
+      physicalResourceId: cr.PhysicalResourceId.of(
+        `cloudfront-origin-prefix-list-${cdk.Aws.REGION}`
+      ),
+    },
+    onUpdate: {
+      service: "EC2",
+      action: "describeManagedPrefixLists",
+      parameters: {
+        Filters: [
+          {
+            Name: "prefix-list-name",
+            Values: [CLOUDFRONT_PREFIX_LIST_NAME],
+          },
+        ],
+      },
+      physicalResourceId: cr.PhysicalResourceId.of(
+        `cloudfront-origin-prefix-list-${cdk.Aws.REGION}`
+      ),
+    },
+    policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+      resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE,
+    }),
+    installLatestAwsSdk: false,
+  });
+}
 
 export class YaspStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: YaspStackProps) {
@@ -79,70 +119,58 @@ export class YaspStack extends cdk.Stack {
     const {
       ecrRepoName = "yasp",
       serviceName = "yasp",
-      autoDeploymentsEnabled = false,
       createRepository = false,
       retainLogBucket = false,
+      enableBasicAuth = true,
       imageTag,
       imageDigest,
       alarmTopicArn,
+      instanceType = DEFAULT_INSTANCE_TYPE,
+      domainName,
+      certificateArn,
     } = props;
 
-    // -----------------------------------------------------------------------
-    // CloudFormation parameters — secrets enter via NoEcho parameters,
-    // not CDK context. This prevents leakage in CLI history, cdk.context.json,
-    // and describe-stacks output.
-    //
-    // Pragmatic compromise: NoEcho reduces accidental exposure but does not
-    // constitute secure secret storage. The Basic Auth credential is
-    // ultimately embedded in the CloudFront Function source code, which is
-    // visible in the CloudFront console. For a small internal tool this is
-    // acceptable; for anything more sensitive, use a proper IdP.
-    // -----------------------------------------------------------------------
+    let basicAuthUsername: string | undefined;
+    let basicAuthPassword: string | undefined;
 
-    const basicAuthUsernameParam = new cdk.CfnParameter(
-      this,
-      "BasicAuthUsername",
-      {
-        type: "String",
-        default: "yasp",
-        description: "HTTP Basic Auth username for CloudFront access.",
-      }
-    );
+    if (enableBasicAuth) {
+      const basicAuthUsernameParam = new cdk.CfnParameter(
+        this,
+        "BasicAuthUsername",
+        {
+          type: "String",
+          default: "yasp",
+          description: "HTTP Basic Auth username for CloudFront access.",
+        }
+      );
 
-    const basicAuthPasswordParam = new cdk.CfnParameter(
-      this,
-      "BasicAuthPassword",
-      {
-        type: "String",
-        noEcho: true,
-        description: "HTTP Basic Auth password for CloudFront access.",
-        minLength: 8,
-      }
-    );
+      const basicAuthPasswordParam = new cdk.CfnParameter(
+        this,
+        "BasicAuthPassword",
+        {
+          type: "String",
+          noEcho: true,
+          description: "HTTP Basic Auth password for CloudFront access.",
+          minLength: 8,
+        }
+      );
+
+      basicAuthUsername = basicAuthUsernameParam.valueAsString;
+      basicAuthPassword = basicAuthPasswordParam.valueAsString;
+    }
 
     const originSecretParam = new cdk.CfnParameter(this, "OriginSecret", {
       type: "String",
       noEcho: true,
       description:
-        "Shared secret header value between CloudFront and App Runner WAF.",
+        "Hex secret header value shared between CloudFront and the EC2 origin.",
       minLength: 16,
+      allowedPattern: "[A-Fa-f0-9]{16,}",
+      constraintDescription:
+        "OriginSecret must be at least 16 hexadecimal characters.",
     });
 
-    const basicAuthUsername = basicAuthUsernameParam.valueAsString;
-    const basicAuthPassword = basicAuthPasswordParam.valueAsString;
     const originSecret = originSecretParam.valueAsString;
-
-    // -----------------------------------------------------------------------
-    // ECR repository
-    // createRepository=true  → CDK creates and owns the repo (first-deploy friendly)
-    // createRepository=false → import an existing repo by name (default)
-    //
-    // When creating: the repo will be empty on first deploy. You must push
-    // an image to it BEFORE deploying the rest of the stack. Use a two-step
-    // workflow: deploy once to create infra, push the image, then deploy
-    // again — or push to the repo immediately after creation and before
-    // App Runner tries to pull.
-    // -----------------------------------------------------------------------
 
     const repo = createRepository
       ? new ecr.Repository(this, "YaspRepo", {
@@ -164,154 +192,161 @@ export class YaspStack extends cdk.Stack {
       imageDigest
     );
 
-    // -----------------------------------------------------------------------
-    // App Runner — ECR access role (least-privilege)
-    // -----------------------------------------------------------------------
+    const alarmTopic = alarmTopicArn
+      ? sns.Topic.fromTopicArn(this, "AlarmTopic", alarmTopicArn)
+      : undefined;
 
-    const ecrAccessRole = new iam.Role(this, "AppRunnerEcrAccessRole", {
-      assumedBy: new iam.ServicePrincipal("build.apprunner.amazonaws.com"),
-      description: "Allows App Runner to pull images from ECR.",
-    });
-    repo.grantPull(ecrAccessRole);
+    const registryUri = cdk.Fn.sub(
+      "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com"
+    );
 
-    // No instance role — YASP does not call any AWS APIs at runtime.
-
-    // -----------------------------------------------------------------------
-    // App Runner service
-    // -----------------------------------------------------------------------
-
-    const service = new apprunner.CfnService(this, "YaspService", {
-      serviceName,
-      sourceConfiguration: {
-        authenticationConfiguration: {
-          accessRoleArn: ecrAccessRole.roleArn,
-        },
-        imageRepository: {
-          imageIdentifier,
-          imageRepositoryType: "ECR",
-          imageConfiguration: {
-            port: "3001",
-          },
-        },
-        autoDeploymentsEnabled,
-      },
-      instanceConfiguration: {
-        cpu: "0.25 vCPU",
-        memory: "0.5 GB",
-      },
-      // TCP health check avoids any interaction with WAF. Port liveness is
-      // sufficient — YASP binds to 3001 immediately on startup.
-      healthCheckConfiguration: {
-        protocol: "TCP",
-        interval: 10,
-        timeout: 5,
-        healthyThreshold: 1,
-        unhealthyThreshold: 5,
-      },
-    });
-
-    const serviceUrl = service.attrServiceUrl;
-
-    // -----------------------------------------------------------------------
-    // Origin WAF (REGIONAL) — blocks direct App Runner access
-    // Default: block. Only requests with the origin secret header pass.
-    // -----------------------------------------------------------------------
-
-    const originWaf = new wafv2.CfnWebACL(this, "OriginWaf", {
-      scope: "REGIONAL",
-      defaultAction: { block: {} },
-      visibilityConfig: {
-        cloudWatchMetricsEnabled: true,
-        metricName: "YaspOriginWaf",
-        sampledRequestsEnabled: true,
-      },
-      rules: [
+    const vpc = new ec2.Vpc(this, "YaspVpc", {
+      maxAzs: 1,
+      natGateways: 0,
+      subnetConfiguration: [
         {
-          name: "AllowOriginSecret",
-          priority: 1,
-          action: { allow: {} },
-          visibilityConfig: {
-            cloudWatchMetricsEnabled: true,
-            metricName: "YaspOriginWafAllowSecret",
-            sampledRequestsEnabled: true,
-          },
-          statement: {
-            byteMatchStatement: {
-              fieldToMatch: {
-                singleHeader: { name: ORIGIN_SECRET_HEADER },
-              },
-              positionalConstraint: "EXACTLY",
-              searchString: originSecret,
-              textTransformations: [{ priority: 0, type: "NONE" }],
-            },
-          },
+          name: "public",
+          subnetType: ec2.SubnetType.PUBLIC,
+          cidrMask: 24,
         },
       ],
     });
 
-    // Explicit dependency: WAF must be fully created before association.
-    // In rare cases WAF propagation may lag behind the association request.
-    // If an association fails on first deploy, a simple redeploy resolves it.
-    const originWafAssociation = new wafv2.CfnWebACLAssociation(
+    const originSecurityGroup = new ec2.SecurityGroup(
       this,
-      "OriginWafAssociation",
+      "OriginSecurityGroup",
       {
-        resourceArn: service.attrServiceArn,
-        webAclArn: originWaf.attrArn,
+        vpc,
+        allowAllOutbound: true,
+        description:
+          "YASP EC2 origin security group. Inbound traffic is limited to CloudFront origin-facing infrastructure.",
       }
     );
-    originWafAssociation.addDependency(originWaf);
-    originWafAssociation.node.addDependency(service);
 
-    // -----------------------------------------------------------------------
-    // CloudFront Function — Basic Auth at the edge
-    //
-    // Fn.base64 produces the base64-encoded credential string at deploy time
-    // via CloudFormation intrinsics. The base64 output is always safe ASCII
-    // (A-Za-z0-9+/=), so it can be embedded in the function code as a string
-    // literal without escaping concerns — even if the original password
-    // contains characters like " or \ that would break JS string syntax.
-    // -----------------------------------------------------------------------
+    const cloudFrontPrefixListLookup = lookupCloudFrontPrefixListId(this);
+    const cloudFrontPrefixListId =
+      cloudFrontPrefixListLookup.getResponseField(
+        "PrefixLists.0.PrefixListId"
+      );
 
-    const authFunction = new cloudfront.Function(this, "BasicAuthFunction", {
-      code: cloudfront.FunctionCode.fromInline(
-        cdk.Fn.sub(
-          [
-            "function handler(event) {",
-            "  var request = event.request;",
-            "  var headers = request.headers;",
-            "  var expected = 'Basic ' + '${EncodedCredentials}';",
-            "  if (!headers.authorization || headers.authorization.value !== expected) {",
-            "    return {",
-            "      statusCode: 401,",
-            '      statusDescription: "Unauthorized",',
-            "      headers: {",
-            '        "www-authenticate": { value: \'Basic realm="YASP"\' },',
-            '        "content-type": { value: "text/plain" },',
-            "      },",
-            '      body: "Unauthorized",',
-            "    };",
-            "  }",
-            "  delete request.headers.authorization;",
-            "  return request;",
-            "}",
-          ].join("\n"),
-          {
-            EncodedCredentials: cdk.Fn.base64(
-              cdk.Fn.sub("${Username}:${Password}", {
-                Username: basicAuthUsername,
-                Password: basicAuthPassword,
-              })
-            ),
-          }
-        )
-      ),
-      runtime: cloudfront.FunctionRuntime.JS_2_0,
+    const allowCloudFrontIngress = new ec2.CfnSecurityGroupIngress(
+      this,
+      "AllowCloudFrontIngress",
+      {
+        groupId: originSecurityGroup.securityGroupId,
+        ipProtocol: "tcp",
+        fromPort: ORIGIN_PORT,
+        toPort: ORIGIN_PORT,
+        sourcePrefixListId: cloudFrontPrefixListId,
+        description:
+          "Allow HTTP origin traffic only from CloudFront origin-facing IP ranges.",
+      }
+    );
+    allowCloudFrontIngress.node.addDependency(cloudFrontPrefixListLookup);
+
+    const instanceRole = new iam.Role(this, "YaspInstanceRole", {
+      assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
+      description:
+        "Allows the YASP EC2 origin to pull from ECR and be managed through SSM.",
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "AmazonSSMManagedInstanceCore"
+        ),
+      ],
+    });
+    repo.grantPull(instanceRole);
+
+    const userData = buildEc2OriginUserData({
+      awsRegion: cdk.Stack.of(this).region,
+      imageIdentifier,
+      originSecret,
+      originSecretHeaderName: ORIGIN_SECRET_HEADER,
+      registryUri,
+      containerPort: CONTAINER_PORT,
+      originPort: ORIGIN_PORT,
+      containerName: CONTAINER_NAME,
     });
 
-    // -----------------------------------------------------------------------
-    // CloudFront access logs bucket
-    // -----------------------------------------------------------------------
+    const instance = new ec2.Instance(this, "YaspOriginInstance", {
+      vpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+      associatePublicIpAddress: true,
+      securityGroup: originSecurityGroup,
+      role: instanceRole,
+      instanceType: new ec2.InstanceType(instanceType),
+      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
+      requireImdsv2: true,
+      userData,
+      userDataCausesReplacement: true,
+      blockDevices: [
+        {
+          deviceName: "/dev/xvda",
+          volume: ec2.BlockDeviceVolume.ebs(16, {
+            encrypted: true,
+            volumeType: ec2.EbsDeviceVolumeType.GP3,
+          }),
+        },
+      ],
+    });
+    cdk.Tags.of(instance).add("Name", serviceName);
+    instance.node.addDependency(allowCloudFrontIngress);
+
+    let authFunction: cloudfront.Function | undefined;
+
+    if (enableBasicAuth && basicAuthUsername && basicAuthPassword) {
+      // Build the CloudFront Function code using Fn::Join instead of Fn::Sub.
+      // Fn::Sub escapes special characters like "!" → "\!" which corrupts
+      // credential matching. Fn::Join concatenates without escaping.
+      const b64Helper = [
+        "var B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';",
+        "function b64(s) {",
+        "  var r = '', i = 0, len = s.length;",
+        "  while (i < len) {",
+        "    var a = s.charCodeAt(i++);",
+        "    var b = i < len ? s.charCodeAt(i++) : -1;",
+        "    var c = i < len ? s.charCodeAt(i++) : -1;",
+        "    var n = (a << 16) | ((b >= 0 ? b : 0) << 8) | (c >= 0 ? c : 0);",
+        "    r += B64[(n >> 18) & 63];",
+        "    r += B64[(n >> 12) & 63];",
+        "    r += b >= 0 ? B64[(n >> 6) & 63] : '=';",
+        "    r += c >= 0 ? B64[n & 63] : '=';",
+        "  }",
+        "  return r;",
+        "}",
+      ].join("\n");
+
+      const authFunctionCode = cdk.Fn.join("", [
+        b64Helper,
+        "\nfunction handler(event) {\n",
+        "  var request = event.request;\n",
+        "  var headers = request.headers;\n",
+        "  var expected = 'Basic ' + b64('",
+        basicAuthUsername,
+        "' + ':' + '",
+        basicAuthPassword,
+        "');\n",
+        "  if (!headers.authorization || headers.authorization.value !== expected) {\n",
+        "    return {\n",
+        "      statusCode: 401,\n",
+        '      statusDescription: "Unauthorized",\n',
+        "      headers: {\n",
+        '        "www-authenticate": { value: \'Basic realm="YASP"\' },\n',
+        '        "content-type": { value: "text/plain" },\n',
+        "      },\n",
+        '      body: "Unauthorized",\n',
+        "    };\n",
+        "  }\n",
+        "  delete request.headers.authorization;\n",
+        "  return request;\n",
+        "}",
+      ]);
+
+      authFunction = new cloudfront.Function(this, "BasicAuthFunction", {
+        code: cloudfront.FunctionCode.fromInline(authFunctionCode),
+        runtime: cloudfront.FunctionRuntime.JS_2_0,
+        comment: "YASP Basic Auth - runtime base64 encoding",
+      });
+    }
 
     const accessLogsBucket = new s3.Bucket(this, "CloudFrontAccessLogs", {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -326,11 +361,6 @@ export class YaspStack extends cdk.Stack {
       autoDeleteObjects: !retainLogBucket,
       objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
     });
-
-    // -----------------------------------------------------------------------
-    // CloudFront WAF (CLOUDFRONT scope — must be us-east-1)
-    // Viewer-facing protection: managed rules + rate limiting.
-    // -----------------------------------------------------------------------
 
     const edgeWaf = new wafv2.CfnWebACL(this, "EdgeWaf", {
       scope: "CLOUDFRONT",
@@ -357,10 +387,6 @@ export class YaspStack extends cdk.Stack {
             },
           },
         },
-        // Rate limit: 2000 requests per 5 minutes per IP.
-        // This is intentionally conservative. Adjust if users share a NAT/VPN
-        // egress IP, during load testing, or if bot traffic patterns require
-        // a different threshold.
         {
           name: "RateLimit",
           priority: 2,
@@ -380,17 +406,27 @@ export class YaspStack extends cdk.Stack {
       ],
     });
 
-    // -----------------------------------------------------------------------
-    // CloudFront distribution
-    // -----------------------------------------------------------------------
+    const certificate =
+      certificateArn && domainName
+        ? acm.Certificate.fromCertificateArn(
+            this,
+            "DomainCertificate",
+            certificateArn
+          )
+        : undefined;
 
     const distribution = new cloudfront.Distribution(this, "YaspCdn", {
+      ...(domainName ? { domainNames: [domainName] } : {}),
+      ...(certificate ? { certificate } : {}),
       defaultBehavior: {
-        origin: new origins.HttpOrigin(serviceUrl, {
-          protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+        origin: new origins.HttpOrigin(instance.instancePublicDnsName, {
+          protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+          httpPort: ORIGIN_PORT,
           customHeaders: {
             [ORIGIN_SECRET_HEADER]: originSecret,
           },
+          readTimeout: cdk.Duration.seconds(60),
+          keepaliveTimeout: cdk.Duration.seconds(60),
         }),
         viewerProtocolPolicy:
           cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -398,46 +434,22 @@ export class YaspStack extends cdk.Stack {
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         originRequestPolicy:
           cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
-        functionAssociations: [
-          {
-            function: authFunction,
-            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
-          },
-        ],
+        ...(authFunction
+          ? {
+              functionAssociations: [
+                {
+                  function: authFunction,
+                  eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+                },
+              ],
+            }
+          : {}),
       },
       httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
       webAclId: edgeWaf.attrArn,
       logBucket: accessLogsBucket,
-      logFilePrefix: "yasp-cdn/",
+      logFilePrefix: `${serviceName}-cdn/`,
     });
-
-    // -----------------------------------------------------------------------
-    // CloudWatch alarms
-    // -----------------------------------------------------------------------
-
-    const alarmTopic = alarmTopicArn
-      ? sns.Topic.fromTopicArn(this, "AlarmTopic", alarmTopicArn)
-      : undefined;
-
-    const appRunner5xxAlarm = new cloudwatch.Alarm(
-      this,
-      "AppRunner5xxAlarm",
-      {
-        metric: new cloudwatch.Metric({
-          namespace: "AWS/AppRunner",
-          metricName: "5xxStatusResponses",
-          dimensionsMap: { ServiceName: serviceName },
-          statistic: "Sum",
-          period: cdk.Duration.minutes(5),
-        }),
-        threshold: 10,
-        evaluationPeriods: 2,
-        comparisonOperator:
-          cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-        alarmDescription: "YASP App Runner is returning elevated 5xx errors.",
-      }
-    );
 
     const cloudFront5xxAlarm = new cloudwatch.Alarm(
       this,
@@ -462,41 +474,34 @@ export class YaspStack extends cdk.Stack {
       }
     );
 
+    const ec2StatusCheckAlarm = new cloudwatch.Alarm(
+      this,
+      "Ec2StatusCheckFailedAlarm",
+      {
+        metric: new cloudwatch.Metric({
+          namespace: "AWS/EC2",
+          metricName: "StatusCheckFailed",
+          dimensionsMap: {
+            InstanceId: instance.instanceId,
+          },
+          statistic: "Maximum",
+          period: cdk.Duration.minutes(5),
+        }),
+        threshold: 1,
+        evaluationPeriods: 2,
+        comparisonOperator:
+          cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          "The YASP EC2 origin has failed an EC2 status check.",
+      }
+    );
+
     if (alarmTopic) {
-      appRunner5xxAlarm.addAlarmAction(
-        new cw_actions.SnsAction(alarmTopic)
-      );
-      cloudFront5xxAlarm.addAlarmAction(
-        new cw_actions.SnsAction(alarmTopic)
-      );
+      const snsAction = new cw_actions.SnsAction(alarmTopic);
+      cloudFront5xxAlarm.addAlarmAction(snsAction);
+      ec2StatusCheckAlarm.addAlarmAction(snsAction);
     }
-
-    // -----------------------------------------------------------------------
-    // Stack outputs
-    // -----------------------------------------------------------------------
-
-    new cdk.CfnOutput(this, "EcrRepositoryUri", {
-      value: repo.repositoryUri,
-      description: "ECR repository URI for pushing YASP images.",
-    });
-
-    new cdk.CfnOutput(this, "DeployedImageReference", {
-      value: imageIdentifier,
-      description: "Exact image reference deployed to App Runner.",
-    });
-
-    new cdk.CfnOutput(this, "AppRunnerServiceUrl", {
-      value: cdk.Fn.sub("https://${ServiceUrl}", {
-        ServiceUrl: serviceUrl,
-      }),
-      description:
-        "App Runner service URL (protected by WAF — do not use directly).",
-    });
-
-    new cdk.CfnOutput(this, "AppRunnerServiceArn", {
-      value: service.attrServiceArn,
-      description: "App Runner service ARN (for manual redeployment).",
-    });
 
     new cdk.CfnOutput(this, "CloudFrontUrl", {
       value: cdk.Fn.sub("https://${Domain}", {
@@ -505,9 +510,37 @@ export class YaspStack extends cdk.Stack {
       description: "CloudFront URL — primary entry point for YASP.",
     });
 
-    new cdk.CfnOutput(this, "OriginWafArn", {
-      value: originWaf.attrArn,
-      description: "WAF web ACL ARN protecting the App Runner origin.",
+    new cdk.CfnOutput(this, "Ec2PublicDnsName", {
+      value: instance.instancePublicDnsName,
+      description:
+        "Public DNS name of the EC2 origin. Direct access is intended to be blocked unless the origin secret is present.",
+    });
+
+    new cdk.CfnOutput(this, "Ec2PublicIp", {
+      value: instance.instancePublicIp,
+      description: "Public IP address of the EC2 origin instance.",
+    });
+
+    new cdk.CfnOutput(this, "InstanceId", {
+      value: instance.instanceId,
+      description: "EC2 instance ID for the YASP origin.",
+    });
+
+    new cdk.CfnOutput(this, "SsmStartSessionCommand", {
+      value: cdk.Fn.sub("aws ssm start-session --target ${InstanceId}", {
+        InstanceId: instance.instanceId,
+      }),
+      description: "Command to start an SSM session to the origin instance.",
+    });
+
+    new cdk.CfnOutput(this, "EcrRepositoryUri", {
+      value: repo.repositoryUri,
+      description: "ECR repository URI for pushing YASP images.",
+    });
+
+    new cdk.CfnOutput(this, "DeployedImageReference", {
+      value: imageIdentifier,
+      description: "Exact image reference deployed to the EC2 origin.",
     });
 
     new cdk.CfnOutput(this, "EdgeWafArn", {

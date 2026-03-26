@@ -28,7 +28,8 @@ function ParticipantCard({
         border: participant.isSelf
           ? "2px solid var(--color-primary)"
           : "1px solid var(--color-border)",
-        minWidth: 80,
+        minWidth: 100,
+        maxWidth: 140,
         opacity: participant.connected ? 1 : 0.5,
       }}
     >
@@ -56,10 +57,11 @@ function ParticipantCard({
       </div>
       {/* Name */}
       <span
+        title={participant.name}
         style={{
           fontSize: 13,
           fontWeight: participant.isSelf ? 600 : 400,
-          maxWidth: 80,
+          width: "100%",
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
