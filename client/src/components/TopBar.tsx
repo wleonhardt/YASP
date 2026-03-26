@@ -2,6 +2,7 @@ import type { PublicRoomState } from "@yasp/shared";
 import type { ConnectionStatus } from "../hooks/useSocket";
 import { ConnectionBadge } from "./ConnectionBadge";
 import { RoomStatus } from "./RoomStatus";
+import { ThemeToggle } from "./ThemeToggle";
 
 type Props = {
   state: PublicRoomState;
@@ -44,6 +45,7 @@ export function TopBar({
       <RoomStatus state={state} />
 
       <div className="topbar__actions">
+        <ThemeToggle />
         <ConnectionBadge status={connectionStatus} />
         <button
           className="button button--ghost"

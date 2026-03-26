@@ -4,6 +4,7 @@ import type { DeckType, ParticipantRole } from "@yasp/shared";
 import { DEFAULT_DECKS } from "@yasp/shared";
 import { Banner } from "../components/Banner";
 import { ConnectionBadge } from "../components/ConnectionBadge";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { useRoom } from "../hooks/useRoom";
 import { useSession } from "../hooks/useSession";
 import { useSocket } from "../hooks/useSocket";
@@ -81,6 +82,7 @@ export function LandingPage() {
       <div className="landing-page">
         <div className="landing-page__status">
           <ConnectionBadge status={status} />
+          <ThemeToggle />
         </div>
 
         <header className="landing-page__hero">

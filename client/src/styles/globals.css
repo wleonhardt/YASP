@@ -14,20 +14,22 @@ body,
 
 html {
   color: var(--color-text);
-  background-color: #050a12;
-  background-image:
-    radial-gradient(ellipse 80% 60% at 10% 0%, rgba(79, 150, 255, 0.08), transparent),
-    radial-gradient(ellipse 60% 50% at 90% 100%, rgba(61, 216, 152, 0.05), transparent),
-    linear-gradient(180deg, #080f19 0%, #050a12 100%);
+  background: var(--color-bg-base);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Background gradients on body so the overscroll bounce area
+   inherits --color-bg-base from html instead of showing white. */
 body {
   margin: 0;
   color: var(--color-text);
-  background-color: #050a12;
+  background-color: var(--color-bg-base);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 10% 0%, var(--gradient-accent-1), transparent),
+    radial-gradient(ellipse 60% 50% at 90% 100%, var(--gradient-accent-2), transparent),
+    var(--gradient-body);
   line-height: 1.55;
   font-size: var(--text-body);
   letter-spacing: -0.006em;
@@ -102,6 +104,9 @@ code {
   top: var(--space-4);
   right: var(--space-4);
   z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .landing-page__hero {
@@ -506,7 +511,7 @@ select.input {
   gap: var(--space-2);
   padding: 0.4rem 0.7rem;
   border: 1px solid var(--color-border);
-  background: rgba(8, 12, 20, 0.7);
+  background: var(--color-surface);
   color: var(--color-text-secondary);
   font-size: var(--text-meta);
   font-weight: 500;
@@ -539,6 +544,31 @@ select.input {
 .connection-badge--disconnected .connection-badge__dot {
   background: var(--color-danger);
   box-shadow: 0 0 0 4px rgba(244, 114, 114, 0.12);
+}
+
+/* ─── Theme toggle ───────────────────────────────────────── */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    background var(--duration-fast) ease;
+}
+
+.theme-toggle:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-strong);
 }
 
 /* ─── Banner ──────────────────────────────────────────────── */
@@ -1231,4 +1261,146 @@ select.input {
   .vote-deck__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* ─── Light theme overrides ──────────────────────────────── */
+/* Only override hardcoded rgba() dark backgrounds; anything
+   using var() tokens already adapts via theme.css.           */
+
+[data-theme="light"] .app-panel {
+  background: var(--color-surface-strong);
+}
+
+[data-theme="light"] .action-card--secondary {
+  background: var(--color-surface);
+}
+
+[data-theme="light"] .button--secondary {
+  background: var(--color-surface-strong);
+}
+
+[data-theme="light"] .button--secondary:hover:not(:disabled) {
+  background: var(--color-bg-elevated);
+}
+
+[data-theme="light"] .button--ghost {
+  background: var(--color-surface);
+}
+
+[data-theme="light"] .button--primary {
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-strong) 100%);
+}
+
+[data-theme="light"] .segmented__option--active {
+  background: var(--color-self-surface);
+  box-shadow: inset 0 0 0 1px rgba(43, 125, 233, 0.24);
+}
+
+[data-theme="light"] .segmented__option:hover:not(.segmented__option--active) {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .input:focus-visible {
+  border-color: rgba(43, 125, 233, 0.5);
+  box-shadow: 0 0 0 3px rgba(43, 125, 233, 0.1);
+}
+
+[data-theme="light"] .topbar__room-code {
+  background: var(--color-surface-soft);
+}
+
+[data-theme="light"] .participants-board__summary {
+  background: var(--color-surface-soft);
+}
+
+[data-theme="light"] .participant-card {
+  background: var(--color-surface-strong);
+}
+
+[data-theme="light"] .participant-card--self {
+  background: var(--color-bg-elevated);
+  border-color: rgba(43, 125, 233, 0.2);
+}
+
+[data-theme="light"] .participant-card__vote {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border);
+}
+
+[data-theme="light"] .participant-card__avatar {
+  background: linear-gradient(135deg, rgba(43, 125, 233, 0.12), rgba(26, 171, 107, 0.1));
+}
+
+[data-theme="light"] .presence-row__dot {
+  background: var(--color-surface-strong);
+}
+
+[data-theme="light"] .presence-row__dot--ready {
+  color: #fff;
+  background: rgba(26, 171, 107, 0.92);
+}
+
+[data-theme="light"] .vote-card {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-1);
+}
+
+[data-theme="light"] .vote-card:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-2);
+}
+
+[data-theme="light"] .vote-card--selected {
+  background: var(--color-self-surface);
+  border-color: var(--color-accent);
+  box-shadow:
+    0 0 0 2px var(--color-accent),
+    var(--shadow-2);
+}
+
+[data-theme="light"] .vote-card--selected:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 2px var(--color-accent),
+    var(--shadow-3);
+}
+
+[data-theme="light"] .stat-tile {
+  background: var(--color-surface-soft);
+}
+
+[data-theme="light"] .room-status__progress,
+[data-theme="light"] .participants-board__progress {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .distribution-row__bar {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .ui-chip--neutral {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] :focus-visible {
+  outline-color: var(--color-accent);
+}
+
+[data-theme="light"] .landing-page__hero h1,
+[data-theme="light"] .empty-state h1,
+[data-theme="light"] .session-panel h1 {
+  background: linear-gradient(160deg, var(--color-text) 30%, var(--color-text-muted) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+[data-theme="light"] .landing-page__eyebrow {
+  color: var(--color-accent-strong);
+}
+
+[data-theme="light"] .participant-card__vote--revealed {
+  background: linear-gradient(135deg, rgba(43, 125, 233, 0.08), rgba(26, 171, 107, 0.06));
+  border-color: rgba(43, 125, 233, 0.16);
 }
