@@ -51,24 +51,27 @@ jobs:
           echo "- \`${ECR_IMAGE}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- \`${ECR_LATEST}\`" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Restart YASP on EC2 via SSM
+      - name: Deploy to EC2 via SSM
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
         run: |
           SHORT_SHA="${GITHUB_SHA::8}"
           ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPO}:${SHORT_SHA}"
 
+          # Update the image tag in yasp-run.sh, then restart the systemd service.
+          # This works WITH systemd instead of against it — no race between
+          # docker stop and systemd's automatic restart.
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --parameters "commands=[
               'set -euxo pipefail',
-              'aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}',
-              'docker pull ${ECR_IMAGE}',
-              'docker stop yasp || true',
-              'docker rm yasp || true',
-              'docker run -d --name yasp --restart unless-stopped --publish 127.0.0.1:3001:3001 --env NODE_ENV=production --env PORT=3001 --log-opt max-size=10m --log-opt max-file=3 ${ECR_IMAGE}',
+              'sed -i \"s|^IMAGE_IDENTIFIER=.*|IMAGE_IDENTIFIER=\\\"${ECR_IMAGE}\\\"|\" /usr/local/bin/yasp-run.sh',
+              'echo Updated yasp-run.sh to ${ECR_IMAGE}',
+              'cat /usr/local/bin/yasp-run.sh',
+              'systemctl restart yasp',
               'sleep 5',
+              'systemctl is-active yasp',
               'curl -sf http://127.0.0.1:3001/api/health || { echo HEALTH CHECK FAILED; docker logs yasp --tail 20; exit 1; }'
             ]" \
             --timeout-seconds 300 \
