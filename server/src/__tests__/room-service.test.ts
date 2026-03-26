@@ -253,7 +253,7 @@ describe("RoomService.disconnectParticipant", () => {
 
     // Alice disconnects → Bob becomes moderator
     service.disconnectParticipant(roomId, "s1");
-    expect(service.store.get(roomId)!.moderatorId).toBe("s2");
+    expect(store.get(roomId)!.moderatorId).toBe("s2");
 
     // Alice reconnects → gets moderator back
     const rejoin = service.joinRoom(roomId, "s1", "sock-1b", "Alice", "voter");
@@ -272,11 +272,11 @@ describe("RoomService.disconnectParticipant", () => {
 
     // Alice disconnects → Bob becomes moderator
     service.disconnectParticipant(roomId, "s1");
-    expect(service.store.get(roomId)!.moderatorId).toBe("s2");
+    expect(store.get(roomId)!.moderatorId).toBe("s2");
 
     // Bob manually transfers to Carol (clears previousModeratorId)
     service.transferModerator(roomId, "s2", "s3");
-    expect(service.store.get(roomId)!.moderatorId).toBe("s3");
+    expect(store.get(roomId)!.moderatorId).toBe("s3");
 
     // Alice reconnects → does NOT get moderator back
     const rejoin = service.joinRoom(roomId, "s1", "sock-1b", "Alice", "voter");
@@ -298,7 +298,7 @@ describe("RoomService.disconnectParticipant", () => {
     service.leaveRoom(roomId, "s1");
 
     // Bob stays moderator, previousModeratorId is cleared
-    const room = service.store.get(roomId)!;
+    const room = store.get(roomId)!;
     expect(room.moderatorId).toBe("s2");
     expect(room.previousModeratorId).toBeNull();
   });

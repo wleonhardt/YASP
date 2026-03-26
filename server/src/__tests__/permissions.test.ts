@@ -14,6 +14,7 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     deck: DEFAULT_DECKS.fibonacci,
     settings: { ...DEFAULT_ROOM_SETTINGS },
     moderatorId: "mod-1",
+    previousModeratorId: null,
     participants: new Map(),
     votes: new Map(),
     ...overrides,
