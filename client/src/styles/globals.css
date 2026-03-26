@@ -27,7 +27,7 @@ html {
 body {
   margin: 0;
   color: var(--color-text);
-  background: transparent;
+  background-color: #050a12;
   line-height: 1.55;
   font-size: var(--text-body);
   letter-spacing: -0.006em;
