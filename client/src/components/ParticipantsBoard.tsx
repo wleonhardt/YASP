@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PublicRoomState } from "@yasp/shared";
 import { ParticipantCard } from "./ParticipantCard";
 import { getConnectedVoterCounts, getRevealedVote } from "../lib/room";
@@ -8,9 +8,33 @@ type Props = {
 };
 
 export function ParticipantsBoard({ state }: Props) {
-  const [mobileExpanded, setMobileExpanded] = useState(true);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(max-width: 720px)").matches
+      : false
+  );
+  const [mobileExpanded, setMobileExpanded] = useState(() =>
+    typeof window !== "undefined"
+      ? !window.matchMedia("(max-width: 720px)").matches
+      : true
+  );
   const { voted, total, percent } = getConnectedVoterCounts(state);
-  const compact = state.participants.length > 12;
+  const compact = state.participants.length > 12 || isMobile;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 720px)");
+
+    const syncViewport = () => {
+      const mobile = mediaQuery.matches;
+      setIsMobile(mobile);
+      setMobileExpanded((current) => (mobile ? current : true));
+    };
+
+    syncViewport();
+    mediaQuery.addEventListener("change", syncViewport);
+
+    return () => mediaQuery.removeEventListener("change", syncViewport);
+  }, []);
 
   return (
     <section className="app-panel participants-board">
@@ -55,6 +79,7 @@ export function ParticipantsBoard({ state }: Props) {
           className="button button--ghost participants-board__toggle"
           onClick={() => setMobileExpanded((expanded) => !expanded)}
           type="button"
+          aria-expanded={mobileExpanded}
         >
           {mobileExpanded ? "Hide roster" : `Show roster (${state.participants.length})`}
         </button>
