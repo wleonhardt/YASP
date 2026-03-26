@@ -14,7 +14,8 @@ body,
 
 html {
   color: var(--color-text);
-  background:
+  background-color: #050a12;
+  background-image:
     radial-gradient(ellipse 80% 60% at 10% 0%, rgba(79, 150, 255, 0.08), transparent),
     radial-gradient(ellipse 60% 50% at 90% 100%, rgba(61, 216, 152, 0.05), transparent),
     linear-gradient(180deg, #080f19 0%, #050a12 100%);
