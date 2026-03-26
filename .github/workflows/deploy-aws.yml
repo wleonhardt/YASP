@@ -58,25 +58,46 @@ jobs:
           SHORT_SHA="${GITHUB_SHA::8}"
           ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPO}:${SHORT_SHA}"
 
-          # Update the image tag in yasp-run.sh, then restart the systemd service.
-          # This works WITH systemd instead of against it — no race between
-          # docker stop and systemd's automatic restart.
+          # Build SSM parameters as JSON via jq to avoid all escaping issues.
+          # The deploy script: updates the image tag, restarts systemd, polls health.
+          DEPLOY_SCRIPT=$(cat <<'SCRIPT'
+          set -euxo pipefail
+          IMAGE="__IMAGE__"
+          sed -i "s|^IMAGE_IDENTIFIER=.*|IMAGE_IDENTIFIER=\"${IMAGE}\"|" /usr/local/bin/yasp-run.sh
+          grep IMAGE_IDENTIFIER /usr/local/bin/yasp-run.sh
+          systemctl restart yasp
+          echo "Waiting for container to start..."
+          n=0
+          while [ $n -lt 12 ]; do
+            n=$((n+1))
+            sleep 5
+            if curl -sf http://127.0.0.1:3001/api/health; then
+              echo
+              echo "Health check passed on attempt $n"
+              exit 0
+            fi
+            echo "Attempt $n: not ready"
+          done
+          echo "HEALTH CHECK FAILED after 60s"
+          systemctl status yasp --no-pager 2>&1 || true
+          docker logs yasp --tail 30 2>&1 || true
+          exit 1
+          SCRIPT
+          )
+
+          # Substitute the actual image reference
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__IMAGE__/$ECR_IMAGE}"
+
+          # Build the JSON parameters file
+          jq -n --arg script "$DEPLOY_SCRIPT" '{"commands": [$script]}' > /tmp/ssm-params.json
+
+          echo "SSM parameters:"
+          cat /tmp/ssm-params.json
+
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[
-              'set -euxo pipefail',
-              'sed -i \"s|^IMAGE_IDENTIFIER=.*|IMAGE_IDENTIFIER=\\\"${ECR_IMAGE}\\\"|\" /usr/local/bin/yasp-run.sh',
-              'echo Updated yasp-run.sh to ${ECR_IMAGE}',
-              'grep IMAGE_IDENTIFIER /usr/local/bin/yasp-run.sh',
-              'systemctl restart yasp',
-              'echo Waiting for container to start...',
-              'for i in $(seq 1 12); do if curl -sf http://127.0.0.1:3001/api/health; then echo; echo Health check passed on attempt $i; exit 0; fi; echo Attempt $i: not ready; sleep 5; done',
-              'echo HEALTH CHECK FAILED after 60s',
-              'systemctl status yasp --no-pager || true',
-              'docker logs yasp --tail 30 2>&1 || true',
-              'exit 1'
-            ]" \
+            --parameters file:///tmp/ssm-params.json \
             --timeout-seconds 300 \
             --query 'Command.CommandId' \
             --output text)
