@@ -123,6 +123,16 @@ A CDK stack under [`cdk/`](./cdk/) deploys YASP behind CloudFront on a single EC
 - [ ] Accessibility audit (keyboard nav, screen reader support)
 - [ ] Horizontal scaling with Redis adapter (opt-in)
 
+## The YASP Promise
+
+Scrum poker is one of the most misused ceremonies in software. Teams adopt it hoping to improve estimation, then watch it devolve into anchoring, pressure to converge, velocity tracking as a performance metric, or a rubber stamp for deadlines already set. The tool isn't the problem — it's how it's wielded.
+
+YASP exists to make estimation conversations fast and frictionless, but the tool only works if the intent is right. So:
+
+> *I solemnly swear not to use Scrum Poker to force certainty, measure people, justify deadlines, or replace real conversation. I will use it only to expose uncertainty, surface assumptions, and improve shared team understanding.*
+
+If your estimate sparked a discussion, the round was a success — even if you never reached consensus.
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
