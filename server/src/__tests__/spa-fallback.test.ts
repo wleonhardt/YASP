@@ -54,15 +54,4 @@ describe("SPA fallback (production static serving)", () => {
     expect(res.json()).toEqual({ ok: true });
     await testApp.close();
   });
-
-  it("serves /api/config", async () => {
-    const testApp = await createApp();
-    await testApp.ready();
-    const res = await testApp.inject({ method: "GET", url: "/api/config" });
-    expect(res.statusCode).toBe(200);
-    const body = res.json();
-    expect(body.appName).toBe("YASP");
-    expect(body.defaultSettings).toBeDefined();
-    await testApp.close();
-  });
 });

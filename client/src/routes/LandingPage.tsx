@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { DeckType, ParticipantRole } from "@yasp/shared";
 import { DEFAULT_DECKS } from "@yasp/shared";
@@ -28,7 +28,7 @@ export function LandingPage() {
 
   const connected = status === "connected";
   const canSubmitIdentity = name.trim().length > 0 && connected;
-  const deckOptions = useMemo(() => Object.values(DEFAULT_DECKS), []);
+  const deckOptions = Object.values(DEFAULT_DECKS);
 
   const headlines = [
     "Estimate together in seconds",

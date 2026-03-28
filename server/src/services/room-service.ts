@@ -4,7 +4,6 @@ import type {
   SocketId,
   ParticipantRole,
   VoteValue,
-  Deck,
   RoomSettings,
   AckResult,
   ServerErrorEvent,
@@ -453,20 +452,15 @@ export class RoomService {
     return success({ room });
   }
 
-  /**
-   * Check if all connected voters have voted (for auto-reveal).
-   */
   allConnectedVotersVoted(room: Room): boolean {
+    let hasVoter = false;
     for (const p of room.participants.values()) {
-      if (p.connected && p.role === "voter" && !room.votes.has(p.id)) {
-        return false;
+      if (p.connected && p.role === "voter") {
+        if (!room.votes.has(p.id)) return false;
+        hasVoter = true;
       }
     }
-    // Need at least one connected voter
-    for (const p of room.participants.values()) {
-      if (p.connected && p.role === "voter") return true;
-    }
-    return false;
+    return hasVoter;
   }
 
   private generateUniqueRoomId(): string {

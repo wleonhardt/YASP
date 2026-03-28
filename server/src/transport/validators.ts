@@ -1,4 +1,4 @@
-import type { ServerErrorEvent, ParticipantRole, DeckType, RoomSettings } from "@yasp/shared";
+import type { ServerErrorEvent, DeckType, RoomSettings } from "@yasp/shared";
 import type { DeckInput } from "@yasp/shared";
 
 export type ValidationResult =

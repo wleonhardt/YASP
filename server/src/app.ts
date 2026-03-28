@@ -1,7 +1,6 @@
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyCors from "@fastify/cors";
-import { getPublicConfig } from "./config.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -20,10 +19,6 @@ export async function createApp() {
   // API routes
   app.get("/api/health", async () => {
     return { ok: true };
-  });
-
-  app.get("/api/config", async () => {
-    return getPublicConfig();
   });
 
   // In production, serve static assets from the client build

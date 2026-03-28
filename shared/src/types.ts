@@ -64,14 +64,6 @@ export type PublicRoomState = {
   };
 };
 
-export type PublicConfig = {
-  appName: string;
-  roomTtlMs: number;
-  disconnectedParticipantGraceMs: number;
-  defaultSettings: RoomSettings;
-  defaultDecks: Deck[];
-};
-
 export type ErrorCode =
   | "ROOM_NOT_FOUND"
   | "ROOM_EXPIRED"

@@ -93,8 +93,6 @@ code {
 
 .landing-page {
   width: min(100%, 640px);
-  display: flex;
-  flex-direction: column;
   gap: var(--space-6);
 }
 
@@ -111,8 +109,6 @@ code {
 
 .landing-page__hero {
   text-align: center;
-  display: flex;
-  flex-direction: column;
   gap: var(--space-3);
   align-items: center;
   padding-top: var(--space-5);
@@ -167,8 +163,6 @@ code {
 }
 
 .landing-page__actions {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-4);
 }
 
@@ -208,6 +202,33 @@ code {
   top: 112px;
 }
 
+/* Shared flex-column layout (components that are just vertical stacks) */
+.landing-page,
+.landing-page__hero,
+.landing-page__actions,
+.identity-panel,
+.action-card,
+.empty-state,
+.session-panel,
+.vote-deck,
+.controls-panel,
+.results-panel,
+.participants-board,
+.distribution-list,
+.distribution-row,
+.ui-banner__body,
+.room-status,
+.topbar__room,
+.controls-panel__buttons,
+.controls-panel__transfer-disclosure,
+.results-panel__section-header,
+.field,
+.participant-card,
+.participant-card__copy {
+  display: flex;
+  flex-direction: column;
+}
+
 /* ─── Panel ───────────────────────────────────────────────── */
 
 .app-panel {
@@ -235,8 +256,6 @@ code {
 
 .identity-panel,
 .action-card {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-4);
 }
 
@@ -244,8 +263,6 @@ code {
 .session-panel {
   width: min(100%, 560px);
   text-align: center;
-  display: flex;
-  flex-direction: column;
   gap: var(--space-4);
   align-items: center;
 }
@@ -279,8 +296,6 @@ code {
 /* ─── Fields ──────────────────────────────────────────────── */
 
 .field {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-2);
 }
 
@@ -603,8 +618,6 @@ select.input {
 }
 
 .ui-banner__body {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-1);
 }
 
@@ -635,8 +648,6 @@ select.input {
 }
 
 .topbar__room {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-2);
   min-width: 0;
 }
@@ -694,8 +705,6 @@ select.input {
 /* ─── Room status ─────────────────────────────────────────── */
 
 .room-status {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-2);
   align-items: center;
   text-align: center;
@@ -761,8 +770,6 @@ select.input {
 /* ─── Participants board ──────────────────────────────────── */
 
 .participants-board {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-4);
 }
 
@@ -845,8 +852,6 @@ select.input {
 /* ─── Participant card ────────────────────────────────────── */
 
 .participant-card {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-4);
   border-radius: var(--radius-md);
@@ -890,8 +895,6 @@ select.input {
 
 .participant-card__copy {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
   gap: var(--space-1);
 }
 
@@ -1010,8 +1013,6 @@ select.input {
 /* ─── Vote deck ───────────────────────────────────────────── */
 
 .vote-deck {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-4);
 }
 
@@ -1084,14 +1085,10 @@ select.input {
 /* ─── Controls panel ──────────────────────────────────────── */
 
 .controls-panel {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-4);
 }
 
 .controls-panel__buttons {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-3);
 }
 
@@ -1103,8 +1100,6 @@ select.input {
 }
 
 .controls-panel__transfer-disclosure {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--color-border);
@@ -1133,8 +1128,6 @@ select.input {
 /* ─── Results panel ───────────────────────────────────────── */
 
 .results-panel {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-4);
 }
 
@@ -1179,8 +1172,6 @@ select.input {
 }
 
 .results-panel__section-header {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-1);
 }
 
@@ -1244,14 +1235,10 @@ select.input {
 }
 
 .distribution-list {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-3);
 }
 
 .distribution-row {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3);
   border: 1px solid var(--color-border);
@@ -1588,19 +1575,10 @@ select.input {
 }
 
 @media (max-width: 520px) {
-  .topbar {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-  }
-
   .session-panel__actions,
   .ui-banner {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .topbar__actions {
-    justify-content: flex-end;
   }
 
   .topbar__copy-label--full {
@@ -1791,10 +1769,7 @@ select.input {
   background: rgba(255, 255, 255, 0.5);
 }
 
-[data-theme="light"] .distribution-row__count {
-  background: rgba(0, 0, 0, 0.04);
-}
-
+[data-theme="light"] .distribution-row__count,
 [data-theme="light"] .distribution-row__bar {
   background: rgba(0, 0, 0, 0.04);
 }

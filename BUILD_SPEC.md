@@ -819,19 +819,6 @@ The SPA can use a very small HTTP surface.
 ### API routes
 
 - `GET /api/health`
-- `GET /api/config`
-
-Example config payload:
-
-```ts
-export type PublicConfig = {
-  appName: string;
-  roomTtlMs: number;
-  disconnectedParticipantGraceMs: number;
-  defaultSettings: RoomSettings;
-  defaultDecks: Deck[];
-};
-```
 
 ### App routes
 

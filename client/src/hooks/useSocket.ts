@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getSocket } from "../lib/socket";
 import type { Socket } from "socket.io-client";
 
@@ -33,18 +33,5 @@ export function useSocket() {
     };
   }, []);
 
-  const emit = useCallback(
-    <T>(event: string, data: unknown): Promise<T> => {
-      return new Promise((resolve, reject) => {
-        socketRef.current.emit(event, data, (response: T) => {
-          resolve(response);
-        });
-        // Timeout after 10 seconds
-        setTimeout(() => reject(new Error("Socket timeout")), 10000);
-      });
-    },
-    []
-  );
-
-  return { socket: socketRef.current, status, emit };
+  return { socket: socketRef.current, status };
 }

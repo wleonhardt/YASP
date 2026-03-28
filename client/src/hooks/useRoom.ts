@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import type { Socket } from "socket.io-client";
 import type {
   PublicRoomState,
@@ -11,7 +11,6 @@ import type {
   JoinRoomOutput,
   DeckInput,
 } from "@yasp/shared";
-import type { RoomSettings } from "@yasp/shared";
 
 export function useRoom(socket: Socket, sessionId: string) {
   const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
@@ -40,7 +39,6 @@ export function useRoom(socket: Socket, sessionId: string) {
     };
   }, [socket]);
 
-  /** Surface ack failures into the error banner. */
   function surfaceAckError<T>(result: AckResult<T>): AckResult<T> {
     if (!result.ok) {
       if (result.error.code === "SESSION_REPLACED") {
@@ -51,135 +49,71 @@ export function useRoom(socket: Socket, sessionId: string) {
     return result;
   }
 
-  const createRoom = useCallback(
-    async (displayName: string, role: ParticipantRole, deck?: DeckInput): Promise<AckResult<CreateRoomOutput>> => {
-      return new Promise((resolve) => {
-        socket.emit(
-          "create_room",
-          { sessionId, displayName, requestedRole: role, deck },
-          (res: AckResult<CreateRoomOutput>) => resolve(surfaceAckError(res))
-        );
+  function emitAck<T = undefined>(event: string, payload: unknown): Promise<AckResult<T>> {
+    return new Promise((resolve) => {
+      socket.emit(event, payload, (result: AckResult<T>) => {
+        resolve(surfaceAckError(result));
       });
-    },
-    [socket, sessionId]
-  );
+    });
+  }
 
-  const joinRoom = useCallback(
-    async (roomId: string, displayName: string, role: ParticipantRole): Promise<AckResult<JoinRoomOutput>> => {
-      setSessionReplaced(false);
-      return new Promise((resolve) => {
-        socket.emit(
-          "join_room",
-          { roomId, sessionId, displayName, requestedRole: role },
-          (res: AckResult<JoinRoomOutput>) => resolve(surfaceAckError(res))
-        );
-      });
-    },
-    [socket, sessionId]
-  );
+  async function createRoom(
+    displayName: string,
+    role: ParticipantRole,
+    deck?: DeckInput
+  ): Promise<AckResult<CreateRoomOutput>> {
+    return emitAck<CreateRoomOutput>("create_room", {
+      sessionId,
+      displayName,
+      requestedRole: role,
+      deck,
+    });
+  }
 
-  const leaveRoom = useCallback(
-    async (roomId: string): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit("leave_room", { roomId }, (res: AckResult) => resolve(surfaceAckError(res)));
-      });
-    },
-    [socket]
-  );
+  async function joinRoom(
+    roomId: string,
+    displayName: string,
+    role: ParticipantRole
+  ): Promise<AckResult<JoinRoomOutput>> {
+    setSessionReplaced(false);
+    return emitAck<JoinRoomOutput>("join_room", {
+      roomId,
+      sessionId,
+      displayName,
+      requestedRole: role,
+    });
+  }
 
-  const castVote = useCallback(
-    async (roomId: string, value: string): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit("cast_vote", { roomId, value }, (res: AckResult) => resolve(surfaceAckError(res)));
-      });
-    },
-    [socket]
-  );
+  async function leaveRoom(roomId: string): Promise<AckResult> {
+    return emitAck("leave_room", { roomId });
+  }
 
-  const clearVote = useCallback(
-    async (roomId: string): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit("clear_vote", { roomId }, (res: AckResult) => resolve(surfaceAckError(res)));
-      });
-    },
-    [socket]
-  );
+  async function castVote(roomId: string, value: string): Promise<AckResult> {
+    return emitAck("cast_vote", { roomId, value });
+  }
 
-  const revealVotes = useCallback(
-    async (roomId: string): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit("reveal_votes", { roomId }, (res: AckResult) => resolve(surfaceAckError(res)));
-      });
-    },
-    [socket]
-  );
+  async function clearVote(roomId: string): Promise<AckResult> {
+    return emitAck("clear_vote", { roomId });
+  }
 
-  const resetRound = useCallback(
-    async (roomId: string): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit("reset_round", { roomId }, (res: AckResult) => resolve(surfaceAckError(res)));
-      });
-    },
-    [socket]
-  );
+  async function revealVotes(roomId: string): Promise<AckResult> {
+    return emitAck("reveal_votes", { roomId });
+  }
 
-  const nextRound = useCallback(
-    async (roomId: string): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit("next_round", { roomId }, (res: AckResult) => resolve(surfaceAckError(res)));
-      });
-    },
-    [socket]
-  );
+  async function resetRound(roomId: string): Promise<AckResult> {
+    return emitAck("reset_round", { roomId });
+  }
 
-  const transferModerator = useCallback(
-    async (roomId: string, targetParticipantId: string): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit(
-          "transfer_moderator",
-          { roomId, targetParticipantId },
-          (res: AckResult) => resolve(surfaceAckError(res))
-        );
-      });
-    },
-    [socket]
-  );
+  async function nextRound(roomId: string): Promise<AckResult> {
+    return emitAck("next_round", { roomId });
+  }
 
-  const changeName = useCallback(
-    async (roomId: string, name: string): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit("change_name", { roomId, name }, (res: AckResult) => resolve(surfaceAckError(res)));
-      });
-    },
-    [socket]
-  );
-
-  const changeRole = useCallback(
-    async (roomId: string, role: ParticipantRole): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit("change_role", { roomId, role }, (res: AckResult) => resolve(surfaceAckError(res)));
-      });
-    },
-    [socket]
-  );
-
-  const changeDeck = useCallback(
-    async (roomId: string, deck: DeckInput): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit("change_deck", { roomId, deck }, (res: AckResult) => resolve(surfaceAckError(res)));
-      });
-    },
-    [socket]
-  );
-
-  const updateSettings = useCallback(
-    async (roomId: string, settings: Partial<RoomSettings>): Promise<AckResult> => {
-      return new Promise((resolve) => {
-        socket.emit("update_settings", { roomId, settings }, (res: AckResult) => resolve(surfaceAckError(res)));
-      });
-    },
-    [socket]
-  );
+  async function transferModerator(
+    roomId: string,
+    targetParticipantId: string
+  ): Promise<AckResult> {
+    return emitAck("transfer_moderator", { roomId, targetParticipantId });
+  }
 
   return {
     roomState,
@@ -194,9 +128,5 @@ export function useRoom(socket: Socket, sessionId: string) {
     resetRound,
     nextRound,
     transferModerator,
-    changeName,
-    changeRole,
-    changeDeck,
-    updateSettings,
   };
 }

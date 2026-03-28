@@ -45,6 +45,12 @@ export function RoomPage() {
 
   const navState = location.state as { role?: ParticipantRole } | null;
 
+  function checkRoomUnavailable(result: { ok: false; error: { code: string } }): void {
+    if (result.error.code === "ROOM_NOT_FOUND" || result.error.code === "ROOM_EXPIRED") {
+      setRoomUnavailable(result.error.code as RoomUnavailableReason);
+    }
+  }
+
   const showToast = useCallback((intent: ToastState["intent"], message: string) => {
     if (toastTimeout.current !== null) {
       window.clearTimeout(toastTimeout.current);
@@ -84,14 +90,7 @@ export function RoomPage() {
       const role = self?.role ?? getIntendedRole();
 
       room.joinRoom(roomId, name, role).then((result) => {
-        if (!result.ok) {
-          if (
-            result.error.code === "ROOM_NOT_FOUND" ||
-            result.error.code === "ROOM_EXPIRED"
-          ) {
-            setRoomUnavailable(result.error.code);
-          }
-        }
+        if (!result.ok) checkRoomUnavailable(result);
       });
 
       return;
@@ -105,14 +104,8 @@ export function RoomPage() {
         const role = getIntendedRole();
         room.joinRoom(roomId, name, role).then((result) => {
           if (!result.ok) {
-            if (
-              result.error.code === "ROOM_NOT_FOUND" ||
-              result.error.code === "ROOM_EXPIRED"
-            ) {
-              setRoomUnavailable(result.error.code);
-            } else {
-              setNeedsManualJoin(true);
-            }
+            checkRoomUnavailable(result);
+            if (!result.error.code.startsWith("ROOM_")) setNeedsManualJoin(true);
           }
         });
       } else {
@@ -145,14 +138,9 @@ export function RoomPage() {
   }, [room.roomState]);
 
   useEffect(() => {
-    if (!room.error) {
-      return;
-    }
+    if (!room.error) return;
 
-    if (
-      room.error.code === "ROOM_NOT_FOUND" ||
-      room.error.code === "ROOM_EXPIRED"
-    ) {
+    if (room.error.code === "ROOM_NOT_FOUND" || room.error.code === "ROOM_EXPIRED") {
       setRoomUnavailable(room.error.code);
       return;
     }
@@ -206,12 +194,7 @@ export function RoomPage() {
       return;
     }
 
-    if (
-      result.error.code === "ROOM_NOT_FOUND" ||
-      result.error.code === "ROOM_EXPIRED"
-    ) {
-      setRoomUnavailable(result.error.code);
-    }
+    checkRoomUnavailable(result);
   };
 
   const handleVote = async (value: string) => {

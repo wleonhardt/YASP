@@ -1,4 +1,4 @@
-import type { Room, Participant } from "./types.js";
+import type { Room } from "./types.js";
 import type { PermissionPolicy } from "@yasp/shared";
 
 export function isModerator(room: Room, participantId: string): boolean {
