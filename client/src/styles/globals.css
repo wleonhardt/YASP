@@ -325,12 +325,12 @@ code {
 .input {
   width: 100%;
   border: 1px solid var(--color-border);
-  background: var(--color-surface-soft);
+  background-color: var(--color-surface-soft);
   color: var(--color-text);
   padding: 0.75rem 0.875rem;
   transition:
     border-color var(--duration-fast) ease,
-    background var(--duration-fast) ease,
+    background-color var(--duration-fast) ease,
     box-shadow var(--duration-fast) ease;
 }
 
@@ -340,12 +340,12 @@ code {
 
 .input:hover {
   border-color: var(--color-border-strong);
-  background: var(--color-surface);
+  background-color: var(--color-surface);
 }
 
 .input:focus-visible {
   border-color: rgba(106, 173, 255, 0.5);
-  background: var(--color-surface);
+  background-color: var(--color-surface);
   box-shadow: 0 0 0 3px rgba(106, 173, 255, 0.12);
   outline: none;
 }
@@ -1298,6 +1298,7 @@ select.input {
   box-shadow: var(--shadow-2);
   font-size: var(--text-meta);
   font-weight: 500;
+  text-align: center;
   animation: toast-in 200ms var(--ease-out);
 }
 
