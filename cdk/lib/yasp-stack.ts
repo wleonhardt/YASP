@@ -15,8 +15,7 @@ import { Construct } from "constructs";
 import { buildEc2OriginUserData } from "./ec2-origin-bootstrap";
 
 const ORIGIN_SECRET_HEADER = "x-yasp-origin-secret";
-const CLOUDFRONT_PREFIX_LIST_NAME =
-  "com.amazonaws.global.cloudfront.origin-facing";
+const CLOUDFRONT_PREFIX_LIST_NAME = "com.amazonaws.global.cloudfront.origin-facing";
 const DEFAULT_INSTANCE_TYPE = "t3.micro";
 const CONTAINER_PORT = 3001;
 const ORIGIN_PORT = 80;
@@ -36,22 +35,14 @@ export interface YaspStackProps extends cdk.StackProps {
   certificateArn?: string;
 }
 
-function resolveImageIdentifier(
-  repoUri: string,
-  tag?: string,
-  digest?: string
-): string {
+function resolveImageIdentifier(repoUri: string, tag?: string, digest?: string): string {
   if (tag && digest) {
-    throw new Error(
-      "Provide exactly one of imageTag or imageDigest, not both."
-    );
+    throw new Error("Provide exactly one of imageTag or imageDigest, not both.");
   }
 
   if (digest) {
     if (!/^sha256:[A-Fa-f0-9]{64}$/.test(digest)) {
-      throw new Error(
-        `imageDigest must match sha256:<64 hex chars>. Got: ${digest}`
-      );
+      throw new Error(`imageDigest must match sha256:<64 hex chars>. Got: ${digest}`);
     }
     return `${repoUri}@${digest}`;
   }
@@ -71,9 +62,7 @@ function resolveImageIdentifier(
   );
 }
 
-function lookupCloudFrontPrefixListId(
-  scope: Construct
-): cr.AwsCustomResource {
+function lookupCloudFrontPrefixListId(scope: Construct): cr.AwsCustomResource {
   return new cr.AwsCustomResource(scope, "CloudFrontOriginPrefixListLookup", {
     onCreate: {
       service: "EC2",
@@ -86,9 +75,7 @@ function lookupCloudFrontPrefixListId(
           },
         ],
       },
-      physicalResourceId: cr.PhysicalResourceId.of(
-        `cloudfront-origin-prefix-list-${cdk.Aws.REGION}`
-      ),
+      physicalResourceId: cr.PhysicalResourceId.of(`cloudfront-origin-prefix-list-${cdk.Aws.REGION}`),
     },
     onUpdate: {
       service: "EC2",
@@ -101,9 +88,7 @@ function lookupCloudFrontPrefixListId(
           },
         ],
       },
-      physicalResourceId: cr.PhysicalResourceId.of(
-        `cloudfront-origin-prefix-list-${cdk.Aws.REGION}`
-      ),
+      physicalResourceId: cr.PhysicalResourceId.of(`cloudfront-origin-prefix-list-${cdk.Aws.REGION}`),
     },
     policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
       resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE,
@@ -134,26 +119,18 @@ export class YaspStack extends cdk.Stack {
     let basicAuthPassword: string | undefined;
 
     if (enableBasicAuth) {
-      const basicAuthUsernameParam = new cdk.CfnParameter(
-        this,
-        "BasicAuthUsername",
-        {
-          type: "String",
-          default: "yasp",
-          description: "HTTP Basic Auth username for CloudFront access.",
-        }
-      );
+      const basicAuthUsernameParam = new cdk.CfnParameter(this, "BasicAuthUsername", {
+        type: "String",
+        default: "yasp",
+        description: "HTTP Basic Auth username for CloudFront access.",
+      });
 
-      const basicAuthPasswordParam = new cdk.CfnParameter(
-        this,
-        "BasicAuthPassword",
-        {
-          type: "String",
-          noEcho: true,
-          description: "HTTP Basic Auth password for CloudFront access.",
-          minLength: 8,
-        }
-      );
+      const basicAuthPasswordParam = new cdk.CfnParameter(this, "BasicAuthPassword", {
+        type: "String",
+        noEcho: true,
+        description: "HTTP Basic Auth password for CloudFront access.",
+        minLength: 8,
+      });
 
       basicAuthUsername = basicAuthUsernameParam.valueAsString;
       basicAuthPassword = basicAuthPasswordParam.valueAsString;
@@ -162,12 +139,10 @@ export class YaspStack extends cdk.Stack {
     const originSecretParam = new cdk.CfnParameter(this, "OriginSecret", {
       type: "String",
       noEcho: true,
-      description:
-        "Hex secret header value shared between CloudFront and the EC2 origin.",
+      description: "Hex secret header value shared between CloudFront and the EC2 origin.",
       minLength: 16,
       allowedPattern: "[A-Fa-f0-9]{16,}",
-      constraintDescription:
-        "OriginSecret must be at least 16 hexadecimal characters.",
+      constraintDescription: "OriginSecret must be at least 16 hexadecimal characters.",
     });
 
     const originSecret = originSecretParam.valueAsString;
@@ -186,19 +161,11 @@ export class YaspStack extends cdk.Stack {
         })
       : ecr.Repository.fromRepositoryName(this, "YaspRepo", ecrRepoName);
 
-    const imageIdentifier = resolveImageIdentifier(
-      repo.repositoryUri,
-      imageTag,
-      imageDigest
-    );
+    const imageIdentifier = resolveImageIdentifier(repo.repositoryUri, imageTag, imageDigest);
 
-    const alarmTopic = alarmTopicArn
-      ? sns.Topic.fromTopicArn(this, "AlarmTopic", alarmTopicArn)
-      : undefined;
+    const alarmTopic = alarmTopicArn ? sns.Topic.fromTopicArn(this, "AlarmTopic", alarmTopicArn) : undefined;
 
-    const registryUri = cdk.Fn.sub(
-      "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com"
-    );
+    const registryUri = cdk.Fn.sub("${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com");
 
     const vpc = new ec2.Vpc(this, "YaspVpc", {
       maxAzs: 1,
@@ -212,47 +179,30 @@ export class YaspStack extends cdk.Stack {
       ],
     });
 
-    const originSecurityGroup = new ec2.SecurityGroup(
-      this,
-      "OriginSecurityGroup",
-      {
-        vpc,
-        allowAllOutbound: true,
-        description:
-          "YASP EC2 origin security group. Inbound traffic is limited to CloudFront origin-facing infrastructure.",
-      }
-    );
+    const originSecurityGroup = new ec2.SecurityGroup(this, "OriginSecurityGroup", {
+      vpc,
+      allowAllOutbound: true,
+      description:
+        "YASP EC2 origin security group. Inbound traffic is limited to CloudFront origin-facing infrastructure.",
+    });
 
     const cloudFrontPrefixListLookup = lookupCloudFrontPrefixListId(this);
-    const cloudFrontPrefixListId =
-      cloudFrontPrefixListLookup.getResponseField(
-        "PrefixLists.0.PrefixListId"
-      );
+    const cloudFrontPrefixListId = cloudFrontPrefixListLookup.getResponseField("PrefixLists.0.PrefixListId");
 
-    const allowCloudFrontIngress = new ec2.CfnSecurityGroupIngress(
-      this,
-      "AllowCloudFrontIngress",
-      {
-        groupId: originSecurityGroup.securityGroupId,
-        ipProtocol: "tcp",
-        fromPort: ORIGIN_PORT,
-        toPort: ORIGIN_PORT,
-        sourcePrefixListId: cloudFrontPrefixListId,
-        description:
-          "Allow HTTP origin traffic only from CloudFront origin-facing IP ranges.",
-      }
-    );
+    const allowCloudFrontIngress = new ec2.CfnSecurityGroupIngress(this, "AllowCloudFrontIngress", {
+      groupId: originSecurityGroup.securityGroupId,
+      ipProtocol: "tcp",
+      fromPort: ORIGIN_PORT,
+      toPort: ORIGIN_PORT,
+      sourcePrefixListId: cloudFrontPrefixListId,
+      description: "Allow HTTP origin traffic only from CloudFront origin-facing IP ranges.",
+    });
     allowCloudFrontIngress.node.addDependency(cloudFrontPrefixListLookup);
 
     const instanceRole = new iam.Role(this, "YaspInstanceRole", {
       assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
-      description:
-        "Allows the YASP EC2 origin to pull from ECR and be managed through SSM.",
-      managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          "AmazonSSMManagedInstanceCore"
-        ),
-      ],
+      description: "Allows the YASP EC2 origin to pull from ECR and be managed through SSM.",
+      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedInstanceCore")],
     });
     repo.grantPull(instanceRole);
 
@@ -352,12 +302,8 @@ export class YaspStack extends cdk.Stack {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
-      lifecycleRules: [
-        { expiration: cdk.Duration.days(retainLogBucket ? 90 : 30) },
-      ],
-      removalPolicy: retainLogBucket
-        ? cdk.RemovalPolicy.RETAIN
-        : cdk.RemovalPolicy.DESTROY,
+      lifecycleRules: [{ expiration: cdk.Duration.days(retainLogBucket ? 90 : 30) }],
+      removalPolicy: retainLogBucket ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: !retainLogBucket,
       objectOwnership: s3.ObjectOwnership.OBJECT_WRITER,
     });
@@ -408,11 +354,7 @@ export class YaspStack extends cdk.Stack {
 
     const certificate =
       certificateArn && domainName
-        ? acm.Certificate.fromCertificateArn(
-            this,
-            "DomainCertificate",
-            certificateArn
-          )
+        ? acm.Certificate.fromCertificateArn(this, "DomainCertificate", certificateArn)
         : undefined;
 
     const distribution = new cloudfront.Distribution(this, "YaspCdn", {
@@ -428,12 +370,10 @@ export class YaspStack extends cdk.Stack {
           readTimeout: cdk.Duration.seconds(60),
           keepaliveTimeout: cdk.Duration.seconds(60),
         }),
-        viewerProtocolPolicy:
-          cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-        originRequestPolicy:
-          cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         ...(authFunction
           ? {
               functionAssociations: [
@@ -451,51 +391,40 @@ export class YaspStack extends cdk.Stack {
       logFilePrefix: `${serviceName}-cdn/`,
     });
 
-    const cloudFront5xxAlarm = new cloudwatch.Alarm(
-      this,
-      "CloudFront5xxAlarm",
-      {
-        metric: new cloudwatch.Metric({
-          namespace: "AWS/CloudFront",
-          metricName: "5xxErrorRate",
-          dimensionsMap: {
-            DistributionId: distribution.distributionId,
-            Region: "Global",
-          },
-          statistic: "Average",
-          period: cdk.Duration.minutes(5),
-        }),
-        threshold: 5,
-        evaluationPeriods: 2,
-        comparisonOperator:
-          cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-        alarmDescription: "YASP CloudFront 5xx error rate is elevated.",
-      }
-    );
+    const cloudFront5xxAlarm = new cloudwatch.Alarm(this, "CloudFront5xxAlarm", {
+      metric: new cloudwatch.Metric({
+        namespace: "AWS/CloudFront",
+        metricName: "5xxErrorRate",
+        dimensionsMap: {
+          DistributionId: distribution.distributionId,
+          Region: "Global",
+        },
+        statistic: "Average",
+        period: cdk.Duration.minutes(5),
+      }),
+      threshold: 5,
+      evaluationPeriods: 2,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      alarmDescription: "YASP CloudFront 5xx error rate is elevated.",
+    });
 
-    const ec2StatusCheckAlarm = new cloudwatch.Alarm(
-      this,
-      "Ec2StatusCheckFailedAlarm",
-      {
-        metric: new cloudwatch.Metric({
-          namespace: "AWS/EC2",
-          metricName: "StatusCheckFailed",
-          dimensionsMap: {
-            InstanceId: instance.instanceId,
-          },
-          statistic: "Maximum",
-          period: cdk.Duration.minutes(5),
-        }),
-        threshold: 1,
-        evaluationPeriods: 2,
-        comparisonOperator:
-          cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-        alarmDescription:
-          "The YASP EC2 origin has failed an EC2 status check.",
-      }
-    );
+    const ec2StatusCheckAlarm = new cloudwatch.Alarm(this, "Ec2StatusCheckFailedAlarm", {
+      metric: new cloudwatch.Metric({
+        namespace: "AWS/EC2",
+        metricName: "StatusCheckFailed",
+        dimensionsMap: {
+          InstanceId: instance.instanceId,
+        },
+        statistic: "Maximum",
+        period: cdk.Duration.minutes(5),
+      }),
+      threshold: 1,
+      evaluationPeriods: 2,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      alarmDescription: "The YASP EC2 origin has failed an EC2 status check.",
+    });
 
     if (alarmTopic) {
       const snsAction = new cw_actions.SnsAction(alarmTopic);
@@ -545,8 +474,7 @@ export class YaspStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "EdgeWafArn", {
       value: edgeWaf.attrArn,
-      description:
-        "WAF web ACL ARN protecting the CloudFront distribution.",
+      description: "WAF web ACL ARN protecting the CloudFront distribution.",
     });
 
     new cdk.CfnOutput(this, "AccessLogsBucket", {

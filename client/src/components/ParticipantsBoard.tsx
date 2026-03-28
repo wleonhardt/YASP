@@ -9,14 +9,10 @@ type Props = {
 
 export function ParticipantsBoard({ state }: Props) {
   const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined"
-      ? window.matchMedia("(max-width: 720px)").matches
-      : false
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 720px)").matches : false
   );
   const [mobileExpanded, setMobileExpanded] = useState(() =>
-    typeof window !== "undefined"
-      ? !window.matchMedia("(max-width: 720px)").matches
-      : true
+    typeof window !== "undefined" ? !window.matchMedia("(max-width: 720px)").matches : true
   );
   const { voted, total, percent } = getConnectedVoterCounts(state);
   const compact = state.participants.length > 12 || isMobile;
@@ -44,16 +40,15 @@ export function ParticipantsBoard({ state }: Props) {
           <h2>Participants</h2>
         </div>
         <div className="participants-board__summary">
-          <strong>{voted}/{total}</strong>
+          <strong>
+            {voted}/{total}
+          </strong>
           <span>voted</span>
         </div>
       </div>
 
       <div className="participants-board__progress">
-        <div
-          className="participants-board__progress-fill"
-          style={{ width: `${percent}%` }}
-        />
+        <div className="participants-board__progress-fill" style={{ width: `${percent}%` }} />
       </div>
 
       <div className="participants-board__presence">

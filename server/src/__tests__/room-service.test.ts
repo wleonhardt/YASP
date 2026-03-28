@@ -482,8 +482,12 @@ describe("RoomService.transferModerator", () => {
     const previousModeratorState = serializeRoom(result.data.room, "s1");
     const newModeratorState = serializeRoom(result.data.room, "s2");
 
-    expect(previousModeratorState.participants.find((participant) => participant.id === "s1")?.isModerator).toBe(false);
-    expect(newModeratorState.participants.find((participant) => participant.id === "s2")?.isModerator).toBe(true);
+    expect(
+      previousModeratorState.participants.find((participant) => participant.id === "s1")?.isModerator
+    ).toBe(false);
+    expect(newModeratorState.participants.find((participant) => participant.id === "s2")?.isModerator).toBe(
+      true
+    );
   });
 
   it("rejects transfer from a non-moderator", () => {

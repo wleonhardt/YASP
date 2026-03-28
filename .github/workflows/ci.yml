@@ -41,10 +41,11 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Run lint if available
-        run: |
-          npm run lint --if-present
-          npm run lint --workspaces --if-present
+      - name: Run lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
 
   docker-validation:
     needs: validate
@@ -125,7 +126,7 @@ jobs:
         if: steps.cdk-changes.outputs.changed == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: cdk/package-lock.json
 

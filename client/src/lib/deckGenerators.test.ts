@@ -8,12 +8,7 @@ import {
   type BaseDeckType,
 } from "./deckGenerators";
 
-const BASE_DECK_TYPES: BaseDeckType[] = [
-  "fibonacci",
-  "modified_fibonacci",
-  "tshirt",
-  "powers_of_two",
-];
+const BASE_DECK_TYPES: BaseDeckType[] = ["fibonacci", "modified_fibonacci", "tshirt", "powers_of_two"];
 
 describe("deckGenerators", () => {
   it.each(BASE_DECK_TYPES)("reproduces the default %s deck exactly", (deckType) => {

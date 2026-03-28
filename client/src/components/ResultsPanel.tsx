@@ -131,10 +131,7 @@ function DistributionSection({
               <span className="distribution-row__count">{count}</span>
             </div>
             <div className="distribution-row__bar">
-              <div
-                className="distribution-row__fill"
-                style={{ width: `${(count / highestCount) * 100}%` }}
-              />
+              <div className="distribution-row__fill" style={{ width: `${(count / highestCount) * 100}%` }} />
             </div>
           </div>
         ))}
@@ -156,10 +153,7 @@ function StatTile({
 }) {
   return (
     <div
-      className={[
-        "stat-tile",
-        emphasis === "hero" ? "stat-tile--hero" : "stat-tile--supporting",
-      ]
+      className={["stat-tile", emphasis === "hero" ? "stat-tile--hero" : "stat-tile--supporting"]
         .filter(Boolean)
         .join(" ")}
     >

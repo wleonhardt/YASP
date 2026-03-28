@@ -12,13 +12,7 @@ type Props = {
   disabled?: boolean;
 };
 
-export function TopBar({
-  state,
-  connectionStatus,
-  onLeave,
-  onCopyFeedback,
-  disabled = false,
-}: Props) {
+export function TopBar({ state, connectionStatus, onLeave, onCopyFeedback, disabled = false }: Props) {
   const roomUrl = `${window.location.origin}/r/${state.id}`;
 
   const handleCopy = async () => {

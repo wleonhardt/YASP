@@ -66,8 +66,7 @@ export function createDefaultDeckDraft(baseDeckType: BaseDeckType): DeckDraft {
 
 export function generateFibonacciDeck(draft: DeckDraft): string[] {
   const max = clampToOptions(draft.fibonacciMax, FIBONACCI_MAX_OPTIONS);
-  const cards = FIBONACCI_BASE
-    .filter((value) => value <= max)
+  const cards = FIBONACCI_BASE.filter((value) => value <= max)
     .map(String)
     .filter((card) => draft.includeZero || card !== "0");
 
@@ -76,8 +75,7 @@ export function generateFibonacciDeck(draft: DeckDraft): string[] {
 
 export function generateModifiedFibonacciDeck(draft: DeckDraft): string[] {
   const max = clampToOptions(draft.modifiedMax, MODIFIED_FIBONACCI_MAX_OPTIONS);
-  const cards = MODIFIED_FIBONACCI_BASE
-    .filter((value) => value <= max)
+  const cards = MODIFIED_FIBONACCI_BASE.filter((value) => value <= max)
     .map(String)
     .filter((card) => draft.includeZero || card !== "0")
     .filter((card) => draft.includeHalf || card !== "0.5");
@@ -194,8 +192,7 @@ export function buildDeckPreview(draft: DeckDraft, mode: DeckCustomizeMode): Dec
       const endIndex = TSHIRT_SIZES.indexOf(draft.tshirtMax);
       const from = Math.min(startIndex, endIndex);
       const to = Math.max(startIndex, endIndex);
-      const rangeLabel =
-        from === to ? TSHIRT_SIZES[from] : `${TSHIRT_SIZES[from]}–${TSHIRT_SIZES[to]}`;
+      const rangeLabel = from === to ? TSHIRT_SIZES[from] : `${TSHIRT_SIZES[from]}–${TSHIRT_SIZES[to]}`;
 
       return {
         label: `T-Shirt · ${rangeLabel}`,

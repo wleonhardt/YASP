@@ -105,7 +105,11 @@ export function registerSocketHandlers(
     // afterEffect controls timer/auto-reveal behavior after broadcast.
     function roomAction<I extends { roomId: RoomId } & Record<string, unknown>>(
       event: string,
-      serviceFn: (roomId: RoomId, participantId: string, input: I) => AckResult<{ room: import("../domain/types.js").Room }>,
+      serviceFn: (
+        roomId: RoomId,
+        participantId: string,
+        input: I
+      ) => AckResult<{ room: import("../domain/types.js").Room }>,
       afterEffect: "autoReveal" | "cancelTimer" | "none" = "none"
     ) {
       socket.on(event, (input: I, ack?: (res: AckResult) => void) => {
@@ -113,7 +117,10 @@ export function registerSocketHandlers(
         if (!caller) return;
 
         const result = serviceFn(input.roomId, caller.participantId, input);
-        if (!result.ok) { ack?.(result); return; }
+        if (!result.ok) {
+          ack?.(result);
+          return;
+        }
 
         ack?.({ ok: true, data: undefined });
         if (afterEffect === "cancelTimer") timerService.cancel(input.roomId);
@@ -126,10 +133,22 @@ export function registerSocketHandlers(
 
     socket.on("create_room", (input: CreateRoomInput, ack?: (res: AckResult<CreateRoomOutput>) => void) => {
       const sessionCheck = validateSessionId(input.sessionId);
-      if (!sessionCheck.valid) { ack?.({ ok: false, error: sessionCheck.error }); return; }
+      if (!sessionCheck.valid) {
+        ack?.({ ok: false, error: sessionCheck.error });
+        return;
+      }
 
-      const result = roomService.createRoom(input.sessionId, socket.id, input.displayName, input.requestedRole, input.deck);
-      if (!result.ok) { ack?.(result as AckResult<CreateRoomOutput>); return; }
+      const result = roomService.createRoom(
+        input.sessionId,
+        socket.id,
+        input.displayName,
+        input.requestedRole,
+        input.deck
+      );
+      if (!result.ok) {
+        ack?.(result as AckResult<CreateRoomOutput>);
+        return;
+      }
 
       const { room } = result.data;
       sessionService.bind(socket.id, input.sessionId, room.id);
@@ -142,13 +161,28 @@ export function registerSocketHandlers(
 
     socket.on("join_room", (input: JoinRoomInput, ack?: (res: AckResult<JoinRoomOutput>) => void) => {
       const sessionCheck = validateSessionId(input.sessionId);
-      if (!sessionCheck.valid) { ack?.({ ok: false, error: sessionCheck.error }); return; }
+      if (!sessionCheck.valid) {
+        ack?.({ ok: false, error: sessionCheck.error });
+        return;
+      }
 
       const roomIdCheck = validateRoomId(input.roomId);
-      if (!roomIdCheck.valid) { ack?.({ ok: false, error: roomIdCheck.error }); return; }
+      if (!roomIdCheck.valid) {
+        ack?.({ ok: false, error: roomIdCheck.error });
+        return;
+      }
 
-      const result = roomService.joinRoom(input.roomId, input.sessionId, socket.id, input.displayName, input.requestedRole);
-      if (!result.ok) { ack?.(result as AckResult<JoinRoomOutput>); return; }
+      const result = roomService.joinRoom(
+        input.roomId,
+        input.sessionId,
+        socket.id,
+        input.displayName,
+        input.requestedRole
+      );
+      if (!result.ok) {
+        ack?.(result as AckResult<JoinRoomOutput>);
+        return;
+      }
 
       const { room, replacedSocketId } = result.data;
       if (replacedSocketId && replacedSocketId !== socket.id) {
@@ -172,7 +206,10 @@ export function registerSocketHandlers(
       if (!caller) return;
 
       const result = roomService.leaveRoom(input.roomId, caller.participantId);
-      if (!result.ok) { ack?.(result); return; }
+      if (!result.ok) {
+        ack?.(result);
+        return;
+      }
 
       sessionService.unbind(socket.id);
       socket.leave(input.roomId);
@@ -182,16 +219,36 @@ export function registerSocketHandlers(
       evaluateAutoReveal(result.data.room, roomService, timerService, io, store);
     });
 
-    roomAction("cast_vote", (roomId, pid, i: CastVoteInput) => roomService.castVote(roomId, pid, i.value), "autoReveal");
+    roomAction(
+      "cast_vote",
+      (roomId, pid, i: CastVoteInput) => roomService.castVote(roomId, pid, i.value),
+      "autoReveal"
+    );
     roomAction("clear_vote", (roomId, pid) => roomService.clearVote(roomId, pid), "autoReveal");
     roomAction("reveal_votes", (roomId, pid) => roomService.revealVotes(roomId, pid), "cancelTimer");
     roomAction("reset_round", (roomId, pid) => roomService.resetRound(roomId, pid), "cancelTimer");
     roomAction("next_round", (roomId, pid) => roomService.nextRound(roomId, pid), "cancelTimer");
-    roomAction("transfer_moderator", (roomId, pid, i: TransferModeratorInput) => roomService.transferModerator(roomId, pid, i.targetParticipantId));
-    roomAction("change_name", (roomId, pid, i: ChangeNameInput) => roomService.changeName(roomId, pid, i.name));
-    roomAction("change_role", (roomId, pid, i: ChangeRoleInput) => roomService.changeRole(roomId, pid, i.role), "autoReveal");
-    roomAction("change_deck", (roomId, pid, i: ChangeDeckInput) => roomService.changeDeck(roomId, pid, i.deck), "cancelTimer");
-    roomAction("update_settings", (roomId, pid, i: UpdateSettingsInput) => roomService.updateSettings(roomId, pid, i.settings), "autoReveal");
+    roomAction("transfer_moderator", (roomId, pid, i: TransferModeratorInput) =>
+      roomService.transferModerator(roomId, pid, i.targetParticipantId)
+    );
+    roomAction("change_name", (roomId, pid, i: ChangeNameInput) =>
+      roomService.changeName(roomId, pid, i.name)
+    );
+    roomAction(
+      "change_role",
+      (roomId, pid, i: ChangeRoleInput) => roomService.changeRole(roomId, pid, i.role),
+      "autoReveal"
+    );
+    roomAction(
+      "change_deck",
+      (roomId, pid, i: ChangeDeckInput) => roomService.changeDeck(roomId, pid, i.deck),
+      "cancelTimer"
+    );
+    roomAction(
+      "update_settings",
+      (roomId, pid, i: UpdateSettingsInput) => roomService.updateSettings(roomId, pid, i.settings),
+      "autoReveal"
+    );
 
     socket.on("ping", (input: PingInput, ack?: (res: PongEvent) => void) => {
       ack?.({ clientTs: input.clientTs, serverTs: now() });

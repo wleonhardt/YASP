@@ -31,18 +31,12 @@ export function LandingPage() {
 
   const [name, setName] = useState(storedName || "");
   const [role, setRole] = useState<ParticipantRole>("voter");
-  const [deckType, setDeckType] = useState<Exclude<DeckType, "custom">>(
-    "fibonacci"
-  );
+  const [deckType, setDeckType] = useState<Exclude<DeckType, "custom">>("fibonacci");
   const [deckOverride, setDeckOverride] = useState<DeckInput | null>(null);
   const [showDeckModal, setShowDeckModal] = useState(false);
-  const [deckModalBaseType, setDeckModalBaseType] = useState<
-    Exclude<DeckType, "custom">
-  >(deckType);
+  const [deckModalBaseType, setDeckModalBaseType] = useState<Exclude<DeckType, "custom">>(deckType);
   const [joinRoomId, setJoinRoomId] = useState("");
-  const [pendingAction, setPendingAction] = useState<"create" | "join" | null>(
-    null
-  );
+  const [pendingAction, setPendingAction] = useState<"create" | "join" | null>(null);
 
   const connected = status === "connected";
   const canSubmitIdentity = name.trim().length > 0 && connected;
@@ -108,9 +102,7 @@ export function LandingPage() {
         <header className="landing-page__hero">
           <div className="landing-page__eyebrow">Yet Another Scrum Poker</div>
           <h1>{headline}</h1>
-          <p>
-            Create a room and estimate together. No sign-up required.
-          </p>
+          <p>Create a room and estimate together. No sign-up required.</p>
         </header>
 
         {!connected && (
@@ -158,10 +150,7 @@ export function LandingPage() {
                 <button
                   key={value}
                   type="button"
-                  className={[
-                    "segmented__option",
-                    role === value ? "segmented__option--active" : "",
-                  ]
+                  className={["segmented__option", role === value ? "segmented__option--active" : ""]
                     .filter(Boolean)
                     .join(" ")}
                   onClick={() => setRole(value)}
@@ -210,9 +199,7 @@ export function LandingPage() {
                   </option>
                 ))}
               </select>
-              {deckOverrideSummary && (
-                <p className="landing-page__deck-note">{deckOverrideSummary}</p>
-              )}
+              {deckOverrideSummary && <p className="landing-page__deck-note">{deckOverrideSummary}</p>}
             </div>
 
             <button

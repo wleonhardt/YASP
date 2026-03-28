@@ -54,20 +54,14 @@ describe("LandingPage create room deck behavior", () => {
     const user = userEvent.setup();
     render(<LandingPage />);
 
-    await user.type(
-      screen.getByPlaceholderText("Enter your display name"),
-      "Taylor"
-    );
+    await user.type(screen.getByPlaceholderText("Enter your display name"), "Taylor");
 
     const createForm = screen.getByRole("button", { name: "Create room" }).closest("form");
     if (!createForm) {
       throw new Error("Create room form not found");
     }
 
-    await user.selectOptions(
-      within(createForm).getByRole("combobox"),
-      "powers_of_two"
-    );
+    await user.selectOptions(within(createForm).getByRole("combobox"), "powers_of_two");
     await user.click(within(createForm).getByRole("button", { name: "Create room" }));
 
     await waitFor(() => {
@@ -81,19 +75,14 @@ describe("LandingPage create room deck behavior", () => {
     const user = userEvent.setup();
     render(<LandingPage />);
 
-    await user.type(
-      screen.getByPlaceholderText("Enter your display name"),
-      "Taylor"
-    );
+    await user.type(screen.getByPlaceholderText("Enter your display name"), "Taylor");
 
     await user.click(screen.getByRole("button", { name: "Customize" }));
     await user.click(screen.getByRole("tab", { name: "Custom" }));
     await user.type(screen.getByLabelText("Cards"), "1 2 3 5");
     await user.click(screen.getByRole("button", { name: "Use deck" }));
 
-    expect(
-      screen.getByText("Using custom deck: Custom · ? on · ☕ off")
-    ).toBeInTheDocument();
+    expect(screen.getByText("Using custom deck: Custom · ? on · ☕ off")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Create room" }));
 
@@ -110,10 +99,7 @@ describe("LandingPage create room deck behavior", () => {
     const user = userEvent.setup();
     render(<LandingPage />);
 
-    await user.type(
-      screen.getByPlaceholderText("Enter your display name"),
-      "Taylor"
-    );
+    await user.type(screen.getByPlaceholderText("Enter your display name"), "Taylor");
 
     await user.click(screen.getByRole("button", { name: "Customize" }));
     await user.click(screen.getByRole("tab", { name: "Custom" }));
@@ -127,10 +113,7 @@ describe("LandingPage create room deck behavior", () => {
       throw new Error("Create room form not found");
     }
 
-    await user.selectOptions(
-      within(createForm).getByRole("combobox"),
-      "modified_fibonacci"
-    );
+    await user.selectOptions(within(createForm).getByRole("combobox"), "modified_fibonacci");
 
     expect(screen.queryByText(/Using custom deck:/)).not.toBeInTheDocument();
 

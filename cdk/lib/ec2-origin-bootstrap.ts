@@ -11,9 +11,7 @@ export interface Ec2OriginBootstrapProps {
   readonly containerName: string;
 }
 
-export function buildEc2OriginUserData(
-  props: Ec2OriginBootstrapProps
-): ec2.UserData {
+export function buildEc2OriginUserData(props: Ec2OriginBootstrapProps): ec2.UserData {
   const userData = ec2.UserData.forLinux();
 
   userData.addCommands(
@@ -69,21 +67,21 @@ export function buildEc2OriginUserData(
     `IMAGE_IDENTIFIER="${props.imageIdentifier}"`,
     `CONTAINER_NAME="${props.containerName}"`,
     "",
-    "aws ecr get-login-password --region \"$AWS_REGION\" | \\",
-    "  docker login --username AWS --password-stdin \"$REGISTRY_URI\"",
+    'aws ecr get-login-password --region "$AWS_REGION" | \\',
+    '  docker login --username AWS --password-stdin "$REGISTRY_URI"',
     "",
-    "docker pull \"$IMAGE_IDENTIFIER\"",
-    "docker rm -f \"$CONTAINER_NAME\" >/dev/null 2>&1 || true",
+    'docker pull "$IMAGE_IDENTIFIER"',
+    'docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true',
     "",
     "exec docker run \\",
     "  --rm \\",
-    "  --name \"$CONTAINER_NAME\" \\",
+    '  --name "$CONTAINER_NAME" \\',
     `  --publish 127.0.0.1:${props.containerPort}:${props.containerPort} \\`,
     "  --env NODE_ENV=production \\",
     `  --env PORT=${props.containerPort} \\`,
     "  --log-opt max-size=10m \\",
     "  --log-opt max-file=3 \\",
-    "  \"$IMAGE_IDENTIFIER\"",
+    '  "$IMAGE_IDENTIFIER"',
     "EOF",
     "chmod 755 /usr/local/bin/yasp-run.sh",
     "cat <<'EOF' >/etc/systemd/system/yasp.service",

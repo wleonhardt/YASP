@@ -13,12 +13,7 @@ import { useRoom } from "../hooks/useRoom";
 import { useSession } from "../hooks/useSession";
 import { useSocket } from "../hooks/useSocket";
 import { getSelf } from "../lib/room";
-import {
-  getStoredDisplayName,
-  getStoredRole,
-  setStoredDisplayName,
-  setStoredRole,
-} from "../lib/storage";
+import { getStoredDisplayName, getStoredRole, setStoredDisplayName, setStoredRole } from "../lib/storage";
 
 type RoomUnavailableReason = "ROOM_NOT_FOUND" | "ROOM_EXPIRED";
 
@@ -47,8 +42,7 @@ export function RoomPage() {
   const [joinName, setJoinName] = useState(storedName || "");
   const [joinRole, setJoinRole] = useState<ParticipantRole>("voter");
   const [toast, setToast] = useState<ToastState | null>(null);
-  const [roomUnavailable, setRoomUnavailable] =
-    useState<RoomUnavailableReason | null>(null);
+  const [roomUnavailable, setRoomUnavailable] = useState<RoomUnavailableReason | null>(null);
 
   const autoJoinAttempted = useRef(false);
   const lastConnectedStatus = useRef(status);
@@ -157,10 +151,7 @@ export function RoomPage() {
       return;
     }
 
-    if (
-      error.code === "SESSION_REPLACED" ||
-      error.code === "NOT_ALLOWED"
-    ) {
+    if (error.code === "SESSION_REPLACED" || error.code === "NOT_ALLOWED") {
       return;
     }
 
@@ -190,36 +181,42 @@ export function RoomPage() {
     window.setTimeout(() => navigate("/"), 120);
   };
 
-  const handleManualJoin = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleManualJoin = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
 
-    if (!roomId || !joinName.trim() || status !== "connected") {
-      return;
-    }
+      if (!roomId || !joinName.trim() || status !== "connected") {
+        return;
+      }
 
-    setStoredDisplayName(joinName.trim());
-    setStoredRole(joinRole);
-    const result = await joinRoom(roomId, joinName.trim(), joinRole);
+      setStoredDisplayName(joinName.trim());
+      setStoredRole(joinRole);
+      const result = await joinRoom(roomId, joinName.trim(), joinRole);
 
-    if (result.ok) {
-      setNeedsManualJoin(false);
-      return;
-    }
+      if (result.ok) {
+        setNeedsManualJoin(false);
+        return;
+      }
 
-    checkRoomUnavailable(result);
-  }, [checkRoomUnavailable, joinName, joinRole, joinRoom, roomId, status]);
+      checkRoomUnavailable(result);
+    },
+    [checkRoomUnavailable, joinName, joinRole, joinRoom, roomId, status]
+  );
 
-  const handleVote = useCallback(async (value: string) => {
-    if (!roomId || actionsDisabled) {
-      return;
-    }
+  const handleVote = useCallback(
+    async (value: string) => {
+      if (!roomId || actionsDisabled) {
+        return;
+      }
 
-    setSelectedCard(value);
-    const result = await castVote(roomId, value);
-    if (!result.ok) {
-      setSelectedCard(null);
-    }
-  }, [actionsDisabled, castVote, roomId]);
+      setSelectedCard(value);
+      const result = await castVote(roomId, value);
+      if (!result.ok) {
+        setSelectedCard(null);
+      }
+    },
+    [actionsDisabled, castVote, roomId]
+  );
 
   const handleClearVote = useCallback(async () => {
     if (!roomId || actionsDisabled) {
@@ -260,14 +257,17 @@ export function RoomPage() {
     }
   }, [actionsDisabled, nextRound, roomId]);
 
-  const handleTransferModerator = useCallback(async (targetParticipantId: string) => {
-    if (!roomId || actionsDisabled) {
-      return false;
-    }
+  const handleTransferModerator = useCallback(
+    async (targetParticipantId: string) => {
+      if (!roomId || actionsDisabled) {
+        return false;
+      }
 
-    const result = await transferModerator(roomId, targetParticipantId);
-    return result.ok;
-  }, [actionsDisabled, roomId, transferModerator]);
+      const result = await transferModerator(roomId, targetParticipantId);
+      return result.ok;
+    },
+    [actionsDisabled, roomId, transferModerator]
+  );
 
   const handleLeave = useCallback(async () => {
     if (!roomId || actionsDisabled) {
@@ -337,11 +337,7 @@ export function RoomPage() {
               ? "The room expired after inactivity."
               : "It may have been closed or restarted."}
           </p>
-          <button
-            className="button button--primary"
-            type="button"
-            onClick={() => navigate("/")}
-          >
+          <button className="button button--primary" type="button" onClick={() => navigate("/")}>
             Create a new room
           </button>
         </section>
@@ -359,9 +355,7 @@ export function RoomPage() {
         <form className="app-panel empty-state empty-state--form" onSubmit={handleManualJoin}>
           <div className="section-label">Manual join</div>
           <h1>Join room {roomId}</h1>
-          <p>
-            We couldn’t auto-join this tab. Enter your name and role to continue.
-          </p>
+          <p>We couldn’t auto-join this tab. Enter your name and role to continue.</p>
 
           <label className="field">
             <span className="field__label">Display name</span>
@@ -382,10 +376,7 @@ export function RoomPage() {
                 <button
                   key={roleOption}
                   type="button"
-                  className={[
-                    "segmented__option",
-                    joinRole === roleOption ? "segmented__option--active" : "",
-                  ]
+                  className={["segmented__option", joinRole === roleOption ? "segmented__option--active" : ""]
                     .filter(Boolean)
                     .join(" ")}
                   onClick={() => setJoinRole(roleOption)}
@@ -467,11 +458,7 @@ export function RoomPage() {
             >
               Take control in this tab
             </button>
-            <button
-              className="button button--ghost"
-              type="button"
-              onClick={handleCloseTab}
-            >
+            <button className="button button--ghost" type="button" onClick={handleCloseTab}>
               Close this tab
             </button>
           </div>

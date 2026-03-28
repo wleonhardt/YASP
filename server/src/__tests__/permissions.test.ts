@@ -94,18 +94,40 @@ describe("permissions", () => {
 
   describe("setting-based permissions", () => {
     it("canChangeName follows allowNameChange", () => {
-      expect(permissions.canChangeName(makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowNameChange: true } }))).toBe(true);
-      expect(permissions.canChangeName(makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowNameChange: false } }))).toBe(false);
+      expect(
+        permissions.canChangeName(makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowNameChange: true } }))
+      ).toBe(true);
+      expect(
+        permissions.canChangeName(
+          makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowNameChange: false } })
+        )
+      ).toBe(false);
     });
 
     it("canChangeRole follows allowSelfRoleSwitch", () => {
-      expect(permissions.canChangeRole(makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowSelfRoleSwitch: true } }))).toBe(true);
-      expect(permissions.canChangeRole(makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowSelfRoleSwitch: false } }))).toBe(false);
+      expect(
+        permissions.canChangeRole(
+          makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowSelfRoleSwitch: true } })
+        )
+      ).toBe(true);
+      expect(
+        permissions.canChangeRole(
+          makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowSelfRoleSwitch: false } })
+        )
+      ).toBe(false);
     });
 
     it("canBeSpectator follows allowSpectators", () => {
-      expect(permissions.canBeSpectator(makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowSpectators: true } }))).toBe(true);
-      expect(permissions.canBeSpectator(makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowSpectators: false } }))).toBe(false);
+      expect(
+        permissions.canBeSpectator(
+          makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowSpectators: true } })
+        )
+      ).toBe(true);
+      expect(
+        permissions.canBeSpectator(
+          makeRoom({ settings: { ...DEFAULT_ROOM_SETTINGS, allowSpectators: false } })
+        )
+      ).toBe(false);
     });
   });
 });

@@ -1,16 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Socket } from "socket.io-client";
-import type {
-  PublicRoomState,
-  AckResult,
-  ServerErrorEvent,
-  ParticipantRole,
-} from "@yasp/shared";
-import type {
-  CreateRoomOutput,
-  JoinRoomOutput,
-  DeckInput,
-} from "@yasp/shared";
+import type { PublicRoomState, AckResult, ServerErrorEvent, ParticipantRole } from "@yasp/shared";
+import type { CreateRoomOutput, JoinRoomOutput, DeckInput } from "@yasp/shared";
 
 export function useRoom(socket: Socket, sessionId: string) {
   const [roomState, setRoomState] = useState<PublicRoomState | null>(null);
@@ -39,7 +30,7 @@ export function useRoom(socket: Socket, sessionId: string) {
     };
   }, [socket]);
 
-  const surfaceAckError = useCallback(<T,>(result: AckResult<T>): AckResult<T> => {
+  const surfaceAckError = useCallback(<T>(result: AckResult<T>): AckResult<T> => {
     if (!result.ok) {
       if (result.error.code === "SESSION_REPLACED") {
         setSessionReplaced(true);
@@ -49,74 +40,98 @@ export function useRoom(socket: Socket, sessionId: string) {
     return result;
   }, []);
 
-  const emitAck = useCallback(<T = undefined,>(
-    event: string,
-    payload: unknown
-  ): Promise<AckResult<T>> => {
-    return new Promise((resolve) => {
-      socket.emit(event, payload, (result: AckResult<T>) => {
-        resolve(surfaceAckError(result));
+  const emitAck = useCallback(
+    <T = undefined>(event: string, payload: unknown): Promise<AckResult<T>> => {
+      return new Promise((resolve) => {
+        socket.emit(event, payload, (result: AckResult<T>) => {
+          resolve(surfaceAckError(result));
+        });
       });
-    });
-  }, [socket, surfaceAckError]);
+    },
+    [socket, surfaceAckError]
+  );
 
-  const createRoom = useCallback(async (
-    displayName: string,
-    role: ParticipantRole,
-    deck?: DeckInput
-  ): Promise<AckResult<CreateRoomOutput>> => {
-    return emitAck<CreateRoomOutput>("create_room", {
-      sessionId,
-      displayName,
-      requestedRole: role,
-      deck,
-    });
-  }, [emitAck, sessionId]);
+  const createRoom = useCallback(
+    async (
+      displayName: string,
+      role: ParticipantRole,
+      deck?: DeckInput
+    ): Promise<AckResult<CreateRoomOutput>> => {
+      return emitAck<CreateRoomOutput>("create_room", {
+        sessionId,
+        displayName,
+        requestedRole: role,
+        deck,
+      });
+    },
+    [emitAck, sessionId]
+  );
 
-  const joinRoom = useCallback(async (
-    roomId: string,
-    displayName: string,
-    role: ParticipantRole
-  ): Promise<AckResult<JoinRoomOutput>> => {
-    setSessionReplaced(false);
-    return emitAck<JoinRoomOutput>("join_room", {
-      roomId,
-      sessionId,
-      displayName,
-      requestedRole: role,
-    });
-  }, [emitAck, sessionId]);
+  const joinRoom = useCallback(
+    async (
+      roomId: string,
+      displayName: string,
+      role: ParticipantRole
+    ): Promise<AckResult<JoinRoomOutput>> => {
+      setSessionReplaced(false);
+      return emitAck<JoinRoomOutput>("join_room", {
+        roomId,
+        sessionId,
+        displayName,
+        requestedRole: role,
+      });
+    },
+    [emitAck, sessionId]
+  );
 
-  const leaveRoom = useCallback(async (roomId: string): Promise<AckResult> => {
-    return emitAck("leave_room", { roomId });
-  }, [emitAck]);
+  const leaveRoom = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("leave_room", { roomId });
+    },
+    [emitAck]
+  );
 
-  const castVote = useCallback(async (roomId: string, value: string): Promise<AckResult> => {
-    return emitAck("cast_vote", { roomId, value });
-  }, [emitAck]);
+  const castVote = useCallback(
+    async (roomId: string, value: string): Promise<AckResult> => {
+      return emitAck("cast_vote", { roomId, value });
+    },
+    [emitAck]
+  );
 
-  const clearVote = useCallback(async (roomId: string): Promise<AckResult> => {
-    return emitAck("clear_vote", { roomId });
-  }, [emitAck]);
+  const clearVote = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("clear_vote", { roomId });
+    },
+    [emitAck]
+  );
 
-  const revealVotes = useCallback(async (roomId: string): Promise<AckResult> => {
-    return emitAck("reveal_votes", { roomId });
-  }, [emitAck]);
+  const revealVotes = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("reveal_votes", { roomId });
+    },
+    [emitAck]
+  );
 
-  const resetRound = useCallback(async (roomId: string): Promise<AckResult> => {
-    return emitAck("reset_round", { roomId });
-  }, [emitAck]);
+  const resetRound = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("reset_round", { roomId });
+    },
+    [emitAck]
+  );
 
-  const nextRound = useCallback(async (roomId: string): Promise<AckResult> => {
-    return emitAck("next_round", { roomId });
-  }, [emitAck]);
+  const nextRound = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("next_round", { roomId });
+    },
+    [emitAck]
+  );
 
-  const transferModerator = useCallback(async (
-    roomId: string,
-    targetParticipantId: string
-  ): Promise<AckResult> => {
-    return emitAck("transfer_moderator", { roomId, targetParticipantId });
-  }, [emitAck]);
+  const transferModerator = useCallback(
+    async (roomId: string, targetParticipantId: string): Promise<AckResult> => {
+      return emitAck("transfer_moderator", { roomId, targetParticipantId });
+    },
+    [emitAck]
+  );
 
   return {
     roomState,

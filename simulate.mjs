@@ -93,7 +93,11 @@ async function main() {
   await sleep(DELAY);
 
   // Bob, Carol, Dave join
-  for (const [socket, role] of [[bob, "voter"], [carol, "voter"], [dave, "spectator"]]) {
+  for (const [socket, role] of [
+    [bob, "voter"],
+    [carol, "voter"],
+    [dave, "spectator"],
+  ]) {
     const name = socket.displayName;
     console.log(`\n▸ ${name} joins as ${role}...`);
     const joinRes = await emit(socket, "join_room", {
@@ -134,7 +138,9 @@ async function main() {
   // Dave tries to vote (spectator — should fail)
   console.log("\n▸ Dave (spectator) tries to vote 8...");
   const daveVote = await emit(dave, "cast_vote", { roomId, value: "8" });
-  console.log(`  Result: ${daveVote.ok ? "OK" : `REJECTED — ${daveVote.error.code}: ${daveVote.error.message}`}`);
+  console.log(
+    `  Result: ${daveVote.ok ? "OK" : `REJECTED — ${daveVote.error.code}: ${daveVote.error.message}`}`
+  );
   await sleep(DELAY);
 
   // Alice reveals
@@ -261,7 +267,9 @@ async function main() {
   // Bob tries to reveal (not moderator, policy is moderator_only)
   console.log("\n▸ Bob tries to reveal (not moderator)...");
   const bobReveal = await emit(bob, "reveal_votes", { roomId });
-  console.log(`  Result: ${bobReveal.ok ? "OK" : `REJECTED — ${bobReveal.error.code}: ${bobReveal.error.message}`}`);
+  console.log(
+    `  Result: ${bobReveal.ok ? "OK" : `REJECTED — ${bobReveal.error.code}: ${bobReveal.error.message}`}`
+  );
   await sleep(DELAY);
 
   // Alice reveals

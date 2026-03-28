@@ -9,12 +9,7 @@ type Props = {
   actions?: ReactNode;
 };
 
-export function Banner({
-  tone = "info",
-  title,
-  children,
-  actions,
-}: Props) {
+export function Banner({ tone = "info", title, children, actions }: Props) {
   return (
     <div className={`ui-banner ui-banner--${tone}`} role="status">
       <div className="ui-banner__body">

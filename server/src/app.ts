@@ -33,11 +33,7 @@ export async function createApp() {
     // Do NOT rewrite asset paths (/assets/), API paths (/api/), or socket.io paths.
     app.setNotFoundHandler(async (request, reply) => {
       const url = request.url;
-      if (
-        url.startsWith("/api/") ||
-        url.startsWith("/socket.io/") ||
-        url.startsWith("/assets/")
-      ) {
+      if (url.startsWith("/api/") || url.startsWith("/socket.io/") || url.startsWith("/assets/")) {
         return reply.code(404).send({ error: "Not found" });
       }
       return reply.sendFile("index.html");

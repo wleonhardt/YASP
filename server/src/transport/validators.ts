@@ -1,9 +1,7 @@
 import type { ServerErrorEvent, DeckType, RoomSettings } from "@yasp/shared";
 import type { DeckInput } from "@yasp/shared";
 
-export type ValidationResult =
-  | { valid: true }
-  | { valid: false; error: ServerErrorEvent };
+export type ValidationResult = { valid: true } | { valid: false; error: ServerErrorEvent };
 
 export function validateName(name: unknown): ValidationResult {
   if (typeof name !== "string") {
@@ -50,10 +48,16 @@ export function validateDeckInput(input: unknown): ValidationResult {
       return { valid: false, error: { code: "INVALID_DECK", message: "Custom deck must have a label" } };
     }
     if (!Array.isArray(deck.cards) || deck.cards.length === 0) {
-      return { valid: false, error: { code: "INVALID_DECK", message: "Custom deck must have at least one card" } };
+      return {
+        valid: false,
+        error: { code: "INVALID_DECK", message: "Custom deck must have at least one card" },
+      };
     }
     if (deck.cards.length > 30) {
-      return { valid: false, error: { code: "INVALID_DECK", message: "Custom deck can have at most 30 cards" } };
+      return {
+        valid: false,
+        error: { code: "INVALID_DECK", message: "Custom deck can have at most 30 cards" },
+      };
     }
     const normalized: string[] = [];
     for (const card of deck.cards) {
@@ -65,7 +69,10 @@ export function validateDeckInput(input: unknown): ValidationResult {
         return { valid: false, error: { code: "INVALID_DECK", message: "Card labels cannot be empty" } };
       }
       if (norm.length > 12) {
-        return { valid: false, error: { code: "INVALID_DECK", message: "Card labels must be at most 12 characters" } };
+        return {
+          valid: false,
+          error: { code: "INVALID_DECK", message: "Card labels must be at most 12 characters" },
+        };
       }
       if (normalized.includes(norm)) {
         return { valid: false, error: { code: "INVALID_DECK", message: `Duplicate card label: "${norm}"` } };
@@ -119,7 +126,10 @@ export function validateSettingsUpdate(settings: unknown): ValidationResult {
   }
   const s = settings as Partial<RoomSettings>;
   const boolKeys: (keyof RoomSettings)[] = [
-    "allowSpectators", "allowNameChange", "allowSelfRoleSwitch", "autoReveal",
+    "allowSpectators",
+    "allowNameChange",
+    "allowSelfRoleSwitch",
+    "autoReveal",
   ];
   for (const key of boolKeys) {
     if (key in s && typeof s[key] !== "boolean") {
@@ -129,12 +139,18 @@ export function validateSettingsUpdate(settings: unknown): ValidationResult {
   const policyKeys: (keyof RoomSettings)[] = ["revealPolicy", "resetPolicy", "deckChangePolicy"];
   for (const key of policyKeys) {
     if (key in s && s[key] !== "moderator_only" && s[key] !== "anyone") {
-      return { valid: false, error: { code: "INTERNAL_ERROR", message: `${key} must be 'moderator_only' or 'anyone'` } };
+      return {
+        valid: false,
+        error: { code: "INTERNAL_ERROR", message: `${key} must be 'moderator_only' or 'anyone'` },
+      };
     }
   }
   if ("autoRevealDelayMs" in s) {
     if (typeof s.autoRevealDelayMs !== "number" || s.autoRevealDelayMs < 0) {
-      return { valid: false, error: { code: "INTERNAL_ERROR", message: "autoRevealDelayMs must be a non-negative number" } };
+      return {
+        valid: false,
+        error: { code: "INTERNAL_ERROR", message: "autoRevealDelayMs must be a non-negative number" },
+      };
     }
   }
   return { valid: true };

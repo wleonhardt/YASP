@@ -53,12 +53,7 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
                   onVote(card);
                 }
               }}
-              className={[
-                "vote-card",
-                isSelected ? "vote-card--selected" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
+              className={["vote-card", isSelected ? "vote-card--selected" : ""].filter(Boolean).join(" ")}
               aria-pressed={isSelected}
             >
               <span className="vote-card__value">{card}</span>
@@ -68,7 +63,9 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
       </div>
 
       {isVoter && !state.revealed && (
-        <div className="vote-deck__shortcut">Shortcuts: number keys to vote when applicable, Esc to clear</div>
+        <div className="vote-deck__shortcut">
+          Shortcuts: number keys to vote when applicable, Esc to clear
+        </div>
       )}
     </section>
   );

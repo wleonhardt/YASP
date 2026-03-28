@@ -42,12 +42,7 @@ function arraysEqual(a: string[], b: string[]) {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
-export function DeckCustomizeModal({
-  open,
-  baseDeckType,
-  onClose,
-  onApply,
-}: Props) {
+export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Props) {
   const [activeTab, setActiveTab] = useState<DeckTab>("simple");
   const [draft, setDraft] = useState<DeckDraft>(() => createDefaultDeckDraft(baseDeckType));
   const modalRef = useRef<HTMLDivElement | null>(null);
@@ -86,9 +81,9 @@ export function DeckCustomizeModal({
         return;
       }
 
-      const focusable = Array.from(
-        modalRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
-      ).filter((element) => !element.hasAttribute("disabled"));
+      const focusable = Array.from(modalRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+        (element) => !element.hasAttribute("disabled")
+      );
 
       if (focusable.length === 0) {
         return;
@@ -314,20 +309,12 @@ export function DeckCustomizeModal({
         </div>
 
         <div className="deck-modal__footer">
-          <button
-            className="deck-modal__text-button"
-            type="button"
-            onClick={handleReset}
-          >
+          <button className="deck-modal__text-button" type="button" onClick={handleReset}>
             Reset to defaults
           </button>
 
           <div className="deck-modal__footer-actions">
-            <button
-              className="button button--secondary"
-              type="button"
-              onClick={onClose}
-            >
+            <button className="button button--secondary" type="button" onClick={onClose}>
               Cancel
             </button>
             <button
@@ -341,9 +328,7 @@ export function DeckCustomizeModal({
           </div>
         </div>
 
-        <p className="deck-modal__footer-note">
-          Will create a Custom deck for this room.
-        </p>
+        <p className="deck-modal__footer-note">Will create a Custom deck for this room.</p>
       </div>
     </div>
   );
@@ -392,9 +377,7 @@ function SimpleDeckControls({
             <select
               className="input"
               value={draft.tshirtMin}
-              onChange={(event) =>
-                onChange({ tshirtMin: event.target.value as TShirtSize })
-              }
+              onChange={(event) => onChange({ tshirtMin: event.target.value as TShirtSize })}
             >
               {TSHIRT_SIZES.map((size) => (
                 <option key={size} value={size}>
@@ -409,9 +392,7 @@ function SimpleDeckControls({
             <select
               className="input"
               value={draft.tshirtMax}
-              onChange={(event) =>
-                onChange({ tshirtMax: event.target.value as TShirtSize })
-              }
+              onChange={(event) => onChange({ tshirtMax: event.target.value as TShirtSize })}
             >
               {TSHIRT_SIZES.map((size) => (
                 <option key={size} value={size}>
@@ -461,10 +442,7 @@ function OptionSlider({
 
       <div className="deck-modal__slider-labels" aria-hidden="true">
         {options.map((option) => (
-          <span
-            key={option}
-            className={option === value ? "deck-modal__slider-label--active" : ""}
-          >
+          <span key={option} className={option === value ? "deck-modal__slider-label--active" : ""}>
             {option}
           </span>
         ))}
@@ -488,10 +466,7 @@ function ToggleField({
 }) {
   return (
     <label
-      className={[
-        "deck-modal__toggle",
-        disabled ? "deck-modal__toggle--disabled" : "",
-      ]
+      className={["deck-modal__toggle", disabled ? "deck-modal__toggle--disabled" : ""]
         .filter(Boolean)
         .join(" ")}
     >

@@ -40,7 +40,10 @@ describe("serializeRoom", () => {
     const p1 = makeParticipant({ id: "p1", sessionId: "s1" });
     const p2 = makeParticipant({ id: "p2", sessionId: "s2", name: "Bob", joinedAt: 2000 });
     const room = makeRoom({
-      participants: new Map([["p1", p1], ["p2", p2]]),
+      participants: new Map([
+        ["p1", p1],
+        ["p2", p2],
+      ]),
     });
 
     const state = serializeRoom(room, "s1");
@@ -94,7 +97,11 @@ describe("serializeRoom", () => {
     const p2 = makeParticipant({ id: "p2", sessionId: "s2", name: "Alice", joinedAt: 1000 });
     const p3 = makeParticipant({ id: "p3", sessionId: "s3", name: "Bob", joinedAt: 500 });
     const room = makeRoom({
-      participants: new Map([["p1", p1], ["p2", p2], ["p3", p3]]),
+      participants: new Map([
+        ["p1", p1],
+        ["p2", p2],
+        ["p3", p3],
+      ]),
     });
 
     const state = serializeRoom(room, "s1");
@@ -106,7 +113,10 @@ describe("serializeRoom", () => {
     const p2 = makeParticipant({ id: "p2", sessionId: "s2", name: "Bob", joinedAt: 2000 });
     const room = makeRoom({
       moderatorId: "p1",
-      participants: new Map([["p1", p1], ["p2", p2]]),
+      participants: new Map([
+        ["p1", p1],
+        ["p2", p2],
+      ]),
     });
 
     const state = serializeRoom(room, "s2");

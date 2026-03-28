@@ -8,22 +8,9 @@ type Props = {
   compact?: boolean;
 };
 
-export function ParticipantCard({
-  participant,
-  revealed,
-  vote,
-  compact = false,
-}: Props) {
-  const statusTone = !participant.connected
-    ? "danger"
-    : participant.hasVoted
-      ? "success"
-      : "neutral";
-  const statusLabel = !participant.connected
-    ? "Offline"
-    : participant.hasVoted
-      ? "Voted"
-      : "Not voted";
+export function ParticipantCard({ participant, revealed, vote, compact = false }: Props) {
+  const statusTone = !participant.connected ? "danger" : participant.hasVoted ? "success" : "neutral";
+  const statusLabel = !participant.connected ? "Offline" : participant.hasVoted ? "Voted" : "Not voted";
 
   return (
     <article
@@ -38,9 +25,7 @@ export function ParticipantCard({
     >
       <div className="participant-card__head">
         <div className="participant-card__identity">
-          <div className="participant-card__avatar">
-            {getParticipantInitials(participant.name)}
-          </div>
+          <div className="participant-card__avatar">{getParticipantInitials(participant.name)}</div>
           <div className="participant-card__copy">
             <div className="participant-card__name-row">
               <span className="participant-card__name">{participant.name}</span>
@@ -70,7 +55,7 @@ export function ParticipantCard({
           .filter(Boolean)
           .join(" ")}
       >
-        {revealed ? vote ?? "—" : participant.hasVoted ? "Ready" : "…"}
+        {revealed ? (vote ?? "—") : participant.hasVoted ? "Ready" : "…"}
       </div>
     </article>
   );

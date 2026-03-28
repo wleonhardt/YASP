@@ -25,10 +25,7 @@ export function getConnectedVoterCounts(state: PublicRoomState) {
   return {
     total: connectedVoters.length,
     voted: votedVoters.length,
-    percent:
-      connectedVoters.length === 0
-        ? 0
-        : (votedVoters.length / connectedVoters.length) * 100,
+    percent: connectedVoters.length === 0 ? 0 : (votedVoters.length / connectedVoters.length) * 100,
   };
 }
 
@@ -59,11 +56,7 @@ export function getProgressText(state: PublicRoomState): string {
 }
 
 export function getParticipantInitials(name: string): string {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2);
+  const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
 
   if (parts.length === 0) {
     return "?";

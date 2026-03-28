@@ -166,10 +166,7 @@ export class RoomService {
     return success({ room, participantId, replacedSocketId });
   }
 
-  leaveRoom(
-    roomId: RoomId,
-    participantId: string
-  ): AckResult<{ room: Room }> {
+  leaveRoom(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
 
@@ -200,10 +197,7 @@ export class RoomService {
     return success({ room });
   }
 
-  disconnectParticipant(
-    roomId: RoomId,
-    participantId: string
-  ): AckResult<{ room: Room }> {
+  disconnectParticipant(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
 
@@ -239,11 +233,7 @@ export class RoomService {
     return success({ room });
   }
 
-  castVote(
-    roomId: RoomId,
-    participantId: string,
-    value: VoteValue
-  ): AckResult<{ room: Room }> {
+  castVote(roomId: RoomId, participantId: string, value: VoteValue): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
 
@@ -261,10 +251,7 @@ export class RoomService {
     return success({ room });
   }
 
-  clearVote(
-    roomId: RoomId,
-    participantId: string
-  ): AckResult<{ room: Room }> {
+  clearVote(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
 
@@ -277,10 +264,7 @@ export class RoomService {
     return success({ room });
   }
 
-  revealVotes(
-    roomId: RoomId,
-    participantId: string
-  ): AckResult<{ room: Room }> {
+  revealVotes(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
     if (room.revealed) return fail({ code: "ALREADY_REVEALED", message: "Already revealed" });
@@ -293,10 +277,7 @@ export class RoomService {
     return success({ room });
   }
 
-  resetRound(
-    roomId: RoomId,
-    participantId: string
-  ): AckResult<{ room: Room }> {
+  resetRound(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
     if (!permissions.canReset(room, participantId)) {
@@ -309,10 +290,7 @@ export class RoomService {
     return success({ room });
   }
 
-  nextRound(
-    roomId: RoomId,
-    participantId: string
-  ): AckResult<{ room: Room }> {
+  nextRound(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
     if (!permissions.canNextRound(room, participantId)) {
@@ -354,11 +332,7 @@ export class RoomService {
     return success({ room });
   }
 
-  changeName(
-    roomId: RoomId,
-    participantId: string,
-    name: string
-  ): AckResult<{ room: Room }> {
+  changeName(roomId: RoomId, participantId: string, name: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
     if (!permissions.canChangeName(room)) {
@@ -376,11 +350,7 @@ export class RoomService {
     return success({ room });
   }
 
-  changeRole(
-    roomId: RoomId,
-    participantId: string,
-    role: ParticipantRole
-  ): AckResult<{ room: Room }> {
+  changeRole(roomId: RoomId, participantId: string, role: ParticipantRole): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
     if (!permissions.canChangeRole(room)) {
@@ -408,11 +378,7 @@ export class RoomService {
     return success({ room });
   }
 
-  changeDeck(
-    roomId: RoomId,
-    participantId: string,
-    deckInput: DeckInput
-  ): AckResult<{ room: Room }> {
+  changeDeck(roomId: RoomId, participantId: string, deckInput: DeckInput): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
     if (!permissions.canChangeDeck(room, participantId)) {

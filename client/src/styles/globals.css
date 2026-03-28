@@ -28,8 +28,7 @@ body {
   background-color: var(--color-bg-base);
   background-image:
     radial-gradient(ellipse 80% 60% at 10% 0%, var(--gradient-accent-1), transparent),
-    radial-gradient(ellipse 60% 50% at 90% 100%, var(--gradient-accent-2), transparent),
-    var(--gradient-body);
+    radial-gradient(ellipse 60% 50% at 90% 100%, var(--gradient-accent-2), transparent), var(--gradient-body);
   line-height: 1.55;
   font-size: var(--text-body);
   letter-spacing: -0.006em;
@@ -586,12 +585,7 @@ code {
 .app-panel {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(14, 22, 36, 0.92) 0%,
-      rgba(10, 16, 26, 0.88) 100%
-    );
+  background: linear-gradient(180deg, rgba(14, 22, 36, 0.92) 0%, rgba(10, 16, 26, 0.88) 100%);
   backdrop-filter: blur(16px);
 }
 
@@ -721,12 +715,7 @@ select.input {
 
 .action-card--secondary {
   border-color: transparent;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(10, 16, 28, 0.72) 0%,
-      rgba(8, 12, 22, 0.68) 100%
-    );
+  background: linear-gradient(180deg, rgba(10, 16, 28, 0.72) 0%, rgba(8, 12, 22, 0.68) 100%);
   box-shadow: none;
 }
 
@@ -1169,7 +1158,9 @@ select.input {
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   background: rgba(10, 16, 26, 0.84);
-  transition: background var(--duration-fast) ease, border-color var(--duration-fast) ease;
+  transition:
+    background var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
 }
 
 .presence-row__dot--online {
@@ -1223,12 +1214,7 @@ select.input {
 
 .participant-card--self {
   border-color: rgba(106, 173, 255, 0.28);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(16, 26, 40, 0.94) 0%,
-      rgba(10, 16, 26, 0.92) 100%
-    );
+  background: linear-gradient(180deg, rgba(16, 26, 40, 0.94) 0%, rgba(10, 16, 26, 0.92) 100%);
 }
 
 .participant-card--compact {
@@ -1380,12 +1366,7 @@ select.input {
   place-items: center;
   border-radius: var(--radius-md);
   border: 1px solid rgba(106, 173, 255, 0.1);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(14, 22, 38, 0.94) 0%,
-      rgba(8, 12, 20, 0.94) 100%
-    );
+  background: linear-gradient(180deg, rgba(14, 22, 38, 0.94) 0%, rgba(8, 12, 20, 0.94) 100%);
   box-shadow: inset 0 -10px 24px rgba(0, 0, 0, 0.14);
   cursor: pointer;
   transition:

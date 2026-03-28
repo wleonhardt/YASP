@@ -5,11 +5,7 @@ export function isModerator(room: Room, participantId: string): boolean {
   return room.moderatorId === participantId;
 }
 
-export function checkPolicy(
-  room: Room,
-  participantId: string,
-  policy: PermissionPolicy
-): boolean {
+export function checkPolicy(room: Room, participantId: string, policy: PermissionPolicy): boolean {
   if (policy === "anyone") return true;
   return isModerator(room, participantId);
 }

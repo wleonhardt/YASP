@@ -1,10 +1,4 @@
-import type {
-  SessionId,
-  PublicRoomState,
-  PublicParticipant,
-  VoteValue,
-  ParticipantId,
-} from "@yasp/shared";
+import type { SessionId, PublicRoomState, PublicParticipant, VoteValue, ParticipantId } from "@yasp/shared";
 import type { Room } from "../domain/types.js";
 import { computeStats } from "../domain/stats.js";
 

@@ -19,8 +19,9 @@ env:
 
 jobs:
   docker:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Check out repo
@@ -52,4 +53,3 @@ jobs:
           tags: |
             ${{ env.DOCKERHUB_IMAGE }}:${{ steps.vars.outputs.short_sha }}
             ${{ env.DOCKERHUB_IMAGE }}:main
-            ${{ env.DOCKERHUB_IMAGE }}:latest

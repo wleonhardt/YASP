@@ -3,12 +3,7 @@ export type ParticipantId = string;
 export type SessionId = string;
 export type SocketId = string;
 export type VoteValue = string;
-export type DeckType =
-  | "fibonacci"
-  | "modified_fibonacci"
-  | "tshirt"
-  | "powers_of_two"
-  | "custom";
+export type DeckType = "fibonacci" | "modified_fibonacci" | "tshirt" | "powers_of_two" | "custom";
 export type ParticipantRole = "voter" | "spectator";
 export type PermissionPolicy = "moderator_only" | "anyone";
 

@@ -27,7 +27,7 @@ describe("SPA fallback (production static serving)", () => {
     const res = await app.inject({ method: "GET", url: "/r/ABCDEF" });
     expect(res.statusCode).toBe(200);
     expect(res.headers["content-type"]).toContain("text/html");
-    expect(res.body).toContain("<div id=\"root\">");
+    expect(res.body).toContain('<div id="root">');
   });
 
   it.skipIf(!hasClientDist)("returns 404 JSON for /api/nonexistent", async () => {

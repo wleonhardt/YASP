@@ -20,22 +20,15 @@ export function ModeratorControls({
   disabled = false,
 }: Props) {
   const isModerator = isMeModerator(state);
-  const revealAllowed =
-    !disabled && (state.settings.revealPolicy === "anyone" || isModerator);
-  const resetAllowed =
-    !disabled && (state.settings.resetPolicy === "anyone" || isModerator);
+  const revealAllowed = !disabled && (state.settings.revealPolicy === "anyone" || isModerator);
+  const resetAllowed = !disabled && (state.settings.resetPolicy === "anyone" || isModerator);
   const transferCandidates = useMemo(
-    () =>
-      state.participants.filter(
-        (participant) => participant.id !== state.me.participantId
-      ),
+    () => state.participants.filter((participant) => participant.id !== state.me.participantId),
     [state.me.participantId, state.participants]
   );
   const [transferOpen, setTransferOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const [targetParticipantId, setTargetParticipantId] = useState(
-    transferCandidates[0]?.id ?? ""
-  );
+  const [targetParticipantId, setTargetParticipantId] = useState(transferCandidates[0]?.id ?? "");
   const transferPanelId = useId();
   const transferSelectRef = useRef<HTMLSelectElement | null>(null);
 
@@ -85,9 +78,7 @@ export function ModeratorControls({
   };
 
   const handleTransfer = async () => {
-    const target = transferCandidates.find(
-      (participant) => participant.id === targetParticipantId
-    );
+    const target = transferCandidates.find((participant) => participant.id === targetParticipantId);
     if (!target) {
       return;
     }
@@ -180,10 +171,8 @@ export function ModeratorControls({
                 <div className="section-label">Confirm transfer</div>
                 <p className="controls-panel__hint">
                   Transfer moderator controls to{" "}
-                  <strong>
-                    {transferCandidates.find((p) => p.id === targetParticipantId)?.name}
-                  </strong>
-                  ? You will lose host privileges.
+                  <strong>{transferCandidates.find((p) => p.id === targetParticipantId)?.name}</strong>? You
+                  will lose host privileges.
                 </p>
                 <div className="controls-panel__transfer-actions">
                   <button
@@ -206,70 +195,68 @@ export function ModeratorControls({
               </div>
             ) : (
               <>
-              <div>
-                <div className="section-label">Transfer host</div>
-                <p className="controls-panel__hint">
-                  Choose the participant who should become the new moderator.
-                </p>
-              </div>
-              <div className="controls-panel__transfer-row">
-                <label className="field controls-panel__transfer-field">
-                  <span className="field__label">New moderator</span>
-                  <select
-                    ref={transferSelectRef}
-                    className="input"
-                    value={targetParticipantId}
-                    onChange={(event) => setTargetParticipantId(event.target.value)}
-                    disabled={disabled}
-                  >
-                    {transferCandidates.map((participant) => (
-                      <option key={participant.id} value={participant.id}>
-                        {participant.name}
-                        {participant.connected ? "" : " (offline)"}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <div className="controls-panel__transfer-actions">
-                  <button
-                    className="button button--secondary"
-                    type="button"
-                    onClick={() => void handleTransfer()}
-                    disabled={disabled || !targetParticipantId}
-                  >
-                    Transfer
-                  </button>
-                  <button
-                    className="button button--ghost"
-                    type="button"
-                    onClick={closeTransfer}
-                    disabled={disabled}
-                  >
-                    Cancel
-                  </button>
+                <div>
+                  <div className="section-label">Transfer host</div>
+                  <p className="controls-panel__hint">
+                    Choose the participant who should become the new moderator.
+                  </p>
                 </div>
-              </div>
+                <div className="controls-panel__transfer-row">
+                  <label className="field controls-panel__transfer-field">
+                    <span className="field__label">New moderator</span>
+                    <select
+                      ref={transferSelectRef}
+                      className="input"
+                      value={targetParticipantId}
+                      onChange={(event) => setTargetParticipantId(event.target.value)}
+                      disabled={disabled}
+                    >
+                      {transferCandidates.map((participant) => (
+                        <option key={participant.id} value={participant.id}>
+                          {participant.name}
+                          {participant.connected ? "" : " (offline)"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <div className="controls-panel__transfer-actions">
+                    <button
+                      className="button button--secondary"
+                      type="button"
+                      onClick={() => void handleTransfer()}
+                      disabled={disabled || !targetParticipantId}
+                    >
+                      Transfer
+                    </button>
+                    <button
+                      className="button button--ghost"
+                      type="button"
+                      onClick={closeTransfer}
+                      disabled={disabled}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </>
             )
           ) : (
             <>
-            <div>
-              <div className="section-label">Transfer host</div>
-              <p className="controls-panel__hint">
-                Add another participant before transferring host.
-              </p>
-            </div>
-            <div className="controls-panel__transfer-actions">
-              <button
-                className="button button--ghost"
-                type="button"
-                onClick={closeTransfer}
-                disabled={disabled}
-              >
-                Close
-              </button>
-            </div>
+              <div>
+                <div className="section-label">Transfer host</div>
+                <p className="controls-panel__hint">Add another participant before transferring host.</p>
+              </div>
+              <div className="controls-panel__transfer-actions">
+                <button
+                  className="button button--ghost"
+                  type="button"
+                  onClick={closeTransfer}
+                  disabled={disabled}
+                >
+                  Close
+                </button>
+              </div>
             </>
           )}
         </div>

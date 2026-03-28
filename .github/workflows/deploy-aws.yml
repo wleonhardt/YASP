@@ -22,8 +22,9 @@ env:
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment: production
 
     env:
@@ -48,18 +49,18 @@ jobs:
           SHORT_SHA="${HEAD_SHA::8}"
           DOCKERHUB_IMAGE="${DOCKERHUB_IMAGE}:${SHORT_SHA}"
           ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPO}:${SHORT_SHA}"
-          ECR_LATEST="${ECR_REGISTRY}/${ECR_REPO}:main"
+          ECR_MAIN="${ECR_REGISTRY}/${ECR_REPO}:main"
 
           docker pull "${DOCKERHUB_IMAGE}"
           docker tag "${DOCKERHUB_IMAGE}" "${ECR_IMAGE}"
-          docker tag "${DOCKERHUB_IMAGE}" "${ECR_LATEST}"
+          docker tag "${DOCKERHUB_IMAGE}" "${ECR_MAIN}"
           docker push "${ECR_IMAGE}"
-          docker push "${ECR_LATEST}"
+          docker push "${ECR_MAIN}"
 
           echo "image=${ECR_IMAGE}" >> "$GITHUB_OUTPUT"
           echo "### Pushed to ECR" >> "$GITHUB_STEP_SUMMARY"
           echo "- \`${ECR_IMAGE}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- \`${ECR_LATEST}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`${ECR_MAIN}\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Deploy to EC2 via SSM
         env:

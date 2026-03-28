@@ -80,7 +80,7 @@ describe("computeStats", () => {
     const stats = computeStats(votes);
     expect(stats.totalVotes).toBe(3);
     expect(stats.numericAverage).toBe(5);
-    expect(stats.distribution).toEqual({ "5": 1, "?": 1, "coffee": 1 });
+    expect(stats.distribution).toEqual({ "5": 1, "?": 1, coffee: 1 });
   });
 
   it("handles all non-numeric", () => {
