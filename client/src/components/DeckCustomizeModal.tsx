@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { DeckType } from "@yasp/shared";
 import type { DeckInput } from "@yasp/shared";
+import { DeckToken } from "./DeckToken";
 import {
   buildDeckInput,
   buildDeckPreview,
@@ -13,6 +15,7 @@ import {
   type DeckCustomizeMode,
   type TShirtSize,
 } from "../lib/deckGenerators";
+import { COFFEE_CARD_TOKEN } from "../lib/deckTokens";
 
 type Props = {
   open: boolean;
@@ -224,7 +227,11 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
                 />
 
                 <ToggleField
-                  label='Include "☕"'
+                  label={
+                    <>
+                      Include <DeckToken token={COFFEE_CARD_TOKEN} coffeeText="Coffee break" />
+                    </>
+                  }
                   description="Add a coffee-break card near the end."
                   checked={draft.includeCoffee}
                   onChange={(checked) => updateDraft({ includeCoffee: checked })}
@@ -279,7 +286,11 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
                 />
 
                 <ToggleField
-                  label='Include "☕"'
+                  label={
+                    <>
+                      Include <DeckToken token={COFFEE_CARD_TOKEN} coffeeText="Coffee break" />
+                    </>
+                  }
                   description="Add a coffee-break card near the end."
                   checked={draft.includeCoffee}
                   onChange={(checked) => updateDraft({ includeCoffee: checked })}
@@ -458,7 +469,7 @@ function ToggleField({
   disabled = false,
   onChange,
 }: {
-  label: string;
+  label: ReactNode;
   description: string;
   checked: boolean;
   disabled?: boolean;
@@ -493,7 +504,7 @@ function DeckPreviewChips({ cards }: { cards: string[] }) {
     <div className="deck-chip-row">
       {cards.map((card, index) => (
         <span key={`${card}-${index}`} className="deck-chip">
-          {card}
+          <DeckToken token={card} />
         </span>
       ))}
     </div>

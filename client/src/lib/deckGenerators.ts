@@ -1,5 +1,6 @@
 import type { DeckType } from "@yasp/shared";
 import type { DeckInput } from "@yasp/shared";
+import { COFFEE_CARD_TOKEN, QUESTION_MARK_TOKEN } from "./deckTokens";
 
 export type BaseDeckType = Exclude<DeckType, "custom">;
 export type DeckCustomizeMode = "preset" | "custom";
@@ -38,12 +39,12 @@ function clampToOptions<T extends readonly number[]>(value: number, options: T):
 }
 
 function appendSpecialCards(cards: string[], includeCoffee: boolean, includeQuestionMark: boolean) {
-  const withoutSpecials = cards.filter((card) => card !== "☕" && card !== "?");
+  const withoutSpecials = cards.filter((card) => card !== COFFEE_CARD_TOKEN && card !== QUESTION_MARK_TOKEN);
   if (includeCoffee) {
-    withoutSpecials.push("☕");
+    withoutSpecials.push(COFFEE_CARD_TOKEN);
   }
   if (includeQuestionMark) {
-    withoutSpecials.push("?");
+    withoutSpecials.push(QUESTION_MARK_TOKEN);
   }
   return withoutSpecials;
 }
@@ -122,7 +123,7 @@ export function parseCustomDeck(text: string): { cards: string[]; errors: string
 
   const seen = new Set<string>();
   const duplicateLabels = new Set<string>();
-  const cards = rawTokens.filter((token) => token !== "?" && token !== "☕");
+  const cards = rawTokens.filter((token) => token !== QUESTION_MARK_TOKEN && token !== COFFEE_CARD_TOKEN);
 
   for (const token of cards) {
     if (token.length > 12) {

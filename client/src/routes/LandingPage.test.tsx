@@ -82,7 +82,9 @@ describe("LandingPage create room deck behavior", () => {
     await user.type(screen.getByLabelText("Cards"), "1 2 3 5");
     await user.click(screen.getByRole("button", { name: "Use deck" }));
 
-    expect(screen.getByText("Using custom deck: Custom · ? on · ☕ off")).toBeInTheDocument();
+    expect(
+      screen.getByText((_, node) => node?.textContent === "Using custom deck: Custom · ? on · Coffee off")
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Create room" }));
 

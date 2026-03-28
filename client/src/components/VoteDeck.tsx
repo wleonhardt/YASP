@@ -1,4 +1,6 @@
 import type { PublicRoomState } from "@yasp/shared";
+import { DeckToken } from "./DeckToken";
+import { COFFEE_CARD_TOKEN, getDeckTokenAriaLabel } from "../lib/deckTokens";
 import { getSelf } from "../lib/room";
 
 type Props = {
@@ -13,13 +15,16 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
   const self = getSelf(state);
   const isVoter = self?.role === "voter";
   const canVote = isVoter && !state.revealed && !disabled;
-  const voteLabel = selectedCard
-    ? state.revealed
-      ? `Your vote: ${selectedCard}`
-      : `Your vote: ${selectedCard}`
-    : isVoter
-      ? "Choose a card"
-      : "Spectators can’t vote";
+  const voteLabel = selectedCard ? (
+    <>
+      <span>Your vote: </span>
+      <DeckToken token={selectedCard} />
+    </>
+  ) : isVoter ? (
+    "Choose a card"
+  ) : (
+    "Spectators can’t vote"
+  );
 
   return (
     <section className="app-panel vote-deck">
@@ -46,6 +51,7 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
               key={card}
               type="button"
               disabled={!canVote}
+              aria-label={card === COFFEE_CARD_TOKEN ? getDeckTokenAriaLabel(card) : undefined}
               onClick={() => {
                 if (isSelected) {
                   onClearVote();
@@ -56,7 +62,9 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
               className={["vote-card", isSelected ? "vote-card--selected" : ""].filter(Boolean).join(" ")}
               aria-pressed={isSelected}
             >
-              <span className="vote-card__value">{card}</span>
+              <span className="vote-card__value">
+                <DeckToken token={card} variant="card" />
+              </span>
             </button>
           );
         })}

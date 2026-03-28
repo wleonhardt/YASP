@@ -1,26 +1,36 @@
+import type { ReactNode } from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { DeckInput, DeckType, ParticipantRole } from "@yasp/shared";
 import { DEFAULT_DECKS } from "@yasp/shared";
 import { Banner } from "../components/Banner";
 import { ConnectionBadge } from "../components/ConnectionBadge";
+import { DeckToken } from "../components/DeckToken";
 import { DeckCustomizeModal } from "../components/DeckCustomizeModal";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useRoom } from "../hooks/useRoom";
+import { COFFEE_CARD_TOKEN, QUESTION_MARK_TOKEN } from "../lib/deckTokens";
 import { useSession } from "../hooks/useSession";
 import { useSocket } from "../hooks/useSocket";
 import { setStoredDisplayName, setStoredRole } from "../lib/storage";
 
-function formatDeckOverrideSummary(deckOverride: DeckInput | null): string | null {
+function formatDeckOverrideSummary(deckOverride: DeckInput | null): ReactNode {
   if (!deckOverride || deckOverride.type !== "custom") {
     return null;
   }
 
-  const hasQuestionMark = deckOverride.cards.includes("?");
-  const hasCoffee = deckOverride.cards.includes("☕");
-  return `Using custom deck: ${deckOverride.label} · ? ${hasQuestionMark ? "on" : "off"} · ☕ ${
-    hasCoffee ? "on" : "off"
-  }`;
+  const hasQuestionMark = deckOverride.cards.includes(QUESTION_MARK_TOKEN);
+  const hasCoffee = deckOverride.cards.includes(COFFEE_CARD_TOKEN);
+  return (
+    <>
+      <span>Using custom deck: {deckOverride.label}</span>
+      <span aria-hidden="true"> · </span>
+      <span>? {hasQuestionMark ? "on" : "off"}</span>
+      <span aria-hidden="true"> · </span>
+      <DeckToken token={COFFEE_CARD_TOKEN} coffeeText="Coffee" />
+      <span> {hasCoffee ? "on" : "off"}</span>
+    </>
+  );
 }
 
 export function LandingPage() {

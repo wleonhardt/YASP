@@ -1,4 +1,6 @@
+import type { ReactNode } from "react";
 import type { PublicRoomState } from "@yasp/shared";
+import { DeckToken } from "./DeckToken";
 import { getMedian, getNumericVotes, getSpread } from "../lib/room";
 
 type Props = {
@@ -28,7 +30,7 @@ export function ResultsPanel({ state }: Props) {
   const highestCount = distribution[0]?.[1] ?? 1;
   const averageValue = stats.numericAverage !== null ? String(stats.numericAverage) : "n/a";
   const medianValue = median !== null ? median.toFixed(1).replace(/\.0$/, "") : "n/a";
-  const mostCommonValue = stats.mostCommon ?? "Tie";
+  const mostCommonValue = stats.mostCommon !== null ? <DeckToken token={stats.mostCommon} /> : "Tie";
   const spreadValue = spread !== null ? spread.toFixed(1).replace(/\.0$/, "") : "n/a";
 
   return (
@@ -95,7 +97,7 @@ function SecondaryStats({
   mostCommonMeta,
   spread,
 }: {
-  mostCommon: string;
+  mostCommon: ReactNode;
   mostCommonMeta: string;
   spread: string;
 }) {
@@ -127,7 +129,9 @@ function DistributionSection({
         {distribution.map(([label, count]) => (
           <div key={label} className="distribution-row">
             <div className="distribution-row__label">
-              <strong>{label}</strong>
+              <strong>
+                <DeckToken token={label} />
+              </strong>
               <span className="distribution-row__count">{count}</span>
             </div>
             <div className="distribution-row__bar">
@@ -147,7 +151,7 @@ function StatTile({
   emphasis = "supporting",
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   meta?: string;
   emphasis?: "hero" | "supporting";
 }) {

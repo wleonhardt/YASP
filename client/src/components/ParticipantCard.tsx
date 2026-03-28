@@ -1,4 +1,5 @@
 import type { PublicParticipant } from "@yasp/shared";
+import { DeckToken } from "./DeckToken";
 import { getParticipantInitials } from "../lib/room";
 
 type Props = {
@@ -55,7 +56,17 @@ export function ParticipantCard({ participant, revealed, vote, compact = false }
           .filter(Boolean)
           .join(" ")}
       >
-        {revealed ? (vote ?? "—") : participant.hasVoted ? "Ready" : "…"}
+        {revealed ? (
+          vote ? (
+            <DeckToken token={vote} variant="card" />
+          ) : (
+            "—"
+          )
+        ) : participant.hasVoted ? (
+          "Ready"
+        ) : (
+          "…"
+        )}
       </div>
     </article>
   );

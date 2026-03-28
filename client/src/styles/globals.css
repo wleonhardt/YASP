@@ -451,6 +451,46 @@ code {
   gap: var(--space-3);
 }
 
+.deck-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42em;
+  min-width: 0;
+  color: inherit;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.deck-token__icon {
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+}
+
+.deck-token__text {
+  min-width: 0;
+}
+
+.deck-token--card {
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 100%;
+  text-align: center;
+  line-height: 1.05;
+}
+
+.deck-token--card .deck-token__icon {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.deck-token--card .deck-token__text {
+  font-size: 0.6em;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
 .deck-chip-row {
   display: flex;
   gap: var(--space-2);
@@ -468,6 +508,13 @@ code {
   border-radius: var(--radius-md);
   background: var(--color-surface);
   white-space: nowrap;
+}
+
+.landing-page__deck-note .deck-token,
+.deck-chip .deck-token,
+.deck-modal__toggle-copy .deck-token,
+.distribution-row__label .deck-token {
+  font-weight: inherit;
 }
 
 .deck-modal__message {
@@ -1286,6 +1333,10 @@ select.input {
   color: var(--color-text-muted);
 }
 
+.participant-card__vote .deck-token--card {
+  max-width: 100%;
+}
+
 .participant-card--compact .participant-card__vote {
   min-width: 60px;
   min-height: 56px;
@@ -1413,6 +1464,10 @@ select.input {
 .vote-card__value {
   font-size: clamp(1rem, 2vw, 1.35rem);
   font-weight: 650;
+}
+
+.vote-card__value .deck-token--card {
+  padding-inline: 0.15rem;
 }
 
 /* ─── Controls panel ──────────────────────────────────────── */
