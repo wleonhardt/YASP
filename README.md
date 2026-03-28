@@ -12,7 +12,7 @@ Most planning poker tools require sign-ups, store your data, and charge per seat
 
 - **Rooms** — create by code, join by link, no account required
 - **Voting** — hidden until reveal, change freely before reveal
-- **Decks** — Fibonacci, Modified Fibonacci, T-shirt sizes, Powers of Two
+- **Decks** — Fibonacci, Modified Fibonacci, T-shirt sizes, Powers of Two, with per-room customization (cap, toggles, fully custom cards)
 - **Stats** — average, median, mode, spread, consensus detection, distribution chart
 - **Roles** — vote as a participant or observe as a spectator
 - **Moderator controls** — reveal, reset, next round, transfer host
@@ -117,7 +117,7 @@ A CDK stack under [`cdk/`](./cdk/) deploys YASP behind CloudFront on a single EC
 
 ## Roadmap
 
-- [ ] Custom deck creation from the UI
+- [x] Custom deck creation from the UI
 - [ ] Timer for voting rounds
 - [ ] Room settings panel (reveal policy, name change policy)
 - [ ] Accessibility audit (keyboard nav, screen reader support)

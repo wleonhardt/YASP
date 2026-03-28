@@ -1,14 +1,27 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { DeckType, ParticipantRole } from "@yasp/shared";
+import type { DeckInput, DeckType, ParticipantRole } from "@yasp/shared";
 import { DEFAULT_DECKS } from "@yasp/shared";
 import { Banner } from "../components/Banner";
 import { ConnectionBadge } from "../components/ConnectionBadge";
+import { DeckCustomizeModal } from "../components/DeckCustomizeModal";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useRoom } from "../hooks/useRoom";
 import { useSession } from "../hooks/useSession";
 import { useSocket } from "../hooks/useSocket";
 import { setStoredDisplayName, setStoredRole } from "../lib/storage";
+
+function formatDeckOverrideSummary(deckOverride: DeckInput | null): string | null {
+  if (!deckOverride || deckOverride.type !== "custom") {
+    return null;
+  }
+
+  const hasQuestionMark = deckOverride.cards.includes("?");
+  const hasCoffee = deckOverride.cards.includes("☕");
+  return `Using custom deck: ${deckOverride.label} · ? ${hasQuestionMark ? "on" : "off"} · ☕ ${
+    hasCoffee ? "on" : "off"
+  }`;
+}
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -21,6 +34,11 @@ export function LandingPage() {
   const [deckType, setDeckType] = useState<Exclude<DeckType, "custom">>(
     "fibonacci"
   );
+  const [deckOverride, setDeckOverride] = useState<DeckInput | null>(null);
+  const [showDeckModal, setShowDeckModal] = useState(false);
+  const [deckModalBaseType, setDeckModalBaseType] = useState<
+    Exclude<DeckType, "custom">
+  >(deckType);
   const [joinRoomId, setJoinRoomId] = useState("");
   const [pendingAction, setPendingAction] = useState<"create" | "join" | null>(
     null
@@ -29,6 +47,7 @@ export function LandingPage() {
   const connected = status === "connected";
   const canSubmitIdentity = name.trim().length > 0 && connected;
   const deckOptions = Object.values(DEFAULT_DECKS);
+  const deckOverrideSummary = formatDeckOverrideSummary(deckOverride);
 
   const headlines = [
     "Estimate together in seconds",
@@ -49,7 +68,8 @@ export function LandingPage() {
     setStoredDisplayName(name.trim());
     setStoredRole(role);
 
-    const result = await createRoom(name.trim(), role, { type: deckType });
+    const deckInputToSend = deckOverride ?? { type: deckType };
+    const result = await createRoom(name.trim(), role, deckInputToSend);
     setPendingAction(null);
 
     if (result.ok) {
@@ -162,14 +182,27 @@ export function LandingPage() {
               </div>
             </div>
 
-            <label className="field">
-              <span className="field__label">Deck</span>
+            <div className="field">
+              <div className="landing-page__deck-head">
+                <span className="field__label">Deck</span>
+                <button
+                  className="landing-page__customize-trigger"
+                  type="button"
+                  onClick={() => {
+                    setDeckModalBaseType(deckType);
+                    setShowDeckModal(true);
+                  }}
+                >
+                  Customize
+                </button>
+              </div>
               <select
                 className="input"
                 value={deckType}
-                onChange={(event) =>
-                  setDeckType(event.target.value as Exclude<DeckType, "custom">)
-                }
+                onChange={(event) => {
+                  setDeckType(event.target.value as Exclude<DeckType, "custom">);
+                  setDeckOverride(null);
+                }}
               >
                 {deckOptions.map((deck) => (
                   <option key={deck.type} value={deck.type}>
@@ -177,7 +210,10 @@ export function LandingPage() {
                   </option>
                 ))}
               </select>
-            </label>
+              {deckOverrideSummary && (
+                <p className="landing-page__deck-note">{deckOverrideSummary}</p>
+              )}
+            </div>
 
             <button
               className="button button--primary button--full"
@@ -219,6 +255,16 @@ export function LandingPage() {
 
         <p className="landing-page__note">Rooms expire after inactivity. No data is stored.</p>
       </div>
+
+      <DeckCustomizeModal
+        open={showDeckModal}
+        baseDeckType={deckModalBaseType}
+        onClose={() => setShowDeckModal(false)}
+        onApply={(customDeck) => {
+          setDeckOverride(customDeck);
+          setShowDeckModal(false);
+        }}
+      />
     </div>
   );
 }
