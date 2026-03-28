@@ -28,7 +28,19 @@ export function RoomPage() {
   const location = useLocation();
   const { socket, status } = useSocket();
   const { sessionId, storedName } = useSession();
-  const room = useRoom(socket, sessionId);
+  const {
+    roomState,
+    error,
+    sessionReplaced,
+    joinRoom,
+    leaveRoom,
+    castVote,
+    clearVote,
+    revealVotes,
+    resetRound,
+    nextRound,
+    transferModerator,
+  } = useRoom(socket, sessionId);
 
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [needsManualJoin, setNeedsManualJoin] = useState(false);
@@ -45,11 +57,11 @@ export function RoomPage() {
 
   const navState = location.state as { role?: ParticipantRole } | null;
 
-  function checkRoomUnavailable(result: { ok: false; error: { code: string } }): void {
+  const checkRoomUnavailable = useCallback((result: { ok: false; error: { code: string } }): void => {
     if (result.error.code === "ROOM_NOT_FOUND" || result.error.code === "ROOM_EXPIRED") {
       setRoomUnavailable(result.error.code as RoomUnavailableReason);
     }
-  }
+  }, []);
 
   const showToast = useCallback((intent: ToastState["intent"], message: string) => {
     if (toastTimeout.current !== null) {
@@ -68,13 +80,13 @@ export function RoomPage() {
     };
   }, []);
 
-  function getIntendedRole(): ParticipantRole {
+  const getIntendedRole = useCallback((): ParticipantRole => {
     if (navState?.role) {
       return navState.role;
     }
 
     return getStoredRole() ?? "voter";
-  }
+  }, [navState]);
 
   useEffect(() => {
     if (status !== "connected" || !roomId) {
@@ -84,12 +96,12 @@ export function RoomPage() {
     const wasDisconnected = lastConnectedStatus.current !== "connected";
     lastConnectedStatus.current = status;
 
-    if (room.roomState && wasDisconnected) {
-      const self = getSelf(room.roomState);
+    if (roomState && wasDisconnected) {
+      const self = getSelf(roomState);
       const name = getStoredDisplayName() || self?.name || "Anonymous";
       const role = self?.role ?? getIntendedRole();
 
-      room.joinRoom(roomId, name, role).then((result) => {
+      joinRoom(roomId, name, role).then((result) => {
         if (!result.ok) checkRoomUnavailable(result);
       });
 
@@ -102,7 +114,7 @@ export function RoomPage() {
 
       if (name) {
         const role = getIntendedRole();
-        room.joinRoom(roomId, name, role).then((result) => {
+        joinRoom(roomId, name, role).then((result) => {
           if (!result.ok) {
             checkRoomUnavailable(result);
             if (!result.error.code.startsWith("ROOM_")) setNeedsManualJoin(true);
@@ -112,7 +124,7 @@ export function RoomPage() {
         setNeedsManualJoin(true);
       }
     }
-  }, [roomId, status]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [checkRoomUnavailable, getIntendedRole, joinRoom, roomId, roomState, status]);
 
   useEffect(() => {
     if (status !== "connected") {
@@ -121,64 +133,64 @@ export function RoomPage() {
   }, [status]);
 
   useEffect(() => {
-    if (!room.roomState) {
+    if (!roomState) {
       return;
     }
 
-    const self = getSelf(room.roomState);
+    const self = getSelf(roomState);
     if (!self) {
       return;
     }
 
-    if (room.roomState.revealed && room.roomState.votes) {
-      setSelectedCard(room.roomState.votes[self.id] ?? null);
-    } else if (!room.roomState.revealed && !self.hasVoted) {
+    if (roomState.revealed && roomState.votes) {
+      setSelectedCard(roomState.votes[self.id] ?? null);
+    } else if (!roomState.revealed && !self.hasVoted) {
       setSelectedCard(null);
     }
-  }, [room.roomState]);
+  }, [roomState]);
 
   useEffect(() => {
-    if (!room.error) return;
+    if (!error) return;
 
-    if (room.error.code === "ROOM_NOT_FOUND" || room.error.code === "ROOM_EXPIRED") {
-      setRoomUnavailable(room.error.code);
+    if (error.code === "ROOM_NOT_FOUND" || error.code === "ROOM_EXPIRED") {
+      setRoomUnavailable(error.code);
       return;
     }
 
     if (
-      room.error.code === "SESSION_REPLACED" ||
-      room.error.code === "NOT_ALLOWED"
+      error.code === "SESSION_REPLACED" ||
+      error.code === "NOT_ALLOWED"
     ) {
       return;
     }
 
-    const errorKey = `${room.error.code}:${room.error.message}`;
+    const errorKey = `${error.code}:${error.message}`;
     if (lastErrorKey.current === errorKey) {
       return;
     }
 
     lastErrorKey.current = errorKey;
-    showToast("error", room.error.message);
-  }, [room.error, showToast]);
+    showToast("error", error.message);
+  }, [error, showToast]);
 
-  const actionsDisabled = room.sessionReplaced;
+  const actionsDisabled = sessionReplaced;
 
-  const handleRejoin = async () => {
+  const handleRejoin = useCallback(async () => {
     if (!roomId || status !== "connected") {
       return;
     }
 
     const name = getStoredDisplayName() || storedName || "Anonymous";
     const role = getIntendedRole();
-    await room.joinRoom(roomId, name, role);
-  };
+    await joinRoom(roomId, name, role);
+  }, [getIntendedRole, joinRoom, roomId, status, storedName]);
 
   const handleCloseTab = () => {
     window.close();
     window.setTimeout(() => navigate("/"), 120);
   };
 
-  const handleManualJoin = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleManualJoin = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!roomId || !joinName.trim() || status !== "connected") {
@@ -187,7 +199,7 @@ export function RoomPage() {
 
     setStoredDisplayName(joinName.trim());
     setStoredRole(joinRole);
-    const result = await room.joinRoom(roomId, joinName.trim(), joinRole);
+    const result = await joinRoom(roomId, joinName.trim(), joinRole);
 
     if (result.ok) {
       setNeedsManualJoin(false);
@@ -195,88 +207,88 @@ export function RoomPage() {
     }
 
     checkRoomUnavailable(result);
-  };
+  }, [checkRoomUnavailable, joinName, joinRole, joinRoom, roomId, status]);
 
-  const handleVote = async (value: string) => {
+  const handleVote = useCallback(async (value: string) => {
     if (!roomId || actionsDisabled) {
       return;
     }
 
     setSelectedCard(value);
-    const result = await room.castVote(roomId, value);
+    const result = await castVote(roomId, value);
     if (!result.ok) {
       setSelectedCard(null);
     }
-  };
+  }, [actionsDisabled, castVote, roomId]);
 
-  const handleClearVote = async () => {
+  const handleClearVote = useCallback(async () => {
     if (!roomId || actionsDisabled) {
       return;
     }
 
     setSelectedCard(null);
-    await room.clearVote(roomId);
-  };
+    await clearVote(roomId);
+  }, [actionsDisabled, clearVote, roomId]);
 
-  const handleReveal = async () => {
+  const handleReveal = useCallback(async () => {
     if (!roomId || actionsDisabled) {
       return;
     }
 
-    await room.revealVotes(roomId);
-  };
+    await revealVotes(roomId);
+  }, [actionsDisabled, revealVotes, roomId]);
 
-  const handleReset = async () => {
+  const handleReset = useCallback(async () => {
     if (!roomId || actionsDisabled) {
       return;
     }
 
-    const result = await room.resetRound(roomId);
+    const result = await resetRound(roomId);
     if (result.ok) {
       setSelectedCard(null);
     }
-  };
+  }, [actionsDisabled, resetRound, roomId]);
 
-  const handleNextRound = async () => {
+  const handleNextRound = useCallback(async () => {
     if (!roomId || actionsDisabled) {
       return;
     }
 
-    const result = await room.nextRound(roomId);
+    const result = await nextRound(roomId);
     if (result.ok) {
       setSelectedCard(null);
     }
-  };
+  }, [actionsDisabled, nextRound, roomId]);
 
-  const handleTransferModerator = async (targetParticipantId: string) => {
+  const handleTransferModerator = useCallback(async (targetParticipantId: string) => {
     if (!roomId || actionsDisabled) {
       return false;
     }
 
-    const result = await room.transferModerator(roomId, targetParticipantId);
+    const result = await transferModerator(roomId, targetParticipantId);
     return result.ok;
-  };
+  }, [actionsDisabled, roomId, transferModerator]);
 
-  const handleLeave = async () => {
+  const handleLeave = useCallback(async () => {
     if (!roomId || actionsDisabled) {
       return;
     }
 
-    await room.leaveRoom(roomId);
+    await leaveRoom(roomId);
     navigate("/");
-  };
+  }, [actionsDisabled, leaveRoom, navigate, roomId]);
 
   useEffect(() => {
-    if (!room.roomState || actionsDisabled || status !== "connected") {
+    if (!roomState || actionsDisabled || status !== "connected") {
       return;
     }
 
-    const self = getSelf(room.roomState);
-    if (!self || self.role !== "voter" || room.roomState.revealed) {
+    const self = getSelf(roomState);
+    if (!self || self.role !== "voter" || roomState.revealed) {
       return;
     }
 
-    const availableCards = new Set(room.roomState.deck.cards);
+    const availableCards = new Set(roomState.deck.cards);
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -308,7 +320,7 @@ export function RoomPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [actionsDisabled, room.roomState, selectedCard, status]);
+  }, [actionsDisabled, handleClearVote, handleVote, roomState, selectedCard, status]);
 
   if (roomUnavailable) {
     return (
@@ -337,7 +349,7 @@ export function RoomPage() {
     );
   }
 
-  if (needsManualJoin && !room.roomState) {
+  if (needsManualJoin && !roomState) {
     return (
       <div className="page-shell page-shell--centered">
         <div className="status-corner">
@@ -399,7 +411,7 @@ export function RoomPage() {
     );
   }
 
-  if (!room.roomState) {
+  if (!roomState) {
     return (
       <div className="page-shell page-shell--centered">
         <div className="status-corner">
@@ -414,7 +426,7 @@ export function RoomPage() {
     );
   }
 
-  const state = room.roomState;
+  const state = roomState;
 
   return (
     <div className="page-shell room-page">
@@ -435,13 +447,13 @@ export function RoomPage() {
         </Banner>
       )}
 
-      {room.error?.code === "NOT_ALLOWED" && (
+      {error?.code === "NOT_ALLOWED" && (
         <Banner tone="warning" title="Action blocked">
-          {room.error.message}
+          {error.message}
         </Banner>
       )}
 
-      {room.sessionReplaced && (
+      {sessionReplaced && (
         <section className="app-panel session-panel">
           <div className="section-label">Session</div>
           <h1>This tab is now read-only</h1>

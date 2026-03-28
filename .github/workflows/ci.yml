@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 20
+  DOCKER_PLATFORM: ${{ vars.DOCKER_PLATFORM || 'linux/amd64' }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run lint if available
+        run: |
+          npm run lint --if-present
+          npm run lint --workspaces --if-present
+
+  docker-validation:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          platforms: ${{ env.DOCKER_PLATFORM }}
+          tags: yasp:ci
+
+      - name: Start container
+        run: docker run -d --rm --platform ${{ env.DOCKER_PLATFORM }} --name yasp-ci -p 3001:3001 yasp:ci
+
+      - name: Verify health endpoint
+        run: |
+          for attempt in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:3001/api/health | grep -q '"ok":true'; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Container failed health check"
+          docker logs yasp-ci
+          exit 1
+
+      - name: Verify root document
+        run: curl -fsS http://127.0.0.1:3001/ | grep -qi '<!doctype html'
+
+      - name: Stop container
+        if: always()
+        run: docker stop yasp-ci || true
+
+  cdk-synth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect CDK changes
+        id: cdk-changes
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base_sha="${{ github.event.pull_request.base.sha }}"
+            head_sha="${{ github.event.pull_request.head.sha }}"
+          else
+            base_sha="${{ github.event.before }}"
+            head_sha="${{ github.sha }}"
+          fi
+
+          if [[ -z "$base_sha" || "$base_sha" == "0000000000000000000000000000000000000000" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git diff --quiet "$base_sha" "$head_sha" -- cdk; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js
+        if: steps.cdk-changes.outputs.changed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: cdk/package-lock.json
+
+      - name: Install CDK dependencies
+        if: steps.cdk-changes.outputs.changed == 'true'
+        working-directory: cdk
+        run: npm ci
+
+      - name: Synthesize CDK
+        if: steps.cdk-changes.outputs.changed == 'true'
+        working-directory: cdk
+        run: npx cdk synth -c imageTag=ci-synth
+
+      - name: Skip synth when CDK is unchanged
+        if: steps.cdk-changes.outputs.changed != 'true'
+        run: echo "No changes under cdk/. Skipping synth."

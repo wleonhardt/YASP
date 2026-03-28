@@ -11,12 +11,18 @@
     "dev:server": "npm run dev -w server",
     "dev:client": "npm run dev -w client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "test": "npm run test -w server",
+    "test": "npm run test -w server && npm run test -w client",
+    "lint": "eslint . --max-warnings=0",
     "start": "npm run start -w server",
     "clean": "rm -rf shared/dist server/dist client/dist node_modules"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
+    "@eslint/js": "^9.23.0",
+    "eslint": "^9.23.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.0.0",
+    "typescript-eslint": "^8.28.0",
     "typescript": "^5.4.5"
   }
 }

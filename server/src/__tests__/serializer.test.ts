@@ -86,7 +86,7 @@ describe("serializeRoom", () => {
 
     const state = serializeRoom(room, "s1");
     const participant = state.participants[0];
-    expect((participant as any).socketId).toBeUndefined();
+    expect("socketId" in participant).toBe(false);
   });
 
   it("sorts participants by joinedAt then name", () => {

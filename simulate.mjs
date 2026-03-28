@@ -33,7 +33,9 @@ function logState(label, state) {
   console.log(`\n  ── ${label} ──`);
   console.log(`  Room: ${state.id} | Round: ${state.roundNumber} | Revealed: ${state.revealed}`);
   console.log(`  Deck: ${state.deck.label}`);
-  console.log(`  Participants (${state.participants.length}):`);
+  console.log(
+    `  Participants (${state.participants.length}: ${voters.length} voters, ${spectators.length} spectators):`
+  );
   for (const p of state.participants) {
     const badges = [];
     if (p.isModerator) badges.push("MOD");
@@ -52,7 +54,7 @@ function logState(label, state) {
   if (state.stats) {
     const s = state.stats;
     console.log(
-      `  Stats: avg=${s.numericAverage?.toFixed(1) ?? "N/A"} | mode=${s.mostCommon ?? "N/A"} | consensus=${s.consensus} | total=${s.totalVotes}`
+      `  Stats: avg=${s.numericAverage ?? "N/A"} | mode=${s.mostCommon ?? "N/A"} | consensus=${s.consensus} | total=${s.totalVotes}`
     );
     console.log(`  Distribution: ${JSON.stringify(s.distribution)}`);
   }

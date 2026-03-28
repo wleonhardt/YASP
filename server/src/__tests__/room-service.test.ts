@@ -32,7 +32,13 @@ describe("RoomService.createRoom", () => {
   });
 
   it("rejects invalid role", () => {
-    const result = service.createRoom("s1", "sock-1", "Alice", "admin" as any);
+    const createRoom = service.createRoom as unknown as (
+      sessionId: string,
+      socketId: string,
+      displayName: string,
+      role: string
+    ) => ReturnType<RoomService["createRoom"]>;
+    const result = createRoom("s1", "sock-1", "Alice", "admin");
     expect(result.ok).toBe(false);
   });
 

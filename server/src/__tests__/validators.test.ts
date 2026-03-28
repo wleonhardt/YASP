@@ -35,7 +35,7 @@ describe("validateName", () => {
   });
 
   it("rejects non-string names", () => {
-    const r = validateName(123 as any);
+    const r = validateName(123);
     expect(r.valid).toBe(false);
   });
 });
@@ -137,7 +137,7 @@ describe("validateVote", () => {
   });
 
   it("rejects non-string votes", () => {
-    const r = validateVote(1 as any, cards);
+    const r = validateVote(1, cards);
     expect(r.valid).toBe(false);
   });
 });
@@ -178,11 +178,11 @@ describe("validateSettingsUpdate", () => {
   });
 
   it("rejects invalid boolean", () => {
-    expect(validateSettingsUpdate({ autoReveal: "yes" as any }).valid).toBe(false);
+    expect(validateSettingsUpdate({ autoReveal: "yes" }).valid).toBe(false);
   });
 
   it("rejects invalid policy", () => {
-    expect(validateSettingsUpdate({ revealPolicy: "invalid" as any }).valid).toBe(false);
+    expect(validateSettingsUpdate({ revealPolicy: "invalid" }).valid).toBe(false);
   });
 
   it("rejects non-object", () => {

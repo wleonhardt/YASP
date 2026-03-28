@@ -1,11 +1,17 @@
 import type { Server as SocketServer, Socket } from "socket.io";
-import type { AckResult, RoomId } from "@yasp/shared";
+import type { AckResult, ErrorCode, RoomId } from "@yasp/shared";
 import type {
+  CastVoteInput,
+  ChangeDeckInput,
+  ChangeNameInput,
+  ChangeRoleInput,
   CreateRoomInput,
   CreateRoomOutput,
   JoinRoomInput,
   JoinRoomOutput,
   LeaveRoomInput,
+  TransferModeratorInput,
+  UpdateSettingsInput,
   PingInput,
   PongEvent,
 } from "@yasp/shared";
@@ -17,8 +23,8 @@ import { serializeRoom } from "./serializers.js";
 import { validateSessionId, validateRoomId } from "./validators.js";
 import { now } from "../utils/time.js";
 
-function ackFail(code: string, message: string): AckResult<never> {
-  return { ok: false, error: { code: code as any, message } };
+function ackFail(code: ErrorCode, message: string): AckResult<never> {
+  return { ok: false, error: { code, message } };
 }
 
 function broadcastRoomState(io: SocketServer, roomId: RoomId, store: RoomStore): void {
@@ -97,8 +103,7 @@ export function registerSocketHandlers(
   io.on("connection", (socket: Socket) => {
     // Helper: resolve caller, run service method, ack+broadcast on success.
     // afterEffect controls timer/auto-reveal behavior after broadcast.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function roomAction<I extends { roomId: RoomId;[key: string]: any }>(
+    function roomAction<I extends { roomId: RoomId } & Record<string, unknown>>(
       event: string,
       serviceFn: (roomId: RoomId, participantId: string, input: I) => AckResult<{ room: import("../domain/types.js").Room }>,
       afterEffect: "autoReveal" | "cancelTimer" | "none" = "none"
@@ -177,16 +182,16 @@ export function registerSocketHandlers(
       evaluateAutoReveal(result.data.room, roomService, timerService, io, store);
     });
 
-    roomAction("cast_vote", (roomId, pid, i) => roomService.castVote(roomId, pid, i.value), "autoReveal");
+    roomAction("cast_vote", (roomId, pid, i: CastVoteInput) => roomService.castVote(roomId, pid, i.value), "autoReveal");
     roomAction("clear_vote", (roomId, pid) => roomService.clearVote(roomId, pid), "autoReveal");
     roomAction("reveal_votes", (roomId, pid) => roomService.revealVotes(roomId, pid), "cancelTimer");
     roomAction("reset_round", (roomId, pid) => roomService.resetRound(roomId, pid), "cancelTimer");
     roomAction("next_round", (roomId, pid) => roomService.nextRound(roomId, pid), "cancelTimer");
-    roomAction("transfer_moderator", (roomId, pid, i) => roomService.transferModerator(roomId, pid, i.targetParticipantId));
-    roomAction("change_name", (roomId, pid, i) => roomService.changeName(roomId, pid, i.name));
-    roomAction("change_role", (roomId, pid, i) => roomService.changeRole(roomId, pid, i.role), "autoReveal");
-    roomAction("change_deck", (roomId, pid, i) => roomService.changeDeck(roomId, pid, i.deck), "cancelTimer");
-    roomAction("update_settings", (roomId, pid, i) => roomService.updateSettings(roomId, pid, i.settings), "autoReveal");
+    roomAction("transfer_moderator", (roomId, pid, i: TransferModeratorInput) => roomService.transferModerator(roomId, pid, i.targetParticipantId));
+    roomAction("change_name", (roomId, pid, i: ChangeNameInput) => roomService.changeName(roomId, pid, i.name));
+    roomAction("change_role", (roomId, pid, i: ChangeRoleInput) => roomService.changeRole(roomId, pid, i.role), "autoReveal");
+    roomAction("change_deck", (roomId, pid, i: ChangeDeckInput) => roomService.changeDeck(roomId, pid, i.deck), "cancelTimer");
+    roomAction("update_settings", (roomId, pid, i: UpdateSettingsInput) => roomService.updateSettings(roomId, pid, i.settings), "autoReveal");
 
     socket.on("ping", (input: PingInput, ack?: (res: PongEvent) => void) => {
       ack?.({ clientTs: input.clientTs, serverTs: now() });

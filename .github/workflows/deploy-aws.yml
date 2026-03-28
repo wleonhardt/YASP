@@ -10,15 +10,24 @@ permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: deploy-aws-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  ECR_REPO: ${{ vars.ECR_REPO || 'yasp' }}
+  INSTANCE_ID: ${{ vars.INSTANCE_ID || 'i-003291a1bb795a624' }}
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_IMAGE || 'wleonhardt/yasp' }}
+
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    environment: production
 
     env:
-      AWS_REGION: us-east-1
-      ECR_REPO: yasp
-      INSTANCE_ID: i-003291a1bb795a624
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
 
     steps:
       - name: Configure AWS credentials
@@ -32,11 +41,12 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Pull from Docker Hub and push to ECR
+        id: image
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
         run: |
-          SHORT_SHA="${GITHUB_SHA::8}"
-          DOCKERHUB_IMAGE="wleonhardt/yasp:latest"
+          SHORT_SHA="${HEAD_SHA::8}"
+          DOCKERHUB_IMAGE="${DOCKERHUB_IMAGE}:${SHORT_SHA}"
           ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPO}:${SHORT_SHA}"
           ECR_LATEST="${ECR_REGISTRY}/${ECR_REPO}:main"
 
@@ -55,7 +65,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
         run: |
-          SHORT_SHA="${GITHUB_SHA::8}"
+          SHORT_SHA="${HEAD_SHA::8}"
           ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPO}:${SHORT_SHA}"
 
           # Build SSM parameters as JSON via jq to avoid all escaping issues.
