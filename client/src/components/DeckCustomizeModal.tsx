@@ -16,6 +16,7 @@ import {
   type TShirtSize,
 } from "../lib/deckGenerators";
 import { COFFEE_CARD_TOKEN } from "../lib/deckTokens";
+import { getNextRovingValue } from "../lib/rovingFocus";
 
 type Props = {
   open: boolean;
@@ -50,9 +51,20 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
   const [draft, setDraft] = useState<DeckDraft>(() => createDefaultDeckDraft(baseDeckType));
   const modalRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const tabRefs = useRef<Record<DeckTab, HTMLButtonElement | null>>({
+    simple: null,
+    advanced: null,
+    custom: null,
+  });
   const titleId = useId();
   const subtitleId = useId();
   const customCardsInputId = useId();
+  const simpleTabId = useId();
+  const advancedTabId = useId();
+  const customTabId = useId();
+  const simplePanelId = useId();
+  const advancedPanelId = useId();
+  const customPanelId = useId();
 
   useLayoutEffect(() => {
     if (!open) {
@@ -149,6 +161,32 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
 
   const zeroToggleDisabled = draft.baseDeckType === "tshirt";
   const halfToggleDisabled = draft.baseDeckType !== "modified_fibonacci";
+  const tabIds: Record<DeckTab, string> = {
+    simple: simpleTabId,
+    advanced: advancedTabId,
+    custom: customTabId,
+  };
+  const panelIds: Record<DeckTab, string> = {
+    simple: simplePanelId,
+    advanced: advancedPanelId,
+    custom: customPanelId,
+  };
+
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, currentTab: DeckTab) => {
+    const nextTab = getNextRovingValue(
+      TAB_OPTIONS.map((tab) => tab.value),
+      currentTab,
+      event.key
+    );
+
+    if (!nextTab) {
+      return;
+    }
+
+    event.preventDefault();
+    setActiveTab(nextTab);
+    tabRefs.current[nextTab]?.focus();
+  };
 
   return (
     <div
@@ -190,9 +228,15 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
           {TAB_OPTIONS.map((tab) => (
             <button
               key={tab.value}
+              ref={(element) => {
+                tabRefs.current[tab.value] = element;
+              }}
+              id={tabIds[tab.value]}
               type="button"
               role="tab"
               aria-selected={activeTab === tab.value}
+              aria-controls={panelIds[tab.value]}
+              tabIndex={activeTab === tab.value ? 0 : -1}
               className={[
                 "segmented__option",
                 "deck-modal__tab",
@@ -201,6 +245,7 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
                 .filter(Boolean)
                 .join(" ")}
               onClick={() => setActiveTab(tab.value)}
+              onKeyDown={(event) => handleTabKeyDown(event, tab.value)}
             >
               <span>{tab.label}</span>
             </button>
@@ -209,13 +254,25 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
 
         <div className="deck-modal__body">
           {activeTab === "simple" && (
-            <div className="deck-modal__panel">
+            <div
+              className="deck-modal__panel"
+              role="tabpanel"
+              id={simplePanelId}
+              aria-labelledby={simpleTabId}
+              tabIndex={0}
+            >
               <SimpleDeckControls draft={draft} onChange={updateDraft} />
             </div>
           )}
 
           {activeTab === "advanced" && (
-            <div className="deck-modal__panel">
+            <div
+              className="deck-modal__panel"
+              role="tabpanel"
+              id={advancedPanelId}
+              aria-labelledby={advancedTabId}
+              tabIndex={0}
+            >
               <div className="deck-modal__control-group">
                 <div className="section-label">Advanced options</div>
 
@@ -265,7 +322,13 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
           )}
 
           {activeTab === "custom" && (
-            <div className="deck-modal__panel">
+            <div
+              className="deck-modal__panel"
+              role="tabpanel"
+              id={customPanelId}
+              aria-labelledby={customTabId}
+              tabIndex={0}
+            >
               <label className="field" htmlFor={customCardsInputId}>
                 <span className="field__label">Cards</span>
                 <textarea

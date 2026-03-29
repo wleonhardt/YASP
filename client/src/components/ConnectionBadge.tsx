@@ -12,12 +12,18 @@ export function ConnectionBadge({ status }: { status: ConnectionStatus }) {
   return (
     <div
       className={`connection-badge connection-badge--${status}`}
-      aria-label={label.full}
-      title={label.full}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
     >
-      <span className="connection-badge__dot" />
-      <span className="connection-badge__label connection-badge__label--full">{label.full}</span>
-      <span className="connection-badge__label connection-badge__label--short">{label.short}</span>
+      <span className="sr-only">{label.full}</span>
+      <span className="connection-badge__dot" aria-hidden="true" />
+      <span className="connection-badge__label connection-badge__label--full" aria-hidden="true">
+        {label.full}
+      </span>
+      <span className="connection-badge__label connection-badge__label--short" aria-hidden="true">
+        {label.short}
+      </span>
     </div>
   );
 }

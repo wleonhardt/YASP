@@ -29,8 +29,16 @@ export function ModeratorControls({
   const [transferOpen, setTransferOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [targetParticipantId, setTargetParticipantId] = useState(transferCandidates[0]?.id ?? "");
+  const headingId = useId();
   const transferPanelId = useId();
+  const actionHintId = useId();
   const transferSelectRef = useRef<HTMLSelectElement | null>(null);
+  const actionHint =
+    !isModerator &&
+    ((state.revealed && state.settings.resetPolicy === "moderator_only") ||
+      (!state.revealed && state.settings.revealPolicy === "moderator_only"))
+      ? `Only the moderator can ${state.revealed ? "advance or reset" : "reveal"} this round.`
+      : null;
 
   useEffect(() => {
     if (!transferCandidates.some((participant) => participant.id === targetParticipantId)) {
@@ -95,11 +103,11 @@ export function ModeratorControls({
   };
 
   return (
-    <section className="app-panel controls-panel">
+    <section className="app-panel controls-panel" aria-labelledby={headingId}>
       <div className="section-header">
         <div>
           <div className="section-label">Actions</div>
-          <h2>{state.revealed ? "Next steps" : "Moderator controls"}</h2>
+          <h2 id={headingId}>{state.revealed ? "Next steps" : "Moderator controls"}</h2>
         </div>
         {isModerator && (
           <button
@@ -124,7 +132,7 @@ export function ModeratorControls({
             className="button button--primary button--full"
             onClick={onReveal}
             disabled={!revealAllowed}
-            title={!revealAllowed ? "Only the moderator can reveal" : undefined}
+            aria-describedby={!revealAllowed && actionHint ? actionHintId : undefined}
           >
             Reveal votes
           </button>
@@ -134,7 +142,7 @@ export function ModeratorControls({
               className="button button--primary button--full"
               onClick={onNextRound}
               disabled={!resetAllowed}
-              title={!resetAllowed ? "Only the moderator can advance the round" : undefined}
+              aria-describedby={!resetAllowed && actionHint ? actionHintId : undefined}
             >
               Next round
             </button>
@@ -142,7 +150,7 @@ export function ModeratorControls({
               className="button button--secondary button--full"
               onClick={onReset}
               disabled={!resetAllowed}
-              title={!resetAllowed ? "Only the moderator can reset" : undefined}
+              aria-describedby={!resetAllowed && actionHint ? actionHintId : undefined}
             >
               Reset
             </button>
@@ -150,13 +158,11 @@ export function ModeratorControls({
         )}
       </div>
 
-      {!isModerator &&
-        ((state.revealed && state.settings.resetPolicy === "moderator_only") ||
-          (!state.revealed && state.settings.revealPolicy === "moderator_only")) && (
-          <p className="controls-panel__hint">
-            Only the moderator can {state.revealed ? "advance or reset" : "reveal"} this round.
-          </p>
-        )}
+      {actionHint && (
+        <p className="controls-panel__hint" id={actionHintId}>
+          {actionHint}
+        </p>
+      )}
 
       {isModerator && transferOpen && (
         <div

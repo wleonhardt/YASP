@@ -33,14 +33,14 @@ export function TopBar({ state, connectionStatus, onLeave, onCopyFeedback, disab
           <button
             className="button button--ghost topbar__copy-button topbar__copy-button--desktop"
             onClick={handleCopy}
-            aria-label="Copy room link"
+            aria-label="Copy link"
           >
             Copy link
           </button>
           <button
             className="button button--ghost topbar__room-link topbar__room-link--mobile"
             onClick={handleCopy}
-            aria-label="Copy room link"
+            aria-label="Copy link"
           >
             <code className="topbar__room-code">{state.id}</code>
             <span className="topbar__copy-label topbar__copy-label--full">Copy link</span>

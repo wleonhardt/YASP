@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { PublicRoomState } from "@yasp/shared";
 import { ParticipantCard } from "./ParticipantCard";
 import { getConnectedVoterCounts, getRevealedVote } from "../lib/room";
@@ -8,6 +8,8 @@ type Props = {
 };
 
 export function ParticipantsBoard({ state }: Props) {
+  const headingId = useId();
+  const rosterId = useId();
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 720px)").matches : false
   );
@@ -33,11 +35,11 @@ export function ParticipantsBoard({ state }: Props) {
   }, []);
 
   return (
-    <section className="app-panel participants-board">
+    <section className="app-panel participants-board" aria-labelledby={headingId}>
       <div className="section-header">
         <div>
           <div className="section-label">Live board</div>
-          <h2>Participants</h2>
+          <h2 id={headingId}>Participants</h2>
         </div>
         <div className="participants-board__summary">
           <strong>
@@ -47,7 +49,15 @@ export function ParticipantsBoard({ state }: Props) {
         </div>
       </div>
 
-      <div className="participants-board__progress">
+      <div
+        className="participants-board__progress"
+        role="progressbar"
+        aria-label="Vote progress"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={voted}
+        aria-valuetext={`${voted} of ${total} voted`}
+      >
         <div className="participants-board__progress-fill" style={{ width: `${percent}%` }} />
       </div>
 
@@ -64,6 +74,9 @@ export function ParticipantsBoard({ state }: Props) {
                 .filter(Boolean)
                 .join(" ")}
               title={participant.name}
+              aria-label={`${participant.name}, ${participant.connected ? "online" : "offline"}${
+                participant.hasVoted ? ", voted" : ""
+              }`}
             >
               {participant.name.slice(0, 1).toUpperCase()}
             </span>
@@ -75,12 +88,14 @@ export function ParticipantsBoard({ state }: Props) {
           onClick={() => setMobileExpanded((expanded) => !expanded)}
           type="button"
           aria-expanded={mobileExpanded}
+          aria-controls={rosterId}
         >
           {mobileExpanded ? "Hide roster" : `Show roster (${state.participants.length})`}
         </button>
       </div>
 
       <div
+        id={rosterId}
         className={[
           "participants-board__grid",
           compact ? "participants-board__grid--compact" : "",

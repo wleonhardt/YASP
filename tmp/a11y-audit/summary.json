@@ -1,0 +1,138 @@
+[
+  {
+    "name": "landing-dark-desktop",
+    "url": "http://127.0.0.1:3101/",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "violations": [],
+    "overflow": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "hasOverflow": false,
+      "offenders": []
+    },
+    "screenshot": "/Users/william/Projects/yasp/tmp/a11y-audit/landing-dark-desktop.png"
+  },
+  {
+    "name": "landing-light-mobile",
+    "url": "http://127.0.0.1:3101/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "light",
+    "violations": [],
+    "overflow": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "hasOverflow": false,
+      "offenders": []
+    },
+    "screenshot": "/Users/william/Projects/yasp/tmp/a11y-audit/landing-light-mobile.png"
+  },
+  {
+    "name": "landing-modal-light-desktop",
+    "url": "http://127.0.0.1:3101/",
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "theme": "light",
+    "violations": [],
+    "overflow": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "hasOverflow": false,
+      "offenders": []
+    },
+    "screenshot": "/Users/william/Projects/yasp/tmp/a11y-audit/landing-modal-light-desktop.png"
+  },
+  {
+    "name": "manual-join-mobile-dark",
+    "url": "http://127.0.0.1:3101/r/TY3MKN",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "violations": [],
+    "overflow": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "hasOverflow": false,
+      "offenders": []
+    },
+    "screenshot": "/Users/william/Projects/yasp/tmp/a11y-audit/manual-join-mobile-dark.png"
+  },
+  {
+    "name": "room-pre-reveal-desktop-dark",
+    "url": "http://127.0.0.1:3101/r/TY3MKN",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "theme": "dark",
+    "violations": [],
+    "overflow": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "hasOverflow": false,
+      "offenders": []
+    },
+    "screenshot": "/Users/william/Projects/yasp/tmp/a11y-audit/room-pre-reveal-desktop-dark.png"
+  },
+  {
+    "name": "room-pre-reveal-mobile-light",
+    "url": "http://127.0.0.1:3101/r/TY3MKN",
+    "viewport": {
+      "width": 320,
+      "height": 568
+    },
+    "theme": "light",
+    "violations": [],
+    "overflow": {
+      "scrollWidth": 320,
+      "innerWidth": 320,
+      "hasOverflow": false,
+      "offenders": []
+    },
+    "screenshot": "/Users/william/Projects/yasp/tmp/a11y-audit/room-pre-reveal-mobile-light.png"
+  },
+  {
+    "name": "room-revealed-desktop-light",
+    "url": "http://127.0.0.1:3101/r/ABRX42",
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    },
+    "theme": "light",
+    "violations": [],
+    "overflow": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "hasOverflow": false,
+      "offenders": []
+    },
+    "screenshot": "/Users/william/Projects/yasp/tmp/a11y-audit/room-revealed-desktop-light.png"
+  },
+  {
+    "name": "room-revealed-mobile-dark",
+    "url": "http://127.0.0.1:3101/r/ABRX42",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "theme": "dark",
+    "violations": [],
+    "overflow": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "hasOverflow": false,
+      "offenders": []
+    },
+    "screenshot": "/Users/william/Projects/yasp/tmp/a11y-audit/room-revealed-mobile-dark.png"
+  }
+]

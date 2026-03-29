@@ -1,5 +1,6 @@
 dist/
 node_modules/
 cdk/cdk.out/
+tmp/
 package-lock.json
 *.md

@@ -127,4 +127,20 @@ describe("LandingPage create room deck behavior", () => {
       });
     });
   });
+
+  it("supports arrow-key navigation for the role picker", async () => {
+    const user = userEvent.setup();
+    render(<LandingPage />);
+
+    const voter = screen.getByRole("radio", { name: /Voter/i });
+    const spectator = screen.getByRole("radio", { name: /Spectator/i });
+
+    voter.focus();
+    await user.keyboard("{ArrowRight}");
+
+    expect(spectator).toHaveFocus();
+    expect(spectator).toHaveAttribute("aria-checked", "true");
+    expect(voter).toHaveAttribute("tabindex", "-1");
+    expect(spectator).toHaveAttribute("tabindex", "0");
+  });
 });

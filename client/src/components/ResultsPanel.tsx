@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import type { PublicRoomState } from "@yasp/shared";
 import { DeckToken } from "./DeckToken";
 import { getMedian, getNumericVotes, getSpread } from "../lib/room";
@@ -8,15 +8,18 @@ type Props = {
 };
 
 export function ResultsPanel({ state }: Props) {
+  const headingId = useId();
+  const keyStatsId = useId();
+  const distributionId = useId();
   const stats = state.stats;
 
   if (!stats || stats.totalVotes === 0) {
     return (
-      <section className="app-panel results-panel">
+      <section className="app-panel results-panel" aria-labelledby={headingId}>
         <div className="section-header">
           <div>
             <div className="section-label">Results</div>
-            <h2>No votes yet</h2>
+            <h2 id={headingId}>No votes yet</h2>
           </div>
         </div>
       </section>
@@ -34,25 +37,29 @@ export function ResultsPanel({ state }: Props) {
   const spreadValue = spread !== null ? spread.toFixed(1).replace(/\.0$/, "") : "n/a";
 
   return (
-    <section className="app-panel results-panel">
-      <ResultsHeader consensus={stats.consensus} />
-      <KeyStatsCard average={averageValue} median={medianValue} />
+    <section className="app-panel results-panel" aria-labelledby={headingId}>
+      <ResultsHeader headingId={headingId} consensus={stats.consensus} />
+      <KeyStatsCard sectionId={keyStatsId} average={averageValue} median={medianValue} />
       <SecondaryStats
         mostCommon={mostCommonValue}
         mostCommonMeta={stats.consensus ? "Consensus" : "Plurality"}
         spread={spreadValue}
       />
-      <DistributionSection distribution={distribution} highestCount={highestCount} />
+      <DistributionSection
+        sectionId={distributionId}
+        distribution={distribution}
+        highestCount={highestCount}
+      />
     </section>
   );
 }
 
-function ResultsHeader({ consensus }: { consensus: boolean }) {
+function ResultsHeader({ consensus, headingId }: { consensus: boolean; headingId: string }) {
   return (
     <div className="section-header results-panel__header">
       <div>
         <div className="section-label">Results</div>
-        <h2>Revealed votes</h2>
+        <h2 id={headingId}>Revealed votes</h2>
       </div>
       <div
         className={[
@@ -74,12 +81,20 @@ function ResultsHeader({ consensus }: { consensus: boolean }) {
   );
 }
 
-function KeyStatsCard({ average, median }: { average: string; median: string }) {
+function KeyStatsCard({
+  average,
+  median,
+  sectionId,
+}: {
+  average: string;
+  median: string;
+  sectionId: string;
+}) {
   return (
-    <section className="results-panel__key-card" aria-labelledby="results-key-stats">
+    <section className="results-panel__key-card" aria-labelledby={sectionId}>
       <div className="results-panel__section-header">
         <div className="section-label">Key stats</div>
-        <h3 id="results-key-stats" className="results-panel__section-title">
+        <h3 id={sectionId} className="results-panel__section-title">
           Key stats
         </h3>
       </div>
@@ -110,17 +125,19 @@ function SecondaryStats({
 }
 
 function DistributionSection({
+  sectionId,
   distribution,
   highestCount,
 }: {
+  sectionId: string;
   distribution: Array<[string, number]>;
   highestCount: number;
 }) {
   return (
-    <section className="results-panel__distribution" aria-labelledby="results-distribution">
+    <section className="results-panel__distribution" aria-labelledby={sectionId}>
       <div className="results-panel__section-header">
         <div className="section-label">Distribution</div>
-        <h3 id="results-distribution" className="results-panel__section-title">
+        <h3 id={sectionId} className="results-panel__section-title">
           Distribution
         </h3>
       </div>

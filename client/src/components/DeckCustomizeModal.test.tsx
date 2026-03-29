@@ -47,4 +47,25 @@ describe("DeckCustomizeModal", () => {
 
     expect(getPreviewCards()).toEqual(["0", "1", "2", "3", "5", "8", "13", "21", "Coffee", "?"]);
   });
+
+  it("supports arrow-key navigation between deck customization tabs", async () => {
+    const user = userEvent.setup();
+
+    render(<DeckCustomizeModal open baseDeckType="fibonacci" onClose={vi.fn()} onApply={vi.fn()} />);
+
+    const simpleTab = screen.getByRole("tab", { name: "Simple" });
+    const advancedTab = screen.getByRole("tab", { name: "Advanced" });
+    const customTab = screen.getByRole("tab", { name: "Custom" });
+
+    simpleTab.focus();
+    await user.keyboard("{ArrowRight}");
+
+    expect(advancedTab).toHaveFocus();
+    expect(advancedTab).toHaveAttribute("aria-selected", "true");
+
+    await user.keyboard("{End}");
+
+    expect(customTab).toHaveFocus();
+    expect(customTab).toHaveAttribute("aria-selected", "true");
+  });
 });

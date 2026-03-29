@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { PublicRoomState } from "@yasp/shared";
 import { DeckToken } from "./DeckToken";
 import { COFFEE_CARD_TOKEN, getDeckTokenAriaLabel } from "../lib/deckTokens";
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }: Props) {
+  const headingId = useId();
   const self = getSelf(state);
   const isVoter = self?.role === "voter";
   const canVote = isVoter && !state.revealed && !disabled;
@@ -27,11 +29,11 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
   );
 
   return (
-    <section className="app-panel vote-deck">
+    <section className="app-panel vote-deck" aria-labelledby={headingId}>
       <div className="section-header">
         <div>
           <div className="section-label">Your vote</div>
-          <h2>{voteLabel}</h2>
+          <h2 id={headingId}>{voteLabel}</h2>
         </div>
       </div>
 
