@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import i18n from "../i18n";
 import { LandingPage } from "./LandingPage";
 
 const mocks = vi.hoisted(() => ({
@@ -143,4 +144,27 @@ describe("LandingPage create room deck behavior", () => {
     expect(voter).toHaveAttribute("tabindex", "-1");
     expect(spectator).toHaveAttribute("tabindex", "0");
   });
+
+  it.each([
+    ["es", "Crear sala", "Unirse a una sala", "Personalizar", "¿Quién se une?"],
+    ["fr", "Créer une salle", "Rejoindre une salle", "Personnaliser", "Qui rejoint la salle ?"],
+    ["de", "Raum erstellen", "Raum beitreten", "Anpassen", "Wer ist dabei?"],
+    ["pt", "Criar sala", "Entrar na sala", "Personalizar", "Quem vai entrar?"],
+    ["ja", "ルームを作成", "ルームに参加", "カスタマイズ", "参加者"],
+    ["ko", "룸 만들기", "룸 참가", "커스텀", "참가자"],
+    ["zh-Hans", "创建房间", "加入房间", "自定义", "谁要加入？"],
+    ["zh-Hant", "建立房間", "加入房間", "自訂", "誰要加入？"],
+  ] as const)(
+    "renders the migrated landing copy in %s",
+    async (locale, createLabel, joinLabel, customizeLabel, identityTitle) => {
+      await i18n.changeLanguage(locale);
+
+      render(<LandingPage />);
+
+      expect(screen.getByRole("button", { name: createLabel })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: joinLabel })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: customizeLabel })).toBeInTheDocument();
+      expect(screen.getByText(identityTitle)).toBeInTheDocument();
+    }
+  );
 });

@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { PublicRoomState } from "@yasp/shared";
 import { ParticipantCard } from "./ParticipantCard";
 import { getConnectedVoterCounts, getRevealedVote } from "../lib/room";
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function ParticipantsBoard({ state }: Props) {
+  const { t } = useTranslation();
   const headingId = useId();
   const rosterId = useId();
   const [isMobile, setIsMobile] = useState(() =>
@@ -38,25 +40,25 @@ export function ParticipantsBoard({ state }: Props) {
     <section className="app-panel participants-board" aria-labelledby={headingId}>
       <div className="section-header">
         <div>
-          <div className="section-label">Live board</div>
-          <h2 id={headingId}>Participants</h2>
+          <div className="section-label">{t("room.liveBoard")}</div>
+          <h2 id={headingId}>{t("room.participants")}</h2>
         </div>
         <div className="participants-board__summary">
           <strong>
             {voted}/{total}
           </strong>
-          <span>voted</span>
+          <span>{t("room.participant.voted")}</span>
         </div>
       </div>
 
       <div
         className="participants-board__progress"
         role="progressbar"
-        aria-label="Vote progress"
+        aria-label={t("room.voteProgress")}
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={voted}
-        aria-valuetext={`${voted} of ${total} voted`}
+        aria-valuetext={t("room.voteProgressAria", { voted, total })}
       >
         <div className="participants-board__progress-fill" style={{ width: `${percent}%` }} />
       </div>
@@ -74,9 +76,9 @@ export function ParticipantsBoard({ state }: Props) {
                 .filter(Boolean)
                 .join(" ")}
               title={participant.name}
-              aria-label={`${participant.name}, ${participant.connected ? "online" : "offline"}${
-                participant.hasVoted ? ", voted" : ""
-              }`}
+              aria-label={`${participant.name}, ${
+                participant.connected ? t("connection.connectedFull") : t("room.participant.offline")
+              }${participant.hasVoted ? `, ${t("room.participant.voted")}` : ""}`}
             >
               {participant.name.slice(0, 1).toUpperCase()}
             </span>
@@ -90,7 +92,7 @@ export function ParticipantsBoard({ state }: Props) {
           aria-expanded={mobileExpanded}
           aria-controls={rosterId}
         >
-          {mobileExpanded ? "Hide roster" : `Show roster (${state.participants.length})`}
+          {mobileExpanded ? t("room.hideRoster") : t("room.showRoster", { count: state.participants.length })}
         </button>
       </div>
 

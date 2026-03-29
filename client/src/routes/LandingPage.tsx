@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import type { TFunction } from "i18next";
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import type { DeckInput, DeckType, ParticipantRole } from "@yasp/shared";
 import { DEFAULT_DECKS } from "@yasp/shared";
@@ -7,8 +9,10 @@ import { Banner } from "../components/Banner";
 import { ConnectionBadge } from "../components/ConnectionBadge";
 import { DeckToken } from "../components/DeckToken";
 import { DeckCustomizeModal } from "../components/DeckCustomizeModal";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { getBaseDeckLabel } from "../i18n/decks";
 import { getNextRovingValue } from "../lib/rovingFocus";
 import { useRoom } from "../hooks/useRoom";
 import { COFFEE_CARD_TOKEN, QUESTION_MARK_TOKEN } from "../lib/deckTokens";
@@ -16,12 +20,7 @@ import { useSession } from "../hooks/useSession";
 import { useSocket } from "../hooks/useSocket";
 import { setStoredDisplayName, setStoredRole } from "../lib/storage";
 
-const ROLE_OPTIONS = [
-  { value: "voter", label: "Voter", helper: "Choose a card" },
-  { value: "spectator", label: "Spectator", helper: "Watch only" },
-] as const satisfies ReadonlyArray<{ value: ParticipantRole; label: string; helper: string }>;
-
-function formatDeckOverrideSummary(deckOverride: DeckInput | null): ReactNode {
+function formatDeckOverrideSummary(deckOverride: DeckInput | null, t: TFunction): ReactNode {
   if (!deckOverride || deckOverride.type !== "custom") {
     return null;
   }
@@ -30,17 +29,18 @@ function formatDeckOverrideSummary(deckOverride: DeckInput | null): ReactNode {
   const hasCoffee = deckOverride.cards.includes(COFFEE_CARD_TOKEN);
   return (
     <>
-      <span>Using custom deck: {deckOverride.label}</span>
+      <span>{t("landing.customDeckSummary", { label: deckOverride.label })}</span>
       <span aria-hidden="true"> · </span>
-      <span>? {hasQuestionMark ? "on" : "off"}</span>
+      <span>? {hasQuestionMark ? t("landing.settingOn") : t("landing.settingOff")}</span>
       <span aria-hidden="true"> · </span>
-      <DeckToken token={COFFEE_CARD_TOKEN} coffeeText="Coffee" />
-      <span> {hasCoffee ? "on" : "off"}</span>
+      <DeckToken token={COFFEE_CARD_TOKEN} coffeeText={t("deck.coffee")} />
+      <span> {hasCoffee ? t("landing.settingOn") : t("landing.settingOff")}</span>
     </>
   );
 }
 
 export function LandingPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { socket, status } = useSocket();
   const { sessionId, storedName } = useSession();
@@ -55,21 +55,28 @@ export function LandingPage() {
   const [joinRoomId, setJoinRoomId] = useState("");
   const [pendingAction, setPendingAction] = useState<"create" | "join" | null>(null);
 
-  useDocumentTitle("Scrum Poker");
+  useDocumentTitle(t("documentTitle.landing"));
 
   const connected = status === "connected";
   const canSubmitIdentity = name.trim().length > 0 && connected;
   const deckOptions = Object.values(DEFAULT_DECKS);
-  const deckOverrideSummary = formatDeckOverrideSummary(deckOverride);
+  const deckOverrideSummary = formatDeckOverrideSummary(deckOverride, t);
 
-  const headlines = [
-    "Estimate together in seconds",
-    "One link. One room. Zero friction.",
-    "No accounts. No history. Just poker.",
-    "Point, vote, ship.",
-  ];
+  const headlines = t("landing.headlines", { returnObjects: true }) as string[];
   const headlineIndex = useRef(Math.floor(Math.random() * headlines.length));
   const headline = headlines[headlineIndex.current];
+  const roleOptions = [
+    {
+      value: "voter",
+      label: t("roles.voter.label"),
+      helper: t("roles.voter.helper"),
+    },
+    {
+      value: "spectator",
+      label: t("roles.spectator.label"),
+      helper: t("roles.spectator.helper"),
+    },
+  ] as const satisfies ReadonlyArray<{ value: ParticipantRole; label: string; helper: string }>;
   const roleOptionRefs = useRef<Record<ParticipantRole, HTMLButtonElement | null>>({
     voter: null,
     spectator: null,
@@ -77,7 +84,7 @@ export function LandingPage() {
 
   const handleRoleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, currentRole: ParticipantRole) => {
     const nextRole = getNextRovingValue(
-      ROLE_OPTIONS.map((option) => option.value),
+      roleOptions.map((option) => option.value),
       currentRole,
       event.key
     );
@@ -135,25 +142,24 @@ export function LandingPage() {
       <main className="landing-page">
         <div className="landing-page__status">
           <ConnectionBadge status={status} />
+          <LanguageSwitcher compact />
           <ThemeToggle />
         </div>
 
         <header className="landing-page__hero">
-          <div className="landing-page__eyebrow">Yet Another Scrum Poker</div>
+          <div className="landing-page__eyebrow">{t("landing.eyebrow")}</div>
           <h1>{headline}</h1>
-          <p>Create a room and estimate together. No sign-up required.</p>
+          <p>{t("landing.description")}</p>
         </header>
 
         {!connected && (
           <Banner tone={status === "connecting" ? "info" : "warning"}>
-            {status === "connecting"
-              ? "Connecting to the room service…"
-              : "Disconnected. Trying to reconnect before you can create or join a room."}
+            {status === "connecting" ? t("landing.connecting") : t("landing.disconnected")}
           </Banner>
         )}
 
         {error && (
-          <Banner tone="error" title="Couldn’t continue">
+          <Banner tone="error" title={t("landing.errorTitle")}>
             {error.message}
           </Banner>
         )}
@@ -161,28 +167,28 @@ export function LandingPage() {
         <section className="app-panel identity-panel">
           <div className="section-header">
             <div>
-              <h2>Who’s joining?</h2>
+              <h2>{t("landing.identityTitle")}</h2>
             </div>
           </div>
 
           <label className="field">
-            <span className="field__label">Display name</span>
+            <span className="field__label">{t("landing.displayNameLabel")}</span>
             <input
               className="input"
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Enter your display name"
+              placeholder={t("landing.displayNamePlaceholder")}
               maxLength={30}
             />
           </label>
 
           <div className="field">
             <span className="field__label" id="role-label">
-              Role
+              {t("landing.roleLabel")}
             </span>
             <div className="segmented" role="radiogroup" aria-labelledby="role-label">
-              {ROLE_OPTIONS.map(({ value, label, helper }) => (
+              {roleOptions.map(({ value, label, helper }) => (
                 <button
                   key={value}
                   ref={(element) => {
@@ -207,17 +213,21 @@ export function LandingPage() {
         </section>
 
         <div className="landing-page__actions">
-          <form className="app-panel action-card" onSubmit={handleCreate} aria-label="Create room">
+          <form
+            className="app-panel action-card"
+            onSubmit={handleCreate}
+            aria-label={t("landing.createRoom")}
+          >
             <div className="section-header">
               <div>
-                <h2>Create room</h2>
+                <h2>{t("landing.createRoom")}</h2>
               </div>
             </div>
 
             <div className="field">
               <div className="landing-page__deck-head">
                 <label className="field__label" htmlFor="deck-select">
-                  Deck
+                  {t("landing.deckLabel")}
                 </label>
                 <button
                   className="landing-page__customize-trigger"
@@ -227,7 +237,7 @@ export function LandingPage() {
                     setShowDeckModal(true);
                   }}
                 >
-                  Customize
+                  {t("landing.customize")}
                 </button>
               </div>
               <select
@@ -241,7 +251,7 @@ export function LandingPage() {
               >
                 {deckOptions.map((deck) => (
                   <option key={deck.type} value={deck.type}>
-                    {deck.label}
+                    {getBaseDeckLabel(t, deck.type as Exclude<DeckType, "custom">)}
                   </option>
                 ))}
               </select>
@@ -253,29 +263,29 @@ export function LandingPage() {
               type="submit"
               disabled={!canSubmitIdentity || pendingAction !== null}
             >
-              {pendingAction === "create" ? "Creating…" : "Create room"}
+              {pendingAction === "create" ? t("landing.creating") : t("landing.createRoom")}
             </button>
           </form>
 
           <form
             className="app-panel action-card action-card--secondary"
             onSubmit={handleJoin}
-            aria-label="Join room"
+            aria-label={t("landing.joinRoom")}
           >
             <div className="section-header">
               <div>
-                <h2>Join room</h2>
+                <h2>{t("landing.joinRoom")}</h2>
               </div>
             </div>
 
             <label className="field">
-              <span className="field__label">Room code</span>
+              <span className="field__label">{t("landing.roomCodeLabel")}</span>
               <input
                 className="input input--code"
                 type="text"
                 value={joinRoomId}
                 onChange={(event) => setJoinRoomId(event.target.value.toUpperCase())}
-                placeholder="Enter room code"
+                placeholder={t("landing.roomCodePlaceholder")}
                 maxLength={10}
               />
             </label>
@@ -285,18 +295,18 @@ export function LandingPage() {
               type="submit"
               disabled={!canSubmitIdentity || !joinRoomId.trim() || pendingAction !== null}
             >
-              {pendingAction === "join" ? "Joining…" : "Join room"}
+              {pendingAction === "join" ? t("landing.joining") : t("landing.joinRoom")}
             </button>
           </form>
         </div>
 
-        <p className="landing-page__note">Rooms expire after inactivity. No data is stored.</p>
+        <p className="landing-page__note">{t("landing.roomNote")}</p>
         <a
           href="https://github.com/wleonhardt/YASP"
           target="_blank"
           rel="noopener noreferrer"
           className="landing-page__github-link"
-          aria-label="GitHub"
+          aria-label={t("meta.github")}
         >
           <svg
             viewBox="0 0 16 16"

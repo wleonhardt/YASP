@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate translations
+        run: npm run i18n:check
+
       - name: Run lint
         run: npm run lint
 

@@ -1,16 +1,13 @@
 import { useTheme } from "../hooks/useTheme";
+import { useTranslation } from "react-i18next";
 
 export function ThemeToggle() {
   const { theme, toggle } = useTheme();
+  const { t } = useTranslation();
+  const label = theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark");
 
   return (
-    <button
-      type="button"
-      className="theme-toggle"
-      onClick={toggle}
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-      title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-    >
+    <button type="button" className="theme-toggle" onClick={toggle} aria-label={label} title={label}>
       {theme === "dark" ? (
         // Sun icon
         <svg

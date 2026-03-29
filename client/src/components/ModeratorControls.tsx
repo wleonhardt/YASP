@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { PublicRoomState } from "@yasp/shared";
 import { isMeModerator } from "../lib/room";
 
@@ -19,6 +20,7 @@ export function ModeratorControls({
   onTransferModerator,
   disabled = false,
 }: Props) {
+  const { t } = useTranslation();
   const isModerator = isMeModerator(state);
   const revealAllowed = !disabled && (state.settings.revealPolicy === "anyone" || isModerator);
   const resetAllowed = !disabled && (state.settings.resetPolicy === "anyone" || isModerator);
@@ -37,7 +39,9 @@ export function ModeratorControls({
     !isModerator &&
     ((state.revealed && state.settings.resetPolicy === "moderator_only") ||
       (!state.revealed && state.settings.revealPolicy === "moderator_only"))
-      ? `Only the moderator can ${state.revealed ? "advance or reset" : "reveal"} this round.`
+      ? state.revealed
+        ? t("room.onlyModeratorAdvanceReset")
+        : t("room.onlyModeratorReveal")
       : null;
 
   useEffect(() => {
@@ -106,8 +110,8 @@ export function ModeratorControls({
     <section className="app-panel controls-panel" aria-labelledby={headingId}>
       <div className="section-header">
         <div>
-          <div className="section-label">Actions</div>
-          <h2 id={headingId}>{state.revealed ? "Next steps" : "Moderator controls"}</h2>
+          <div className="section-label">{t("room.actions")}</div>
+          <h2 id={headingId}>{state.revealed ? t("room.nextSteps") : t("room.moderatorControls")}</h2>
         </div>
         {isModerator && (
           <button
@@ -121,7 +125,7 @@ export function ModeratorControls({
             aria-controls={transferPanelId}
             disabled={disabled}
           >
-            Transfer host
+            {t("room.transferHost")}
           </button>
         )}
       </div>
@@ -134,7 +138,7 @@ export function ModeratorControls({
             disabled={!revealAllowed}
             aria-describedby={!revealAllowed && actionHint ? actionHintId : undefined}
           >
-            Reveal votes
+            {t("room.revealVotes")}
           </button>
         ) : (
           <>
@@ -144,7 +148,7 @@ export function ModeratorControls({
               disabled={!resetAllowed}
               aria-describedby={!resetAllowed && actionHint ? actionHintId : undefined}
             >
-              Next round
+              {t("room.nextRound")}
             </button>
             <button
               className="button button--secondary button--full"
@@ -152,7 +156,7 @@ export function ModeratorControls({
               disabled={!resetAllowed}
               aria-describedby={!resetAllowed && actionHint ? actionHintId : undefined}
             >
-              Reset
+              {t("room.reset")}
             </button>
           </>
         )}
@@ -169,16 +173,16 @@ export function ModeratorControls({
           className="controls-panel__transfer-disclosure"
           id={transferPanelId}
           role="group"
-          aria-label="Transfer host"
+          aria-label={t("room.transferHost")}
         >
           {transferCandidates.length > 0 ? (
             confirming ? (
               <div className="controls-panel__transfer-confirm">
-                <div className="section-label">Confirm transfer</div>
+                <div className="section-label">{t("room.confirmTransfer")}</div>
                 <p className="controls-panel__hint">
-                  Transfer moderator controls to{" "}
-                  <strong>{transferCandidates.find((p) => p.id === targetParticipantId)?.name}</strong>? You
-                  will lose host privileges.
+                  {t("room.transferConfirmMessage", {
+                    name: transferCandidates.find((p) => p.id === targetParticipantId)?.name ?? "",
+                  })}
                 </p>
                 <div className="controls-panel__transfer-actions">
                   <button
@@ -187,7 +191,7 @@ export function ModeratorControls({
                     onClick={() => void handleTransfer()}
                     disabled={disabled}
                   >
-                    Yes, transfer
+                    {t("room.yesTransfer")}
                   </button>
                   <button
                     className="button button--ghost"
@@ -195,21 +199,19 @@ export function ModeratorControls({
                     onClick={() => setConfirming(false)}
                     disabled={disabled}
                   >
-                    Back
+                    {t("room.back")}
                   </button>
                 </div>
               </div>
             ) : (
               <>
                 <div>
-                  <div className="section-label">Transfer host</div>
-                  <p className="controls-panel__hint">
-                    Choose the participant who should become the new moderator.
-                  </p>
+                  <div className="section-label">{t("room.transferHost")}</div>
+                  <p className="controls-panel__hint">{t("room.transferPrompt")}</p>
                 </div>
                 <div className="controls-panel__transfer-row">
                   <label className="field controls-panel__transfer-field">
-                    <span className="field__label">New moderator</span>
+                    <span className="field__label">{t("room.newModerator")}</span>
                     <select
                       ref={transferSelectRef}
                       className="input"
@@ -220,7 +222,7 @@ export function ModeratorControls({
                       {transferCandidates.map((participant) => (
                         <option key={participant.id} value={participant.id}>
                           {participant.name}
-                          {participant.connected ? "" : " (offline)"}
+                          {participant.connected ? "" : ` (${t("room.participant.offline").toLowerCase()})`}
                         </option>
                       ))}
                     </select>
@@ -233,7 +235,7 @@ export function ModeratorControls({
                       onClick={() => void handleTransfer()}
                       disabled={disabled || !targetParticipantId}
                     >
-                      Transfer
+                      {t("room.transfer")}
                     </button>
                     <button
                       className="button button--ghost"
@@ -241,7 +243,7 @@ export function ModeratorControls({
                       onClick={closeTransfer}
                       disabled={disabled}
                     >
-                      Cancel
+                      {t("room.cancel")}
                     </button>
                   </div>
                 </div>
@@ -250,8 +252,8 @@ export function ModeratorControls({
           ) : (
             <>
               <div>
-                <div className="section-label">Transfer host</div>
-                <p className="controls-panel__hint">Add another participant before transferring host.</p>
+                <div className="section-label">{t("room.transferHost")}</div>
+                <p className="controls-panel__hint">{t("room.addParticipantBeforeTransfer")}</p>
               </div>
               <div className="controls-panel__transfer-actions">
                 <button
@@ -260,7 +262,7 @@ export function ModeratorControls({
                   onClick={closeTransfer}
                   disabled={disabled}
                 >
-                  Close
+                  {t("room.close")}
                 </button>
               </div>
             </>

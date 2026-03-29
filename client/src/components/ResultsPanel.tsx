@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import type { PublicRoomState } from "@yasp/shared";
 import { DeckToken } from "./DeckToken";
 import { getMedian, getNumericVotes, getSpread } from "../lib/room";
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function ResultsPanel({ state }: Props) {
+  const { t } = useTranslation();
   const headingId = useId();
   const keyStatsId = useId();
   const distributionId = useId();
@@ -18,8 +20,8 @@ export function ResultsPanel({ state }: Props) {
       <section className="app-panel results-panel" aria-labelledby={headingId}>
         <div className="section-header">
           <div>
-            <div className="section-label">Results</div>
-            <h2 id={headingId}>No votes yet</h2>
+            <div className="section-label">{t("room.results")}</div>
+            <h2 id={headingId}>{t("room.noVotesYet")}</h2>
           </div>
         </div>
       </section>
@@ -31,10 +33,10 @@ export function ResultsPanel({ state }: Props) {
   const spread = getSpread(numericVotes);
   const distribution = Object.entries(stats.distribution).sort(([, a], [, b]) => b - a);
   const highestCount = distribution[0]?.[1] ?? 1;
-  const averageValue = stats.numericAverage !== null ? String(stats.numericAverage) : "n/a";
-  const medianValue = median !== null ? median.toFixed(1).replace(/\.0$/, "") : "n/a";
-  const mostCommonValue = stats.mostCommon !== null ? <DeckToken token={stats.mostCommon} /> : "Tie";
-  const spreadValue = spread !== null ? spread.toFixed(1).replace(/\.0$/, "") : "n/a";
+  const averageValue = stats.numericAverage !== null ? String(stats.numericAverage) : t("room.notAvailable");
+  const medianValue = median !== null ? median.toFixed(1).replace(/\.0$/, "") : t("room.notAvailable");
+  const mostCommonValue = stats.mostCommon !== null ? <DeckToken token={stats.mostCommon} /> : t("room.tie");
+  const spreadValue = spread !== null ? spread.toFixed(1).replace(/\.0$/, "") : t("room.notAvailable");
 
   return (
     <section className="app-panel results-panel" aria-labelledby={headingId}>
@@ -42,7 +44,7 @@ export function ResultsPanel({ state }: Props) {
       <KeyStatsCard sectionId={keyStatsId} average={averageValue} median={medianValue} />
       <SecondaryStats
         mostCommon={mostCommonValue}
-        mostCommonMeta={stats.consensus ? "Consensus" : "Plurality"}
+        mostCommonMeta={stats.consensus ? t("room.consensus") : t("room.plurality")}
         spread={spreadValue}
       />
       <DistributionSection
@@ -55,11 +57,13 @@ export function ResultsPanel({ state }: Props) {
 }
 
 function ResultsHeader({ consensus, headingId }: { consensus: boolean; headingId: string }) {
+  const { t } = useTranslation();
+
   return (
     <div className="section-header results-panel__header">
       <div>
-        <div className="section-label">Results</div>
-        <h2 id={headingId}>Revealed votes</h2>
+        <div className="section-label">{t("room.results")}</div>
+        <h2 id={headingId}>{t("room.revealedVotes")}</h2>
       </div>
       <div
         className={[
@@ -75,7 +79,7 @@ function ResultsHeader({ consensus, headingId }: { consensus: boolean; headingId
             ✓
           </span>
         )}
-        <span>{consensus ? "Consensus reached" : "No consensus"}</span>
+        <span>{consensus ? t("room.consensusReached") : t("room.noConsensus")}</span>
       </div>
     </div>
   );
@@ -90,18 +94,20 @@ function KeyStatsCard({
   median: string;
   sectionId: string;
 }) {
+  const { t } = useTranslation();
+
   return (
     <section className="results-panel__key-card" aria-labelledby={sectionId}>
       <div className="results-panel__section-header">
-        <div className="section-label">Key stats</div>
+        <div className="section-label">{t("room.keyStats")}</div>
         <h3 id={sectionId} className="results-panel__section-title">
-          Key stats
+          {t("room.keyStats")}
         </h3>
       </div>
 
       <div className="results-panel__key-grid">
-        <StatTile label="Average" value={average} emphasis="hero" />
-        <StatTile label="Median" value={median} emphasis="hero" />
+        <StatTile label={t("room.average")} value={average} emphasis="hero" />
+        <StatTile label={t("room.median")} value={median} emphasis="hero" />
       </div>
     </section>
   );
@@ -116,10 +122,12 @@ function SecondaryStats({
   mostCommonMeta: string;
   spread: string;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="results-panel__secondary-grid">
-      <StatTile label="Most common" value={mostCommon} meta={mostCommonMeta} />
-      <StatTile label="Spread" value={spread} />
+      <StatTile label={t("room.mostCommon")} value={mostCommon} meta={mostCommonMeta} />
+      <StatTile label={t("room.spread")} value={spread} />
     </div>
   );
 }
@@ -133,12 +141,14 @@ function DistributionSection({
   distribution: Array<[string, number]>;
   highestCount: number;
 }) {
+  const { t } = useTranslation();
+
   return (
     <section className="results-panel__distribution" aria-labelledby={sectionId}>
       <div className="results-panel__section-header">
-        <div className="section-label">Distribution</div>
+        <div className="section-label">{t("room.distribution")}</div>
         <h3 id={sectionId} className="results-panel__section-title">
-          Distribution
+          {t("room.distribution")}
         </h3>
       </div>
 

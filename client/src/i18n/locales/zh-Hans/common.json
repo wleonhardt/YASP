@@ -1,0 +1,251 @@
+{
+  "meta": {
+    "appName": "YASP",
+    "github": "GitHub"
+  },
+  "common": {
+    "anonymous": "匿名"
+  },
+  "language": {
+    "label": "语言",
+    "option": {
+      "en": "English",
+      "es": "Español",
+      "fr": "Français",
+      "de": "Deutsch",
+      "pt": "Português",
+      "ja": "日本語",
+      "ko": "한국어",
+      "zh-Hans": "简体中文",
+      "zh-Hant": "繁體中文"
+    },
+    "short": {
+      "en": "EN",
+      "es": "ES",
+      "fr": "FR",
+      "de": "DE",
+      "pt": "PT",
+      "ja": "JA",
+      "ko": "KO",
+      "zh-Hans": "简",
+      "zh-Hant": "繁"
+    }
+  },
+  "connection": {
+    "connectedFull": "已连接",
+    "connectedShort": "在线",
+    "connectingFull": "正在重新连接…",
+    "connectingShort": "同步中…",
+    "disconnectedFull": "已断开连接",
+    "disconnectedShort": "离线"
+  },
+  "theme": {
+    "switchToLight": "切换到浅色模式",
+    "switchToDark": "切换到深色模式"
+  },
+  "roles": {
+    "voter": {
+      "label": "投票者",
+      "helper": "选择一张牌"
+    },
+    "spectator": {
+      "label": "旁观者",
+      "helper": "仅观看"
+    }
+  },
+  "landing": {
+    "eyebrow": "Yet Another Scrum Poker",
+    "headlines": [
+      "几秒内一起完成估算",
+      "一个链接，一个房间，零摩擦。",
+      "无需账号，没有历史，只做扑克估算。",
+      "给点数、投票、继续推进。"
+    ],
+    "description": "创建房间并一起估算。无需注册。",
+    "connecting": "正在连接房间服务…",
+    "disconnected": "连接已断开。正在尝试重新连接，然后你才能创建或加入房间。",
+    "errorTitle": "无法继续",
+    "identityTitle": "谁要加入？",
+    "displayNameLabel": "显示名称",
+    "displayNamePlaceholder": "输入你的显示名称",
+    "roleLabel": "角色",
+    "createRoom": "创建房间",
+    "joinRoom": "加入房间",
+    "deckLabel": "牌组",
+    "customize": "自定义",
+    "roomCodeLabel": "房间代码",
+    "roomCodePlaceholder": "输入房间代码",
+    "creating": "创建中…",
+    "joining": "加入中…",
+    "roomNote": "房间会在一段时间无活动后过期。不会存储数据。",
+    "customDeckSummary": "正在使用自定义牌组：{{label}}",
+    "settingOn": "开",
+    "settingOff": "关"
+  },
+  "deck": {
+    "options": {
+      "fibonacci": "斐波那契",
+      "modifiedFibonacci": "修改版斐波那契",
+      "tshirt": "T 恤尺码",
+      "powersOfTwo": "2 的幂",
+      "custom": "自定义"
+    },
+    "coffee": "咖啡",
+    "coffeeBreak": "咖啡休息",
+    "preview": {
+      "fibonacci": "斐波那契 · 最大 {{max}}",
+      "modifiedFibonacci": "修改版斐波那契 · 最大 {{max}}",
+      "powersOfTwo": "2 的幂 · 最大 {{max}}",
+      "tshirt": "T 恤尺码 · {{range}}",
+      "default": "{{label}}（默认）"
+    },
+    "errors": {
+      "addAtLeastOneCard": "请至少添加一张牌。",
+      "maxLabelLength": "卡牌标签最长不能超过 12 个字符。问题项：\"{{token}}\"",
+      "duplicateCards": "请移除重复卡牌：{{cards}}",
+      "maxCards": "自定义牌组最多只能包含 30 张牌。"
+    },
+    "modal": {
+      "title": "自定义牌组",
+      "close": "关闭牌组自定义",
+      "tabs": {
+        "simple": "简单",
+        "advanced": "高级",
+        "custom": "自定义"
+      },
+      "tabList": "牌组自定义标签页",
+      "advancedOptions": "高级选项",
+      "includeQuestion": "包含“?”",
+      "includeCoffee": "包含咖啡休息牌",
+      "questionDescription": "保留不确定性卡牌。",
+      "coffeeDescription": "在牌组末尾附近加入一张咖啡休息牌。",
+      "includeZero": "包含“0”",
+      "zeroNotUsed": "T 恤尺码牌组不会使用它。",
+      "zeroNumericOnly": "只影响自动生成的数字牌组。",
+      "includeHalf": "包含“0.5”",
+      "halfUnavailable": "仅适用于修改版斐波那契。",
+      "halfDefault": "与默认修改版斐波那契牌组保持一致。",
+      "cardsLabel": "卡牌",
+      "cardsPlaceholder": "用逗号或空格分隔卡牌，例如 1, 2, 3, 5, 8",
+      "preview": "预览",
+      "cardsAppear": "卡牌会显示在这里。",
+      "reset": "恢复默认",
+      "cancel": "取消",
+      "useDeck": "使用牌组",
+      "footerNote": "将为此房间创建一个自定义牌组。",
+      "maxValue": "最大值",
+      "minimumSize": "最小范围",
+      "maximumSize": "最大范围"
+    }
+  },
+  "room": {
+    "room": "房间",
+    "copyLink": "复制链接",
+    "copyShort": "复制",
+    "copySuccess": "已复制房间链接",
+    "copyError": "无法复制房间链接",
+    "leave": "离开",
+    "leaveRoom": "离开房间",
+    "round": "第 {{count}} 轮",
+    "phase": {
+      "waiting": "等待中",
+      "voting": "投票中",
+      "revealed": "已揭示"
+    },
+    "progress": "{{voted}}/{{total}} 已投票",
+    "liveBoard": "实时看板",
+    "participants": "参与者",
+    "voteProgress": "投票进度",
+    "voteProgressAria": "{{total}} 人中已有 {{voted}} 人投票",
+    "hideRoster": "隐藏名单",
+    "showRoster": "显示名单（{{count}}）",
+    "participant": {
+      "you": "你",
+      "spectator": "旁观者",
+      "moderator": "主持人",
+      "offline": "离线",
+      "voted": "已投票",
+      "notVoted": "未投票",
+      "ready": "已就绪"
+    },
+    "yourVote": "你的投票",
+    "chooseCard": "选择一张牌",
+    "spectatorsCantVote": "旁观者不能投票",
+    "voteHintReady": "揭示前可再次点击已选中的卡牌来取消。",
+    "voteHintIdle": "准备好后请选择一张牌。",
+    "voteHintSpectator": "旁观者可以查看进度，但不参与本轮投票。",
+    "shortcuts": "快捷键：可用时按数字键投票，Esc 清除选择",
+    "actions": "操作",
+    "nextSteps": "下一步",
+    "moderatorControls": "主持人控制",
+    "revealVotes": "揭示投票",
+    "nextRound": "下一轮",
+    "reset": "重置",
+    "transferHost": "转移主持人",
+    "onlyModeratorReveal": "只有主持人可以揭示本轮结果。",
+    "onlyModeratorAdvanceReset": "只有主持人可以推进或重置本轮。",
+    "confirmTransfer": "确认转移",
+    "transferPrompt": "选择一位参与者作为新的主持人。",
+    "transferConfirmMessage": "将主持人控制权转移给 {{name}} 吗？你将失去主持权限。",
+    "newModerator": "新的主持人",
+    "transfer": "转移",
+    "yesTransfer": "是，转移",
+    "back": "返回",
+    "cancel": "取消",
+    "close": "关闭",
+    "addParticipantBeforeTransfer": "在转移主持人前，请先添加另一位参与者。",
+    "results": "结果",
+    "noVotesYet": "还没有投票",
+    "revealedVotes": "已揭示的投票",
+    "consensusReached": "已达成共识",
+    "noConsensus": "尚未达成共识",
+    "keyStats": "关键指标",
+    "average": "平均值",
+    "median": "中位数",
+    "mostCommon": "最常见",
+    "spread": "范围",
+    "distribution": "分布",
+    "plurality": "相对多数",
+    "consensus": "一致",
+    "tie": "平局",
+    "notAvailable": "无",
+    "roomUnavailable": "房间不可用",
+    "roomMissing": "房间是临时的。该房间已不存在。",
+    "roomExpiredMessage": "该房间因长时间无活动而过期。",
+    "roomMissingMessage": "它可能已被关闭或重启。",
+    "createNewRoom": "创建新房间",
+    "roomHeading": "房间 {{roomId}}",
+    "manualJoin": "手动加入",
+    "joinRoomTitle": "加入房间 {{roomId}}",
+    "manualJoinDescription": "此标签页无法自动加入。请输入你的姓名和角色继续。",
+    "connecting": "连接中",
+    "joiningRoom": "正在加入房间…",
+    "waitingSnapshot": "正在等待最新的房间状态快照。",
+    "reconnectingTitle": "正在重新连接…",
+    "disconnectedTitle": "已断开连接",
+    "reconnectHint": "正在尝试重新连接。如果持续这样，请刷新页面。",
+    "actionBlocked": "操作被阻止",
+    "session": "会话",
+    "sessionStatus": "会话状态",
+    "readOnlyTitle": "此标签页现在为只读状态",
+    "readOnlyBody": "此房间已在另一个标签页中处于活动状态。",
+    "takeControl": "在此标签页中接管",
+    "closeTab": "关闭此标签页",
+    "announce": {
+      "roundStarted": "第 {{count}} 轮已开始",
+      "votesRevealed": "投票已揭示",
+      "votesReset": "投票已重置",
+      "moderatorChanged": "{{name}} 现在是主持人",
+      "allVotesIn": "所有投票已完成",
+      "voteProgress": "共 {{total}} 票，已提交 {{voted}} 票"
+    }
+  },
+  "documentTitle": {
+    "landing": "Scrum Poker",
+    "roomUnavailable": "房间不可用",
+    "joining": "正在加入 {{roomId}}",
+    "join": "加入 {{roomId}}",
+    "revealedSuffix": " · 已揭示",
+    "roomRound": "房间 {{roomId}} · 第 {{roundNumber}} 轮{{revealedSuffix}}"
+  }
+}

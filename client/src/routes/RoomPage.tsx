@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { ParticipantRole } from "@yasp/shared";
 import { Banner } from "../components/Banner";
 import { ConnectionBadge } from "../components/ConnectionBadge";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ModeratorControls } from "../components/ModeratorControls";
 import { ParticipantsBoard } from "../components/ParticipantsBoard";
 import { ResultsPanel } from "../components/ResultsPanel";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { Toast, type ToastState } from "../components/Toast";
 import { TopBar } from "../components/TopBar";
 import { VoteDeck } from "../components/VoteDeck";
@@ -21,6 +24,7 @@ type RoomUnavailableReason = "ROOM_NOT_FOUND" | "ROOM_EXPIRED";
 const JOIN_ROLE_OPTIONS = ["voter", "spectator"] as const satisfies readonly ParticipantRole[];
 
 export function RoomPage() {
+  const { t } = useTranslation();
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,12 +52,16 @@ export function RoomPage() {
   const [roomUnavailable, setRoomUnavailable] = useState<RoomUnavailableReason | null>(null);
 
   const roomTitle = roomUnavailable
-    ? "Room unavailable"
+    ? t("documentTitle.roomUnavailable")
     : roomState
-      ? `Room ${roomId} · Round ${roomState.roundNumber}${roomState.revealed ? " · Revealed" : ""}`
+      ? t("documentTitle.roomRound", {
+          roomId,
+          roundNumber: roomState.roundNumber,
+          revealedSuffix: roomState.revealed ? t("documentTitle.revealedSuffix") : "",
+        })
       : needsManualJoin
-        ? `Join ${roomId}`
-        : `Joining ${roomId}`;
+        ? t("documentTitle.join", { roomId })
+        : t("documentTitle.joining", { roomId });
   useDocumentTitle(roomTitle);
 
   const autoJoinAttempted = useRef(false);
@@ -98,11 +106,13 @@ export function RoomPage() {
     let nextAnnouncement: string | null = null;
 
     if (prevRoundRef.current !== null && roomState.roundNumber !== prevRoundRef.current) {
-      nextAnnouncement = `Round ${roomState.roundNumber} started`;
+      nextAnnouncement = t("room.announce.roundStarted", { count: roomState.roundNumber });
     } else if (prevRevealedRef.current !== null && roomState.revealed !== prevRevealedRef.current) {
-      nextAnnouncement = roomState.revealed ? "Votes revealed" : "Votes reset";
+      nextAnnouncement = roomState.revealed
+        ? t("room.announce.votesRevealed")
+        : t("room.announce.votesReset");
     } else if (prevModeratorRef.current !== null && moderator && moderator.id !== prevModeratorRef.current) {
-      nextAnnouncement = `${moderator.name} is now the moderator`;
+      nextAnnouncement = t("room.announce.moderatorChanged", { name: moderator.name });
     } else if (
       !roomState.revealed &&
       prevRevealedRef.current === roomState.revealed &&
@@ -111,7 +121,9 @@ export function RoomPage() {
       voteProgress !== prevVoteProgressRef.current
     ) {
       nextAnnouncement =
-        total > 0 && voted === total ? "All votes are in" : `${voted} of ${total} votes submitted`;
+        total > 0 && voted === total
+          ? t("room.announce.allVotesIn")
+          : t("room.announce.voteProgress", { voted, total });
     }
 
     if (nextAnnouncement) {
@@ -122,7 +134,7 @@ export function RoomPage() {
     prevRevealedRef.current = roomState.revealed;
     prevVoteProgressRef.current = voteProgress;
     prevModeratorRef.current = moderator?.id ?? null;
-  }, [announce, roomState]);
+  }, [announce, roomState, t]);
 
   const navState = location.state as { role?: ParticipantRole } | null;
 
@@ -170,7 +182,7 @@ export function RoomPage() {
 
     if (roomState && wasDisconnected) {
       const self = getSelf(roomState);
-      const name = getStoredDisplayName() || self?.name || "Anonymous";
+      const name = getStoredDisplayName() || self?.name || t("common.anonymous");
       const role = self?.role ?? getIntendedRole();
 
       joinRoom(roomId, name, role).then((result) => {
@@ -196,7 +208,7 @@ export function RoomPage() {
         setNeedsManualJoin(true);
       }
     }
-  }, [checkRoomUnavailable, getIntendedRole, joinRoom, roomId, roomState, status]);
+  }, [checkRoomUnavailable, getIntendedRole, joinRoom, roomId, roomState, status, t]);
 
   useEffect(() => {
     if (status !== "connected") {
@@ -249,10 +261,10 @@ export function RoomPage() {
       return;
     }
 
-    const name = getStoredDisplayName() || storedName || "Anonymous";
+    const name = getStoredDisplayName() || storedName || t("common.anonymous");
     const role = getIntendedRole();
     await joinRoom(roomId, name, role);
-  }, [getIntendedRole, joinRoom, roomId, status, storedName]);
+  }, [getIntendedRole, joinRoom, roomId, status, storedName, t]);
 
   const handleCloseTab = () => {
     window.close();
@@ -417,20 +429,20 @@ export function RoomPage() {
   if (roomUnavailable) {
     return (
       <div className="page-shell page-shell--centered">
-        <header className="status-corner" aria-label="Session status">
+        <header className="status-corner" aria-label={t("room.sessionStatus")}>
           <ConnectionBadge status={status} />
+          <LanguageSwitcher compact />
+          <ThemeToggle />
         </header>
 
         <main className="app-panel empty-state">
-          <div className="section-label">Room unavailable</div>
-          <h1>Rooms are temporary. This room no longer exists.</h1>
+          <div className="section-label">{t("room.roomUnavailable")}</div>
+          <h1>{t("room.roomMissing")}</h1>
           <p>
-            {roomUnavailable === "ROOM_EXPIRED"
-              ? "The room expired after inactivity."
-              : "It may have been closed or restarted."}
+            {roomUnavailable === "ROOM_EXPIRED" ? t("room.roomExpiredMessage") : t("room.roomMissingMessage")}
           </p>
           <button className="button button--primary" type="button" onClick={() => navigate("/")}>
-            Create a new room
+            {t("room.createNewRoom")}
           </button>
         </main>
       </div>
@@ -440,31 +452,33 @@ export function RoomPage() {
   if (needsManualJoin && !roomState) {
     return (
       <div className="page-shell page-shell--centered">
-        <header className="status-corner" aria-label="Session status">
+        <header className="status-corner" aria-label={t("room.sessionStatus")}>
           <ConnectionBadge status={status} />
+          <LanguageSwitcher compact />
+          <ThemeToggle />
         </header>
 
         <main className="app-panel empty-state empty-state--form">
           <form className="empty-state__form-body" onSubmit={handleManualJoin}>
-            <div className="section-label">Manual join</div>
-            <h1>Join room {roomId}</h1>
-            <p>We couldn’t auto-join this tab. Enter your name and role to continue.</p>
+            <div className="section-label">{t("room.manualJoin")}</div>
+            <h1>{t("room.joinRoomTitle", { roomId })}</h1>
+            <p>{t("room.manualJoinDescription")}</p>
 
             <label className="field">
-              <span className="field__label">Display name</span>
+              <span className="field__label">{t("landing.displayNameLabel")}</span>
               <input
                 className="input"
                 type="text"
                 value={joinName}
                 onChange={(event) => setJoinName(event.target.value)}
-                placeholder="Enter your display name"
+                placeholder={t("landing.displayNamePlaceholder")}
                 maxLength={30}
               />
             </label>
 
             <div className="field">
               <span className="field__label" id="join-role-label">
-                Role
+                {t("landing.roleLabel")}
               </span>
               <div className="segmented" role="radiogroup" aria-labelledby="join-role-label">
                 {JOIN_ROLE_OPTIONS.map((roleOption) => (
@@ -486,8 +500,8 @@ export function RoomPage() {
                     onClick={() => setJoinRole(roleOption)}
                     onKeyDown={(event) => handleJoinRoleKeyDown(event, roleOption)}
                   >
-                    <span>{roleOption === "voter" ? "Voter" : "Spectator"}</span>
-                    <small>{roleOption === "voter" ? "Choose a card" : "Watch only"}</small>
+                    <span>{t(`roles.${roleOption}.label`)}</span>
+                    <small>{t(`roles.${roleOption}.helper`)}</small>
                   </button>
                 ))}
               </div>
@@ -498,7 +512,7 @@ export function RoomPage() {
               type="submit"
               disabled={!joinName.trim() || status !== "connected"}
             >
-              Join room
+              {t("landing.joinRoom")}
             </button>
           </form>
         </main>
@@ -511,13 +525,15 @@ export function RoomPage() {
   if (!roomState) {
     return (
       <div className="page-shell page-shell--centered">
-        <header className="status-corner" aria-label="Session status">
+        <header className="status-corner" aria-label={t("room.sessionStatus")}>
           <ConnectionBadge status={status} />
+          <LanguageSwitcher compact />
+          <ThemeToggle />
         </header>
         <main className="app-panel empty-state">
-          <div className="section-label">Connecting</div>
-          <h1>Joining room…</h1>
-          <p>Waiting for the latest room snapshot.</p>
+          <div className="section-label">{t("room.connecting")}</div>
+          <h1>{t("room.joiningRoom")}</h1>
+          <p>{t("room.waitingSnapshot")}</p>
         </main>
       </div>
     );
@@ -536,27 +552,27 @@ export function RoomPage() {
       />
 
       <main>
-        <h1 className="sr-only">Room {roomId}</h1>
+        <h1 className="sr-only">{t("room.roomHeading", { roomId })}</h1>
         {status !== "connected" && (
           <Banner
             tone={status === "connecting" ? "info" : "error"}
-            title={status === "connecting" ? "Reconnecting…" : "Disconnected"}
+            title={status === "connecting" ? t("room.reconnectingTitle") : t("room.disconnectedTitle")}
           >
-            Trying to reconnect. If this persists, refresh.
+            {t("room.reconnectHint")}
           </Banner>
         )}
 
         {error?.code === "NOT_ALLOWED" && (
-          <Banner tone="warning" title="Action blocked">
+          <Banner tone="warning" title={t("room.actionBlocked")}>
             {error.message}
           </Banner>
         )}
 
         {sessionReplaced && (
           <section className="app-panel session-panel">
-            <div className="section-label">Session</div>
-            <h2>This tab is now read-only</h2>
-            <p>This room is active in another tab.</p>
+            <div className="section-label">{t("room.session")}</div>
+            <h2>{t("room.readOnlyTitle")}</h2>
+            <p>{t("room.readOnlyBody")}</p>
             <div className="session-panel__actions">
               <button
                 className="button button--primary"
@@ -564,10 +580,10 @@ export function RoomPage() {
                 onClick={handleRejoin}
                 disabled={status !== "connected"}
               >
-                Take control in this tab
+                {t("room.takeControl")}
               </button>
               <button className="button button--ghost" type="button" onClick={handleCloseTab}>
-                Close this tab
+                {t("room.closeTab")}
               </button>
             </div>
           </section>

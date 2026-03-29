@@ -24,11 +24,10 @@ Use this checklist for release-facing accessibility sanity checks. It complement
 ## Labels and Icon-Only Controls
 
 - [ ] Confirm icon-only buttons have a clear accessible name and understandable visible purpose.
-- [ ] Check at minimum:
-  - theme toggle
-  - copy link
-  - leave room
-  - moderator transfer controls
+- [ ] Confirm the theme toggle is clearly labeled and understandable.
+- [ ] Confirm the copy link control is clearly labeled and understandable.
+- [ ] Confirm the leave room control is clearly labeled and understandable.
+- [ ] Confirm the moderator transfer controls are clearly labeled and understandable.
 
 ## Contrast Sanity
 

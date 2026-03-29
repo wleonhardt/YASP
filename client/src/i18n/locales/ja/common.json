@@ -1,0 +1,251 @@
+{
+  "meta": {
+    "appName": "YASP",
+    "github": "GitHub"
+  },
+  "common": {
+    "anonymous": "匿名"
+  },
+  "language": {
+    "label": "言語",
+    "option": {
+      "en": "English",
+      "es": "Español",
+      "fr": "Français",
+      "de": "Deutsch",
+      "pt": "Português",
+      "ja": "日本語",
+      "ko": "한국어",
+      "zh-Hans": "简体中文",
+      "zh-Hant": "繁體中文"
+    },
+    "short": {
+      "en": "EN",
+      "es": "ES",
+      "fr": "FR",
+      "de": "DE",
+      "pt": "PT",
+      "ja": "JA",
+      "ko": "KO",
+      "zh-Hans": "简",
+      "zh-Hant": "繁"
+    }
+  },
+  "connection": {
+    "connectedFull": "接続済み",
+    "connectedShort": "接続中",
+    "connectingFull": "再接続中…",
+    "connectingShort": "同期中…",
+    "disconnectedFull": "切断済み",
+    "disconnectedShort": "オフライン"
+  },
+  "theme": {
+    "switchToLight": "ライトモードに切り替え",
+    "switchToDark": "ダークモードに切り替え"
+  },
+  "roles": {
+    "voter": {
+      "label": "投票者",
+      "helper": "カードを選ぶ"
+    },
+    "spectator": {
+      "label": "観戦者",
+      "helper": "見るだけ"
+    }
+  },
+  "landing": {
+    "eyebrow": "Yet Another Scrum Poker",
+    "headlines": [
+      "数秒で一緒に見積もる",
+      "リンクひとつ、ルームひとつ、手間はゼロ。",
+      "アカウント不要。履歴なし。ポーカーだけ。",
+      "見積もって、投票して、前に進む。"
+    ],
+    "description": "ルームを作成して一緒に見積もりましょう。登録は不要です。",
+    "connecting": "ルームサービスに接続しています…",
+    "disconnected": "切断されました。ルームの作成や参加ができるようになるまで再接続を試みます。",
+    "errorTitle": "続行できませんでした",
+    "identityTitle": "参加者",
+    "displayNameLabel": "表示名",
+    "displayNamePlaceholder": "表示名を入力",
+    "roleLabel": "役割",
+    "createRoom": "ルームを作成",
+    "joinRoom": "ルームに参加",
+    "deckLabel": "デッキ",
+    "customize": "カスタマイズ",
+    "roomCodeLabel": "ルームコード",
+    "roomCodePlaceholder": "ルームコードを入力",
+    "creating": "作成中…",
+    "joining": "参加中…",
+    "roomNote": "ルームは一定時間操作がないと期限切れになります。データは保存されません。",
+    "customDeckSummary": "カスタムデッキを使用中: {{label}}",
+    "settingOn": "オン",
+    "settingOff": "オフ"
+  },
+  "deck": {
+    "options": {
+      "fibonacci": "Fibonacci",
+      "modifiedFibonacci": "Modified Fibonacci",
+      "tshirt": "Tシャツ",
+      "powersOfTwo": "2の累乗",
+      "custom": "カスタム"
+    },
+    "coffee": "コーヒー",
+    "coffeeBreak": "休憩カード",
+    "preview": {
+      "fibonacci": "Fibonacci · 最大 {{max}}",
+      "modifiedFibonacci": "Modified Fibonacci · 最大 {{max}}",
+      "powersOfTwo": "2の累乗 · 最大 {{max}}",
+      "tshirt": "Tシャツ · {{range}}",
+      "default": "{{label}} (デフォルト)"
+    },
+    "errors": {
+      "addAtLeastOneCard": "少なくとも1枚のカードを追加してください。",
+      "maxLabelLength": "カードラベルは12文字以内にしてください。問題の値: \"{{token}}\"",
+      "duplicateCards": "重複するカードを削除してください: {{cards}}",
+      "maxCards": "カスタムデッキは最大30枚までです。"
+    },
+    "modal": {
+      "title": "デッキをカスタマイズ",
+      "close": "デッキ設定を閉じる",
+      "tabs": {
+        "simple": "シンプル",
+        "advanced": "詳細",
+        "custom": "カスタム"
+      },
+      "tabList": "デッキ設定タブ",
+      "advancedOptions": "詳細オプション",
+      "includeQuestion": "\"?\" を含める",
+      "includeCoffee": "休憩カードを含める",
+      "questionDescription": "不確実性カードを使えるようにします。",
+      "coffeeDescription": "デッキの終わり近くに休憩カードを追加します。",
+      "includeZero": "\"0\" を含める",
+      "zeroNotUsed": "Tシャツデッキでは使われません。",
+      "zeroNumericOnly": "自動生成される数値デッキにのみ影響します。",
+      "includeHalf": "\"0.5\" を含める",
+      "halfUnavailable": "Modified Fibonacci でのみ利用できます。",
+      "halfDefault": "デフォルトの Modified Fibonacci デッキに合わせます。",
+      "cardsLabel": "カード",
+      "cardsPlaceholder": "カードをカンマまたは空白区切りで入力。例: 1, 2, 3, 5, 8",
+      "preview": "プレビュー",
+      "cardsAppear": "ここにカードが表示されます。",
+      "reset": "デフォルトに戻す",
+      "cancel": "キャンセル",
+      "useDeck": "このデッキを使う",
+      "footerNote": "このルーム用にカスタムデッキを作成します。",
+      "maxValue": "最大値",
+      "minimumSize": "最小サイズ",
+      "maximumSize": "最大サイズ"
+    }
+  },
+  "room": {
+    "room": "ルーム",
+    "copyLink": "リンクをコピー",
+    "copyShort": "コピー",
+    "copySuccess": "ルームリンクをコピーしました",
+    "copyError": "ルームリンクをコピーできませんでした",
+    "leave": "退出",
+    "leaveRoom": "ルームを退出",
+    "round": "ラウンド {{count}}",
+    "phase": {
+      "waiting": "待機中",
+      "voting": "投票中",
+      "revealed": "公開済み"
+    },
+    "progress": "{{voted}}/{{total}} 投票済み",
+    "liveBoard": "ライブボード",
+    "participants": "参加者",
+    "voteProgress": "投票の進行状況",
+    "voteProgressAria": "{{total}}人中{{voted}}人が投票済み",
+    "hideRoster": "参加者一覧を隠す",
+    "showRoster": "参加者一覧を表示 ({{count}})",
+    "participant": {
+      "you": "あなた",
+      "spectator": "観戦者",
+      "moderator": "モデレーター",
+      "offline": "オフライン",
+      "voted": "投票済み",
+      "notVoted": "未投票",
+      "ready": "準備完了"
+    },
+    "yourVote": "あなたの投票",
+    "chooseCard": "カードを選択",
+    "spectatorsCantVote": "観戦者は投票できません",
+    "voteHintReady": "公開前なら、選択済みのカードをもう一度タップして取り消せます。",
+    "voteHintIdle": "準備ができたらカードを選んでください。",
+    "voteHintSpectator": "観戦者はラウンドに参加せず、進行だけ確認できます。",
+    "shortcuts": "ショートカット: 数字キーで投票、Esc でクリア",
+    "actions": "操作",
+    "nextSteps": "次の操作",
+    "moderatorControls": "モデレーター操作",
+    "revealVotes": "投票を公開",
+    "nextRound": "次のラウンド",
+    "reset": "リセット",
+    "transferHost": "進行役を引き継ぐ",
+    "onlyModeratorReveal": "このラウンドを公開できるのはモデレーターだけです。",
+    "onlyModeratorAdvanceReset": "このラウンドを進めたりリセットしたりできるのはモデレーターだけです。",
+    "confirmTransfer": "引き継ぎを確認",
+    "transferPrompt": "新しいモデレーターにする参加者を選んでください。",
+    "transferConfirmMessage": "{{name}} にモデレーター権限を引き継ぎますか？ あなたの進行役権限は失われます。",
+    "newModerator": "新しいモデレーター",
+    "transfer": "引き継ぐ",
+    "yesTransfer": "はい、引き継ぐ",
+    "back": "戻る",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "addParticipantBeforeTransfer": "進行役を引き継ぐ前に、もう一人参加者を追加してください。",
+    "results": "結果",
+    "noVotesYet": "まだ投票がありません",
+    "revealedVotes": "公開された投票",
+    "consensusReached": "合意に達しました",
+    "noConsensus": "合意なし",
+    "keyStats": "主要な指標",
+    "average": "平均",
+    "median": "中央値",
+    "mostCommon": "最多値",
+    "spread": "幅",
+    "distribution": "分布",
+    "plurality": "最多",
+    "consensus": "一致",
+    "tie": "同数",
+    "notAvailable": "なし",
+    "roomUnavailable": "ルームを利用できません",
+    "roomMissing": "ルームは一時的なものです。このルームはもう存在しません。",
+    "roomExpiredMessage": "このルームは無操作のため期限切れになりました。",
+    "roomMissingMessage": "閉じられたか、再起動された可能性があります。",
+    "createNewRoom": "新しいルームを作成",
+    "roomHeading": "ルーム {{roomId}}",
+    "manualJoin": "手動参加",
+    "joinRoomTitle": "ルーム {{roomId}} に参加",
+    "manualJoinDescription": "このタブでは自動参加できませんでした。続けるには名前と役割を入力してください。",
+    "connecting": "接続中",
+    "joiningRoom": "ルームに参加中…",
+    "waitingSnapshot": "最新のルーム状態を待っています。",
+    "reconnectingTitle": "再接続中…",
+    "disconnectedTitle": "切断されました",
+    "reconnectHint": "再接続を試みています。続く場合はページを再読み込みしてください。",
+    "actionBlocked": "操作がブロックされました",
+    "session": "セッション",
+    "sessionStatus": "セッション状態",
+    "readOnlyTitle": "このタブは現在読み取り専用です",
+    "readOnlyBody": "このルームは別のタブでアクティブです。",
+    "takeControl": "このタブで操作を引き継ぐ",
+    "closeTab": "このタブを閉じる",
+    "announce": {
+      "roundStarted": "ラウンド {{count}} を開始しました",
+      "votesRevealed": "投票を公開しました",
+      "votesReset": "投票をリセットしました",
+      "moderatorChanged": "{{name}} がモデレーターになりました",
+      "allVotesIn": "全員の投票が揃いました",
+      "voteProgress": "{{total}}人中{{voted}}人が投票しました"
+    }
+  },
+  "documentTitle": {
+    "landing": "Scrum Poker",
+    "roomUnavailable": "ルームを利用できません",
+    "joining": "{{roomId}} に参加中",
+    "join": "{{roomId}} に参加",
+    "revealedSuffix": " · 公開済み",
+    "roomRound": "ルーム {{roomId}} · ラウンド {{roundNumber}}{{revealedSuffix}}"
+  }
+}

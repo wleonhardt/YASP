@@ -1,0 +1,251 @@
+{
+  "meta": {
+    "appName": "YASP",
+    "github": "GitHub"
+  },
+  "common": {
+    "anonymous": "Anonym"
+  },
+  "language": {
+    "label": "Sprache",
+    "option": {
+      "en": "English",
+      "es": "Español",
+      "fr": "Français",
+      "de": "Deutsch",
+      "pt": "Português",
+      "ja": "日本語",
+      "ko": "한국어",
+      "zh-Hans": "简体中文",
+      "zh-Hant": "繁體中文"
+    },
+    "short": {
+      "en": "EN",
+      "es": "ES",
+      "fr": "FR",
+      "de": "DE",
+      "pt": "PT",
+      "ja": "JA",
+      "ko": "KO",
+      "zh-Hans": "简",
+      "zh-Hant": "繁"
+    }
+  },
+  "connection": {
+    "connectedFull": "Verbunden",
+    "connectedShort": "Live",
+    "connectingFull": "Verbindung wird wiederhergestellt…",
+    "connectingShort": "Sync…",
+    "disconnectedFull": "Getrennt",
+    "disconnectedShort": "Offline"
+  },
+  "theme": {
+    "switchToLight": "Zum hellen Modus wechseln",
+    "switchToDark": "Zum dunklen Modus wechseln"
+  },
+  "roles": {
+    "voter": {
+      "label": "Voter",
+      "helper": "Karte wählen"
+    },
+    "spectator": {
+      "label": "Zuschauer",
+      "helper": "Nur beobachten"
+    }
+  },
+  "landing": {
+    "eyebrow": "Yet Another Scrum Poker",
+    "headlines": [
+      "Gemeinsam in Sekunden schätzen",
+      "Ein Link. Ein Raum. Keine Reibung.",
+      "Keine Konten. Keine Historie. Nur Poker.",
+      "Punkte setzen, abstimmen, weiter."
+    ],
+    "description": "Erstelle einen Raum und schätzt gemeinsam. Keine Registrierung erforderlich.",
+    "connecting": "Verbindung zum Raumdienst wird hergestellt…",
+    "disconnected": "Getrennt. Es wird versucht, die Verbindung wiederherzustellen, bevor du einen Raum erstellen oder beitreten kannst.",
+    "errorTitle": "Fortfahren nicht möglich",
+    "identityTitle": "Wer ist dabei?",
+    "displayNameLabel": "Anzeigename",
+    "displayNamePlaceholder": "Anzeigenamen eingeben",
+    "roleLabel": "Rolle",
+    "createRoom": "Raum erstellen",
+    "joinRoom": "Raum beitreten",
+    "deckLabel": "Deck",
+    "customize": "Anpassen",
+    "roomCodeLabel": "Raumcode",
+    "roomCodePlaceholder": "Raumcode eingeben",
+    "creating": "Erstellen…",
+    "joining": "Beitreten…",
+    "roomNote": "Räume verfallen nach Inaktivität. Es werden keine Daten gespeichert.",
+    "customDeckSummary": "Benutzerdefiniertes Deck aktiv: {{label}}",
+    "settingOn": "an",
+    "settingOff": "aus"
+  },
+  "deck": {
+    "options": {
+      "fibonacci": "Fibonacci",
+      "modifiedFibonacci": "Modifiziertes Fibonacci",
+      "tshirt": "T-Shirt",
+      "powersOfTwo": "Potenzen von zwei",
+      "custom": "Benutzerdefiniert"
+    },
+    "coffee": "Kaffee",
+    "coffeeBreak": "Kaffeepause",
+    "preview": {
+      "fibonacci": "Fibonacci · max {{max}}",
+      "modifiedFibonacci": "Modifiziertes Fibonacci · max {{max}}",
+      "powersOfTwo": "Potenzen von zwei · max {{max}}",
+      "tshirt": "T-Shirt · {{range}}",
+      "default": "{{label}} (Standard)"
+    },
+    "errors": {
+      "addAtLeastOneCard": "Füge mindestens eine Karte hinzu.",
+      "maxLabelLength": "Kartenbezeichnungen dürfen höchstens 12 Zeichen lang sein. Problem: \"{{token}}\"",
+      "duplicateCards": "Entferne doppelte Karten: {{cards}}",
+      "maxCards": "Benutzerdefinierte Decks dürfen höchstens 30 Karten enthalten."
+    },
+    "modal": {
+      "title": "Deck anpassen",
+      "close": "Deck-Anpassung schließen",
+      "tabs": {
+        "simple": "Einfach",
+        "advanced": "Erweitert",
+        "custom": "Eigenes"
+      },
+      "tabList": "Tabs für die Deck-Anpassung",
+      "advancedOptions": "Erweiterte Optionen",
+      "includeQuestion": "„?“ einschließen",
+      "includeCoffee": "Kaffeepause einschließen",
+      "questionDescription": "Die Unsicherheitskarte bleibt verfügbar.",
+      "coffeeDescription": "Fügt gegen Ende eine Kaffeepausen-Karte hinzu.",
+      "includeZero": "„0“ einschließen",
+      "zeroNotUsed": "Wird bei T-Shirt-Decks nicht verwendet.",
+      "zeroNumericOnly": "Betrifft nur generierte numerische Decks.",
+      "includeHalf": "„0.5“ einschließen",
+      "halfUnavailable": "Nur für modifiziertes Fibonacci verfügbar.",
+      "halfDefault": "Entspricht dem Standarddeck für modifiziertes Fibonacci.",
+      "cardsLabel": "Karten",
+      "cardsPlaceholder": "Karten durch Kommas oder Leerzeichen trennen, z. B. 1, 2, 3, 5, 8",
+      "preview": "Vorschau",
+      "cardsAppear": "Hier erscheinen die Karten.",
+      "reset": "Auf Standard zurücksetzen",
+      "cancel": "Abbrechen",
+      "useDeck": "Deck verwenden",
+      "footerNote": "Erstellt ein benutzerdefiniertes Deck für diesen Raum.",
+      "maxValue": "Maximalwert",
+      "minimumSize": "Mindestgröße",
+      "maximumSize": "Höchstgröße"
+    }
+  },
+  "room": {
+    "room": "Raum",
+    "copyLink": "Link kopieren",
+    "copyShort": "Link",
+    "copySuccess": "Raumlink kopiert",
+    "copyError": "Der Raumlink konnte nicht kopiert werden",
+    "leave": "Verlassen",
+    "leaveRoom": "Raum verlassen",
+    "round": "Runde {{count}}",
+    "phase": {
+      "waiting": "Warten",
+      "voting": "Abstimmung",
+      "revealed": "Aufgedeckt"
+    },
+    "progress": "{{voted}}/{{total}} haben abgestimmt",
+    "liveBoard": "Live-Board",
+    "participants": "Teilnehmende",
+    "voteProgress": "Abstimmungsfortschritt",
+    "voteProgressAria": "{{voted}} von {{total}} haben abgestimmt",
+    "hideRoster": "Liste ausblenden",
+    "showRoster": "Liste anzeigen ({{count}})",
+    "participant": {
+      "you": "Du",
+      "spectator": "Zuschauer",
+      "moderator": "Moderator",
+      "offline": "Offline",
+      "voted": "Abgestimmt",
+      "notVoted": "Nicht abgestimmt",
+      "ready": "Bereit"
+    },
+    "yourVote": "Deine Stimme",
+    "chooseCard": "Wähle eine Karte",
+    "spectatorsCantVote": "Zuschauer können nicht abstimmen",
+    "voteHintReady": "Tippe die ausgewählte Karte erneut an, um sie vor dem Aufdecken zu löschen.",
+    "voteHintIdle": "Wähle eine Karte, wenn du bereit bist.",
+    "voteHintSpectator": "Zuschauer können den Fortschritt verfolgen, ohne an der Runde teilzunehmen.",
+    "shortcuts": "Kurzbefehle: Zifferntasten zum Abstimmen, Esc zum Löschen",
+    "actions": "Aktionen",
+    "nextSteps": "Nächste Schritte",
+    "moderatorControls": "Moderator-Steuerung",
+    "revealVotes": "Stimmen aufdecken",
+    "nextRound": "Nächste Runde",
+    "reset": "Zurücksetzen",
+    "transferHost": "Moderation übertragen",
+    "onlyModeratorReveal": "Nur der Moderator kann diese Runde aufdecken.",
+    "onlyModeratorAdvanceReset": "Nur der Moderator kann diese Runde fortsetzen oder zurücksetzen.",
+    "confirmTransfer": "Übertragung bestätigen",
+    "transferPrompt": "Wähle die Person aus, die neuer Moderator werden soll.",
+    "transferConfirmMessage": "Moderatorrechte an {{name}} übertragen? Du verlierst die Host-Rechte.",
+    "newModerator": "Neuer Moderator",
+    "transfer": "Übertragen",
+    "yesTransfer": "Ja, übertragen",
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "addParticipantBeforeTransfer": "Füge eine weitere Person hinzu, bevor du die Moderation überträgst.",
+    "results": "Ergebnisse",
+    "noVotesYet": "Noch keine Stimmen",
+    "revealedVotes": "Aufgedeckte Stimmen",
+    "consensusReached": "Konsens erreicht",
+    "noConsensus": "Kein Konsens",
+    "keyStats": "Kernwerte",
+    "average": "Durchschnitt",
+    "median": "Median",
+    "mostCommon": "Am häufigsten",
+    "spread": "Spanne",
+    "distribution": "Verteilung",
+    "plurality": "Mehrheit",
+    "consensus": "Konsens",
+    "tie": "Gleichstand",
+    "notAvailable": "k. A.",
+    "roomUnavailable": "Raum nicht verfügbar",
+    "roomMissing": "Räume sind temporär. Dieser Raum existiert nicht mehr.",
+    "roomExpiredMessage": "Der Raum ist nach Inaktivität abgelaufen.",
+    "roomMissingMessage": "Er wurde möglicherweise geschlossen oder neu gestartet.",
+    "createNewRoom": "Neuen Raum erstellen",
+    "roomHeading": "Raum {{roomId}}",
+    "manualJoin": "Manuell beitreten",
+    "joinRoomTitle": "Raum {{roomId}} beitreten",
+    "manualJoinDescription": "Dieser Tab konnte nicht automatisch beitreten. Gib deinen Namen und deine Rolle ein, um fortzufahren.",
+    "connecting": "Verbinden",
+    "joiningRoom": "Raum wird betreten…",
+    "waitingSnapshot": "Warten auf den neuesten Raumstatus.",
+    "reconnectingTitle": "Verbindung wird wiederhergestellt…",
+    "disconnectedTitle": "Getrennt",
+    "reconnectHint": "Es wird versucht, die Verbindung wiederherzustellen. Wenn das so bleibt, aktualisiere die Seite.",
+    "actionBlocked": "Aktion blockiert",
+    "session": "Sitzung",
+    "sessionStatus": "Sitzungsstatus",
+    "readOnlyTitle": "Dieser Tab ist jetzt schreibgeschützt",
+    "readOnlyBody": "Dieser Raum ist in einem anderen Tab aktiv.",
+    "takeControl": "Steuerung in diesem Tab übernehmen",
+    "closeTab": "Diesen Tab schließen",
+    "announce": {
+      "roundStarted": "Runde {{count}} gestartet",
+      "votesRevealed": "Stimmen aufgedeckt",
+      "votesReset": "Stimmen zurückgesetzt",
+      "moderatorChanged": "{{name}} ist jetzt Moderator",
+      "allVotesIn": "Alle Stimmen sind eingegangen",
+      "voteProgress": "{{voted}} von {{total}} Stimmen abgegeben"
+    }
+  },
+  "documentTitle": {
+    "landing": "Scrum Poker",
+    "roomUnavailable": "Raum nicht verfügbar",
+    "joining": "Beitritt zu {{roomId}}",
+    "join": "{{roomId}} beitreten",
+    "revealedSuffix": " · Aufgedeckt",
+    "roomRound": "Raum {{roomId}} · Runde {{roundNumber}}{{revealedSuffix}}"
+  }
+}

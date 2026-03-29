@@ -626,6 +626,7 @@ code {
 
 .room-layout__main,
 .room-layout__aside {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -998,6 +999,51 @@ select.input {
 
 /* ─── Theme toggle ───────────────────────────────────────── */
 
+.language-switcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.language-switcher__select {
+  appearance: none;
+  min-width: 7rem;
+  height: 36px;
+  padding: 0 1.65rem 0 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.language-switcher__select:hover {
+  background: var(--color-surface-soft);
+}
+
+.language-switcher__select:focus-visible {
+  outline: none;
+}
+
+.language-switcher__chevron {
+  position: absolute;
+  right: 0.55rem;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  pointer-events: none;
+}
+
+.language-switcher--compact .language-switcher__select {
+  min-width: 6.75rem;
+}
+
 .theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -1131,6 +1177,7 @@ select.input {
 .topbar__actions {
   justify-content: flex-end;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 /* ─── Room status ─────────────────────────────────────────── */
@@ -1859,7 +1906,7 @@ select.input {
     grid-row: 1;
     justify-content: flex-end;
     align-self: start;
-    gap: 6px;
+    gap: 4px;
     flex-wrap: nowrap;
   }
 
@@ -1915,7 +1962,8 @@ select.input {
   }
 
   .topbar__actions .button,
-  .topbar__actions .connection-badge {
+  .topbar__actions .connection-badge,
+  .topbar__actions .language-switcher__select {
     min-height: 36px;
     padding: 0.4rem 0.55rem;
     font-size: 0.75rem;
@@ -1940,6 +1988,18 @@ select.input {
   .topbar__actions .connection-badge__label--full,
   .topbar__actions .connection-badge__label--short {
     display: none;
+  }
+
+  .topbar__actions .language-switcher {
+    max-width: min(7rem, 32vw);
+  }
+
+  .topbar__actions .language-switcher__select {
+    min-width: 0;
+    width: 100%;
+    padding: 0 1.45rem 0 0.45rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.01em;
   }
 
   .topbar__actions .topbar__leave-label {
@@ -2097,7 +2157,8 @@ select.input {
   }
 
   .topbar__actions .button,
-  .topbar__actions .connection-badge {
+  .topbar__actions .connection-badge,
+  .topbar__actions .language-switcher__select {
     min-height: 34px;
     padding: 0.4rem 0.5rem;
     font-size: 0.72rem;
@@ -2106,6 +2167,18 @@ select.input {
   .topbar__actions .theme-toggle {
     width: 34px;
     height: 34px;
+  }
+
+  .topbar__actions .language-switcher {
+    max-width: min(6.5rem, 31vw);
+  }
+
+  .topbar__actions .language-switcher__select {
+    height: 34px;
+    min-width: 0;
+    width: 100%;
+    padding: 0 1.35rem 0 0.38rem;
+    font-size: 0.68rem;
   }
 
   .results-panel__header {

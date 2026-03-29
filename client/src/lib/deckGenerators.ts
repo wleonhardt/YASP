@@ -26,6 +26,22 @@ export type DeckPreview = {
   errors: string[];
 };
 
+export type DeckTextSet = {
+  labels: {
+    custom: string;
+    fibonacci(max: number): string;
+    modifiedFibonacci(max: number): string;
+    powersOfTwo(max: number): string;
+    tshirt(from: TShirtSize, to: TShirtSize): string;
+  };
+  errors: {
+    addAtLeastOneCard: string;
+    maxLabelLength(token: string): string;
+    duplicateCards(cards: string[]): string;
+    maxCards: string;
+  };
+};
+
 export const FIBONACCI_MAX_OPTIONS = [13, 21, 34, 55, 89] as const;
 export const MODIFIED_FIBONACCI_MAX_OPTIONS = [20, 40, 100] as const;
 export const POWERS_OF_TWO_MAX_OPTIONS = [16, 32, 64, 128, 256, 512] as const;
@@ -33,6 +49,21 @@ export const TSHIRT_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const satisfie
 
 const FIBONACCI_BASE = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89] as const;
 const MODIFIED_FIBONACCI_BASE = [0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100] as const;
+const DEFAULT_TEXT_SET: DeckTextSet = {
+  labels: {
+    custom: "Custom",
+    fibonacci: (max) => `Fibonacci · max ${max}`,
+    modifiedFibonacci: (max) => `Modified Fibonacci · max ${max}`,
+    powersOfTwo: (max) => `Powers of Two · max ${max}`,
+    tshirt: (from, to) => `T-Shirt · ${from === to ? from : `${from}–${to}`}`,
+  },
+  errors: {
+    addAtLeastOneCard: "Add at least one card.",
+    maxLabelLength: (token) => `Card labels must be 12 characters or fewer. Problem: "${token}"`,
+    duplicateCards: (cards) => `Remove duplicate cards: ${cards.join(", ")}`,
+    maxCards: "Custom decks can include at most 30 cards.",
+  },
+};
 
 function clampToOptions<T extends readonly number[]>(value: number, options: T): T[number] {
   return options.find((option) => option === value) ?? options[0];
@@ -109,7 +140,10 @@ export function generateTShirtDeck(draft: DeckDraft): string[] {
   return appendSpecialCards([...cards], draft.includeCoffee, draft.includeQuestionMark);
 }
 
-export function parseCustomDeck(text: string): { cards: string[]; errors: string[] } {
+export function parseCustomDeck(
+  text: string,
+  textSet: DeckTextSet = DEFAULT_TEXT_SET
+): { cards: string[]; errors: string[] } {
   const rawTokens = text
     .split(/[,\s]+/)
     .map((token) => token.trim())
@@ -118,7 +152,7 @@ export function parseCustomDeck(text: string): { cards: string[]; errors: string
   const errors: string[] = [];
 
   if (rawTokens.length === 0) {
-    errors.push("Add at least one card.");
+    errors.push(textSet.errors.addAtLeastOneCard);
   }
 
   const seen = new Set<string>();
@@ -127,7 +161,7 @@ export function parseCustomDeck(text: string): { cards: string[]; errors: string
 
   for (const token of cards) {
     if (token.length > 12) {
-      errors.push(`Card labels must be 12 characters or fewer. Problem: "${token}"`);
+      errors.push(textSet.errors.maxLabelLength(token));
       break;
     }
 
@@ -138,29 +172,36 @@ export function parseCustomDeck(text: string): { cards: string[]; errors: string
   }
 
   if (duplicateLabels.size > 0) {
-    errors.push(`Remove duplicate cards: ${Array.from(duplicateLabels).join(", ")}`);
+    errors.push(textSet.errors.duplicateCards(Array.from(duplicateLabels)));
   }
 
   return { cards: rawTokens, errors };
 }
 
-export function generateCustomDeck(draft: DeckDraft): { cards: string[]; errors: string[] } {
-  const parsed = parseCustomDeck(draft.customInputText);
+export function generateCustomDeck(
+  draft: DeckDraft,
+  textSet: DeckTextSet = DEFAULT_TEXT_SET
+): { cards: string[]; errors: string[] } {
+  const parsed = parseCustomDeck(draft.customInputText, textSet);
   const cards = appendSpecialCards(parsed.cards, draft.includeCoffee, draft.includeQuestionMark);
   const errors = [...parsed.errors];
 
   if (cards.length > 30) {
-    errors.push("Custom decks can include at most 30 cards.");
+    errors.push(textSet.errors.maxCards);
   }
 
   return { cards, errors };
 }
 
-export function buildDeckPreview(draft: DeckDraft, mode: DeckCustomizeMode): DeckPreview {
+export function buildDeckPreview(
+  draft: DeckDraft,
+  mode: DeckCustomizeMode,
+  textSet: DeckTextSet = DEFAULT_TEXT_SET
+): DeckPreview {
   if (mode === "custom") {
-    const custom = generateCustomDeck(draft);
+    const custom = generateCustomDeck(draft, textSet);
     return {
-      label: "Custom",
+      label: textSet.labels.custom,
       cards: custom.cards,
       errors: custom.errors,
     };
@@ -169,22 +210,21 @@ export function buildDeckPreview(draft: DeckDraft, mode: DeckCustomizeMode): Dec
   switch (draft.baseDeckType) {
     case "fibonacci":
       return {
-        label: `Fibonacci · max ${clampToOptions(draft.fibonacciMax, FIBONACCI_MAX_OPTIONS)}`,
+        label: textSet.labels.fibonacci(clampToOptions(draft.fibonacciMax, FIBONACCI_MAX_OPTIONS)),
         cards: generateFibonacciDeck(draft),
         errors: [],
       };
     case "modified_fibonacci":
       return {
-        label: `Modified Fibonacci · max ${clampToOptions(
-          draft.modifiedMax,
-          MODIFIED_FIBONACCI_MAX_OPTIONS
-        )}`,
+        label: textSet.labels.modifiedFibonacci(
+          clampToOptions(draft.modifiedMax, MODIFIED_FIBONACCI_MAX_OPTIONS)
+        ),
         cards: generateModifiedFibonacciDeck(draft),
         errors: [],
       };
     case "powers_of_two":
       return {
-        label: `Powers of Two · max ${clampToOptions(draft.powersMax, POWERS_OF_TWO_MAX_OPTIONS)}`,
+        label: textSet.labels.powersOfTwo(clampToOptions(draft.powersMax, POWERS_OF_TWO_MAX_OPTIONS)),
         cards: generatePowersOfTwoDeck(draft),
         errors: [],
       };
@@ -193,10 +233,9 @@ export function buildDeckPreview(draft: DeckDraft, mode: DeckCustomizeMode): Dec
       const endIndex = TSHIRT_SIZES.indexOf(draft.tshirtMax);
       const from = Math.min(startIndex, endIndex);
       const to = Math.max(startIndex, endIndex);
-      const rangeLabel = from === to ? TSHIRT_SIZES[from] : `${TSHIRT_SIZES[from]}–${TSHIRT_SIZES[to]}`;
 
       return {
-        label: `T-Shirt · ${rangeLabel}`,
+        label: textSet.labels.tshirt(TSHIRT_SIZES[from], TSHIRT_SIZES[to]),
         cards: generateTShirtDeck(draft),
         errors: [],
       };
@@ -204,8 +243,12 @@ export function buildDeckPreview(draft: DeckDraft, mode: DeckCustomizeMode): Dec
   }
 }
 
-export function buildDeckInput(draft: DeckDraft, mode: DeckCustomizeMode): DeckInput {
-  const preview = buildDeckPreview(draft, mode);
+export function buildDeckInput(
+  draft: DeckDraft,
+  mode: DeckCustomizeMode,
+  textSet: DeckTextSet = DEFAULT_TEXT_SET
+): DeckInput {
+  const preview = buildDeckPreview(draft, mode, textSet);
   return {
     type: "custom",
     label: preview.label,

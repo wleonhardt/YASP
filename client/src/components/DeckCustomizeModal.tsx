@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { DeckType } from "@yasp/shared";
 import type { DeckInput } from "@yasp/shared";
+import { createDeckTextSet } from "../i18n/decks";
 import { DeckToken } from "./DeckToken";
 import {
   buildDeckInput,
@@ -15,7 +17,6 @@ import {
   type DeckCustomizeMode,
   type TShirtSize,
 } from "../lib/deckGenerators";
-import { COFFEE_CARD_TOKEN } from "../lib/deckTokens";
 import { getNextRovingValue } from "../lib/rovingFocus";
 
 type Props = {
@@ -27,11 +28,7 @@ type Props = {
 
 type DeckTab = "simple" | "advanced" | "custom";
 
-const TAB_OPTIONS: Array<{ value: DeckTab; label: string }> = [
-  { value: "simple", label: "Simple" },
-  { value: "advanced", label: "Advanced" },
-  { value: "custom", label: "Custom" },
-];
+const TAB_OPTIONS: readonly DeckTab[] = ["simple", "advanced", "custom"];
 
 const FOCUSABLE_SELECTOR = [
   "button:not([disabled])",
@@ -47,6 +44,7 @@ function arraysEqual(a: string[], b: string[]) {
 }
 
 export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Props) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<DeckTab>("simple");
   const [draft, setDraft] = useState<DeckDraft>(() => createDefaultDeckDraft(baseDeckType));
   const modalRef = useRef<HTMLDivElement | null>(null);
@@ -147,14 +145,15 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
   }, [onClose, open]);
 
   const mode: DeckCustomizeMode = activeTab === "custom" ? "custom" : "preset";
-  const preview = useMemo(() => buildDeckPreview(draft, mode), [draft, mode]);
+  const deckTextSet = useMemo(() => createDeckTextSet(t), [t]);
+  const preview = useMemo(() => buildDeckPreview(draft, mode, deckTextSet), [deckTextSet, draft, mode]);
   const defaultPreview = useMemo(
-    () => buildDeckPreview(createDefaultDeckDraft(baseDeckType), "preset"),
-    [baseDeckType]
+    () => buildDeckPreview(createDefaultDeckDraft(baseDeckType), "preset", deckTextSet),
+    [baseDeckType, deckTextSet]
   );
   const subtitle =
     mode === "preset" && arraysEqual(preview.cards, defaultPreview.cards)
-      ? `${preview.label} (default)`
+      ? t("deck.preview.default", { label: preview.label })
       : preview.label;
 
   if (!open) {
@@ -172,7 +171,7 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
       return;
     }
 
-    onApply(buildDeckInput(draft, mode));
+    onApply(buildDeckInput(draft, mode, deckTextSet));
   };
 
   const handleReset = () => {
@@ -194,11 +193,7 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
   };
 
   const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, currentTab: DeckTab) => {
-    const nextTab = getNextRovingValue(
-      TAB_OPTIONS.map((tab) => tab.value),
-      currentTab,
-      event.key
-    );
+    const nextTab = getNextRovingValue(TAB_OPTIONS, currentTab, event.key);
 
     if (!nextTab) {
       return;
@@ -221,7 +216,7 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
       >
         <div className="deck-modal__header">
           <div className="deck-modal__title-group">
-            <h2 id={titleId}>Customize deck</h2>
+            <h2 id={titleId}>{t("deck.modal.title")}</h2>
             <p id={subtitleId} className="deck-modal__subtitle">
               {subtitle}
             </p>
@@ -231,37 +226,37 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
             ref={closeButtonRef}
             className="deck-modal__close"
             type="button"
-            aria-label="Close deck customization"
+            aria-label={t("deck.modal.close")}
             onClick={onClose}
           >
             ×
           </button>
         </div>
 
-        <div className="segmented deck-modal__tabs" role="tablist" aria-label="Deck customization tabs">
+        <div className="segmented deck-modal__tabs" role="tablist" aria-label={t("deck.modal.tabList")}>
           {TAB_OPTIONS.map((tab) => (
             <button
-              key={tab.value}
+              key={tab}
               ref={(element) => {
-                tabRefs.current[tab.value] = element;
+                tabRefs.current[tab] = element;
               }}
-              id={tabIds[tab.value]}
+              id={tabIds[tab]}
               type="button"
               role="tab"
-              aria-selected={activeTab === tab.value}
-              aria-controls={panelIds[tab.value]}
-              tabIndex={activeTab === tab.value ? 0 : -1}
+              aria-selected={activeTab === tab}
+              aria-controls={panelIds[tab]}
+              tabIndex={activeTab === tab ? 0 : -1}
               className={[
                 "segmented__option",
                 "deck-modal__tab",
-                activeTab === tab.value ? "segmented__option--active" : "",
+                activeTab === tab ? "segmented__option--active" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
-              onClick={() => setActiveTab(tab.value)}
-              onKeyDown={(event) => handleTabKeyDown(event, tab.value)}
+              onClick={() => setActiveTab(tab)}
+              onKeyDown={(event) => handleTabKeyDown(event, tab)}
             >
-              <span>{tab.label}</span>
+              <span>{t(`deck.modal.tabs.${tab}`)}</span>
             </button>
           ))}
         </div>
@@ -288,32 +283,26 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
               tabIndex={0}
             >
               <div className="deck-modal__control-group">
-                <div className="section-label">Advanced options</div>
+                <div className="section-label">{t("deck.modal.advancedOptions")}</div>
 
                 <ToggleField
-                  label='Include "?"'
-                  description="Keep the uncertainty card available."
+                  label={t("deck.modal.includeQuestion")}
+                  description={t("deck.modal.questionDescription")}
                   checked={draft.includeQuestionMark}
                   onChange={(checked) => updateDraft({ includeQuestionMark: checked })}
                 />
 
                 <ToggleField
-                  label={
-                    <>
-                      Include <DeckToken token={COFFEE_CARD_TOKEN} coffeeText="Coffee break" />
-                    </>
-                  }
-                  description="Add a coffee-break card near the end."
+                  label={t("deck.modal.includeCoffee")}
+                  description={t("deck.modal.coffeeDescription")}
                   checked={draft.includeCoffee}
                   onChange={(checked) => updateDraft({ includeCoffee: checked })}
                 />
 
                 <ToggleField
-                  label='Include "0"'
+                  label={t("deck.modal.includeZero")}
                   description={
-                    zeroToggleDisabled
-                      ? "Not used for T-Shirt decks."
-                      : "Only affects generated numeric decks."
+                    zeroToggleDisabled ? t("deck.modal.zeroNotUsed") : t("deck.modal.zeroNumericOnly")
                   }
                   checked={draft.includeZero}
                   disabled={zeroToggleDisabled}
@@ -321,11 +310,9 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
                 />
 
                 <ToggleField
-                  label='Include "0.5"'
+                  label={t("deck.modal.includeHalf")}
                   description={
-                    halfToggleDisabled
-                      ? "Only available for Modified Fibonacci."
-                      : "Matches the default Modified Fibonacci deck."
+                    halfToggleDisabled ? t("deck.modal.halfUnavailable") : t("deck.modal.halfDefault")
                   }
                   checked={draft.includeHalf}
                   disabled={halfToggleDisabled}
@@ -344,31 +331,27 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
               tabIndex={0}
             >
               <label className="field" htmlFor={customCardsInputId}>
-                <span className="field__label">Cards</span>
+                <span className="field__label">{t("deck.modal.cardsLabel")}</span>
                 <textarea
                   id={customCardsInputId}
                   className="input deck-modal__textarea"
                   value={draft.customInputText}
                   onChange={(event) => updateDraft({ customInputText: event.target.value })}
-                  placeholder="Enter cards separated by commas or spaces, e.g. 1, 2, 3, 5, 8"
+                  placeholder={t("deck.modal.cardsPlaceholder")}
                 />
               </label>
 
               <div className="deck-modal__toggle-grid">
                 <ToggleField
-                  label='Include "?"'
-                  description="Keep the uncertainty card available."
+                  label={t("deck.modal.includeQuestion")}
+                  description={t("deck.modal.questionDescription")}
                   checked={draft.includeQuestionMark}
                   onChange={(checked) => updateDraft({ includeQuestionMark: checked })}
                 />
 
                 <ToggleField
-                  label={
-                    <>
-                      Include <DeckToken token={COFFEE_CARD_TOKEN} coffeeText="Coffee break" />
-                    </>
-                  }
-                  description="Add a coffee-break card near the end."
+                  label={t("deck.modal.includeCoffee")}
+                  description={t("deck.modal.coffeeDescription")}
                   checked={draft.includeCoffee}
                   onChange={(checked) => updateDraft({ includeCoffee: checked })}
                 />
@@ -378,7 +361,7 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
 
           <section className="deck-modal__preview">
             <div className="deck-modal__preview-header">
-              <div className="section-label">Preview</div>
+              <div className="section-label">{t("deck.modal.preview")}</div>
               <div className="deck-modal__preview-label">{preview.label}</div>
             </div>
 
@@ -398,12 +381,12 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
 
         <div className="deck-modal__footer">
           <button className="deck-modal__text-button" type="button" onClick={handleReset}>
-            Reset to defaults
+            {t("deck.modal.reset")}
           </button>
 
           <div className="deck-modal__footer-actions">
             <button className="button button--secondary" type="button" onClick={onClose}>
-              Cancel
+              {t("deck.modal.cancel")}
             </button>
             <button
               className="button button--primary"
@@ -411,12 +394,12 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
               onClick={handleApply}
               disabled={!canApply}
             >
-              Use deck
+              {t("deck.modal.useDeck")}
             </button>
           </div>
         </div>
 
-        <p className="deck-modal__footer-note">Will create a Custom deck for this room.</p>
+        <p className="deck-modal__footer-note">{t("deck.modal.footerNote")}</p>
       </div>
     </div>
   );
@@ -429,11 +412,13 @@ function SimpleDeckControls({
   draft: DeckDraft;
   onChange(next: Partial<DeckDraft>): void;
 }) {
+  const { t } = useTranslation();
+
   switch (draft.baseDeckType) {
     case "fibonacci":
       return (
         <OptionSlider
-          label="Max value"
+          label={t("deck.modal.maxValue")}
           value={draft.fibonacciMax}
           options={FIBONACCI_MAX_OPTIONS}
           onChange={(value) => onChange({ fibonacciMax: value })}
@@ -442,7 +427,7 @@ function SimpleDeckControls({
     case "modified_fibonacci":
       return (
         <OptionSlider
-          label="Max value"
+          label={t("deck.modal.maxValue")}
           value={draft.modifiedMax}
           options={MODIFIED_FIBONACCI_MAX_OPTIONS}
           onChange={(value) => onChange({ modifiedMax: value })}
@@ -451,7 +436,7 @@ function SimpleDeckControls({
     case "powers_of_two":
       return (
         <OptionSlider
-          label="Max value"
+          label={t("deck.modal.maxValue")}
           value={draft.powersMax}
           options={POWERS_OF_TWO_MAX_OPTIONS}
           onChange={(value) => onChange({ powersMax: value })}
@@ -461,7 +446,7 @@ function SimpleDeckControls({
       return (
         <div className="deck-modal__range-grid">
           <label className="field">
-            <span className="field__label">Minimum size</span>
+            <span className="field__label">{t("deck.modal.minimumSize")}</span>
             <select
               className="input"
               value={draft.tshirtMin}
@@ -476,7 +461,7 @@ function SimpleDeckControls({
           </label>
 
           <label className="field">
-            <span className="field__label">Maximum size</span>
+            <span className="field__label">{t("deck.modal.maximumSize")}</span>
             <select
               className="input"
               value={draft.tshirtMax}
@@ -584,8 +569,10 @@ function ToggleField({
 }
 
 function DeckPreviewChips({ cards }: { cards: string[] }) {
+  const { t } = useTranslation();
+
   if (cards.length === 0) {
-    return <p className="deck-modal__empty-preview">Cards will appear here.</p>;
+    return <p className="deck-modal__empty-preview">{t("deck.modal.cardsAppear")}</p>;
   }
 
   return (

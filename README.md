@@ -81,6 +81,7 @@ This starts both the server (port 3001) and Vite dev server (port 5173). Open [h
 
 ```bash
 npm test             # Run tests
+npm run i18n:check   # Validate locale files against English
 npm run lint         # ESLint
 npm run format:check # Prettier check
 npm run build        # Production build (shared → server → client)
@@ -108,6 +109,44 @@ YASP has an active [WCAG 2.2 AAA audit](./ACCESSIBILITY_WCAG_2_2_AAA_AUDIT.md). 
 - dark/light theme support with stronger contrast-oriented tokens than the original baseline
 
 The app is in much better shape than the initial audit baseline, but it is **not claimed as WCAG 2.2 AAA conformant yet**. Manual assistive-technology validation is still required before making that claim.
+
+## Localization
+
+YASP uses a lean, git-based localization setup built on `i18next` + `react-i18next`.
+
+- locale files live in [`client/src/i18n/locales/`](./client/src/i18n/locales/)
+- Phase 1 uses a single namespace: `common.json`
+- English (`en`) is the default and fallback locale
+- Supported locales are `en`, `es`, `fr`, `de`, `pt`, `ja`, `ko`, `zh-Hans`, and `zh-Hant`
+- translations are bundled with the client and reviewed in pull requests
+- no hosted translation service, sync platform, or runtime locale fetching is used
+- English is the source locale, supported locales must stay in sync with it, and `npm run i18n:check` is enforced in CI
+- Chinese is handled as two explicit locale variants: `zh-Hans` (Simplified) and `zh-Hant` (Traditional)
+
+Language selection:
+
+- the selected language is stored in `localStorage`
+- on startup, YASP uses the stored locale first
+- if no locale was stored, YASP falls back to the browser language only when it matches a supported locale
+- browser locale normalization maps `ko-KR` to `ko`, `zh-CN` and `zh-SG` to `zh-Hans`, `zh-TW`, `zh-HK`, and `zh-MO` to `zh-Hant`, and plain `zh` to `zh-Hans`
+- otherwise it falls back to English
+
+To add a new string:
+
+1. Add a stable key to [`client/src/i18n/locales/en/common.json`](./client/src/i18n/locales/en/common.json).
+   Prefer semantic keys grouped by feature or screen, such as `landing.createRoom`, rather than English sentence keys.
+2. Add the translated value to each additional locale file.
+3. Use `t("your.key")` from `useTranslation()` in the client component.
+4. Run `npm run i18n:check` to verify keys, placeholders, and empty-string rules.
+
+To add a new language:
+
+1. Add a new locale file under [`client/src/i18n/locales/`](./client/src/i18n/locales/).
+2. Register it in [`client/src/i18n/index.ts`](./client/src/i18n/index.ts).
+3. Add the locale code to [`client/src/i18n/config.ts`](./client/src/i18n/config.ts).
+4. Add its visible label to the locale JSON files so the switcher exposes the new language consistently.
+
+Terminology guidance for future translation work lives in [docs/i18n-glossary.md](./docs/i18n-glossary.md).
 
 ## Configuration
 

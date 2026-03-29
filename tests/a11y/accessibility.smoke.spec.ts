@@ -76,8 +76,9 @@ test("transfer-host disclosure open state is free of detectable accessibility vi
     await joinRoomAsParticipant(participantContext, roomId, "Second voter");
     await expect(page.getByText("Second voter")).toBeVisible();
     await page.getByRole("button", { name: "Transfer host" }).click();
-    await expect(page.getByRole("group", { name: "Transfer host" })).toBeVisible();
-    await expect(page.getByLabel("New moderator")).toHaveValue(/.+/);
+    const transferGroup = page.getByRole("group", { name: "Transfer host" });
+    await expect(transferGroup).toBeVisible();
+    await expect(transferGroup.getByLabel("New moderator")).toHaveValue(/.+/);
     await expectNoAccessibilityViolations(page);
   } finally {
     await participantContext.close();
@@ -103,7 +104,7 @@ test("custom deck modal validation state is free of detectable accessibility vio
   page,
 }) => {
   const dialog = await openDeckCustomizationModal(page);
-  await page.getByRole("tab", { name: "Custom" }).click();
+  await dialog.getByRole("tab", { name: "Custom" }).click();
   await expect(dialog.getByText("Add at least one card.")).toBeVisible();
   await expect(dialog.getByLabel("Cards")).toBeVisible();
   await expectNoAccessibilityViolations(page);

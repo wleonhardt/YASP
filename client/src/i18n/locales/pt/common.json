@@ -1,0 +1,251 @@
+{
+  "meta": {
+    "appName": "YASP",
+    "github": "GitHub"
+  },
+  "common": {
+    "anonymous": "Anónimo"
+  },
+  "language": {
+    "label": "Idioma",
+    "option": {
+      "en": "English",
+      "es": "Español",
+      "fr": "Français",
+      "de": "Deutsch",
+      "pt": "Português",
+      "ja": "日本語",
+      "ko": "한국어",
+      "zh-Hans": "简体中文",
+      "zh-Hant": "繁體中文"
+    },
+    "short": {
+      "en": "EN",
+      "es": "ES",
+      "fr": "FR",
+      "de": "DE",
+      "pt": "PT",
+      "ja": "JA",
+      "ko": "KO",
+      "zh-Hans": "简",
+      "zh-Hant": "繁"
+    }
+  },
+  "connection": {
+    "connectedFull": "Ligado",
+    "connectedShort": "Ao vivo",
+    "connectingFull": "A reconectar…",
+    "connectingShort": "Sincronizar…",
+    "disconnectedFull": "Desligado",
+    "disconnectedShort": "Offline"
+  },
+  "theme": {
+    "switchToLight": "Mudar para o modo claro",
+    "switchToDark": "Mudar para o modo escuro"
+  },
+  "roles": {
+    "voter": {
+      "label": "Votante",
+      "helper": "Escolher uma carta"
+    },
+    "spectator": {
+      "label": "Espectador",
+      "helper": "Apenas observar"
+    }
+  },
+  "landing": {
+    "eyebrow": "Yet Another Scrum Poker",
+    "headlines": [
+      "Estimem em conjunto em segundos",
+      "Um link. Uma sala. Zero fricção.",
+      "Sem contas. Sem histórico. Só poker.",
+      "Pontuar, votar, seguir."
+    ],
+    "description": "Crie uma sala e estimem em conjunto. Não é necessário registo.",
+    "connecting": "A ligar ao serviço de salas…",
+    "disconnected": "Desligado. A tentar restabelecer a ligação antes de poderes criar ou entrar numa sala.",
+    "errorTitle": "Não foi possível continuar",
+    "identityTitle": "Quem vai entrar?",
+    "displayNameLabel": "Nome visível",
+    "displayNamePlaceholder": "Introduz o teu nome visível",
+    "roleLabel": "Função",
+    "createRoom": "Criar sala",
+    "joinRoom": "Entrar na sala",
+    "deckLabel": "Baralho",
+    "customize": "Personalizar",
+    "roomCodeLabel": "Código da sala",
+    "roomCodePlaceholder": "Introduz o código da sala",
+    "creating": "A criar…",
+    "joining": "A entrar…",
+    "roomNote": "As salas expiram após um período de inatividade. Nenhum dado é guardado.",
+    "customDeckSummary": "A usar baralho personalizado: {{label}}",
+    "settingOn": "ligado",
+    "settingOff": "desligado"
+  },
+  "deck": {
+    "options": {
+      "fibonacci": "Fibonacci",
+      "modifiedFibonacci": "Fibonacci modificado",
+      "tshirt": "T-Shirt",
+      "powersOfTwo": "Potências de dois",
+      "custom": "Personalizado"
+    },
+    "coffee": "Café",
+    "coffeeBreak": "Pausa para café",
+    "preview": {
+      "fibonacci": "Fibonacci · máx. {{max}}",
+      "modifiedFibonacci": "Fibonacci modificado · máx. {{max}}",
+      "powersOfTwo": "Potências de dois · máx. {{max}}",
+      "tshirt": "T-Shirt · {{range}}",
+      "default": "{{label}} (predefinido)"
+    },
+    "errors": {
+      "addAtLeastOneCard": "Adiciona pelo menos uma carta.",
+      "maxLabelLength": "Os rótulos das cartas devem ter no máximo 12 caracteres. Problema: \"{{token}}\"",
+      "duplicateCards": "Remove as cartas duplicadas: {{cards}}",
+      "maxCards": "Os baralhos personalizados podem ter no máximo 30 cartas."
+    },
+    "modal": {
+      "title": "Personalizar baralho",
+      "close": "Fechar personalização do baralho",
+      "tabs": {
+        "simple": "Simples",
+        "advanced": "Avançado",
+        "custom": "Personalizado"
+      },
+      "tabList": "Separadores de personalização do baralho",
+      "advancedOptions": "Opções avançadas",
+      "includeQuestion": "Incluir \"?\"",
+      "includeCoffee": "Incluir pausa para café",
+      "questionDescription": "Mantém a carta de incerteza disponível.",
+      "coffeeDescription": "Adiciona uma carta de pausa para café perto do fim.",
+      "includeZero": "Incluir \"0\"",
+      "zeroNotUsed": "Não é usado em baralhos T-Shirt.",
+      "zeroNumericOnly": "Afeta apenas baralhos numéricos gerados.",
+      "includeHalf": "Incluir \"0.5\"",
+      "halfUnavailable": "Só está disponível para Fibonacci modificado.",
+      "halfDefault": "Corresponde ao baralho predefinido de Fibonacci modificado.",
+      "cardsLabel": "Cartas",
+      "cardsPlaceholder": "Introduz cartas separadas por vírgulas ou espaços, ex.: 1, 2, 3, 5, 8",
+      "preview": "Pré-visualização",
+      "cardsAppear": "As cartas vão aparecer aqui.",
+      "reset": "Repor predefinições",
+      "cancel": "Cancelar",
+      "useDeck": "Usar baralho",
+      "footerNote": "Vai criar um baralho personalizado para esta sala.",
+      "maxValue": "Valor máximo",
+      "minimumSize": "Tamanho mínimo",
+      "maximumSize": "Tamanho máximo"
+    }
+  },
+  "room": {
+    "room": "Sala",
+    "copyLink": "Copiar link",
+    "copyShort": "Link",
+    "copySuccess": "Link da sala copiado",
+    "copyError": "Não foi possível copiar o link da sala",
+    "leave": "Sair",
+    "leaveRoom": "Sair da sala",
+    "round": "Ronda {{count}}",
+    "phase": {
+      "waiting": "À espera",
+      "voting": "A votar",
+      "revealed": "Revelado"
+    },
+    "progress": "{{voted}}/{{total}} votaram",
+    "liveBoard": "Painel ao vivo",
+    "participants": "Participantes",
+    "voteProgress": "Progresso da votação",
+    "voteProgressAria": "{{voted}} de {{total}} votaram",
+    "hideRoster": "Ocultar lista",
+    "showRoster": "Mostrar lista ({{count}})",
+    "participant": {
+      "you": "Tu",
+      "spectator": "Espectador",
+      "moderator": "Moderador",
+      "offline": "Offline",
+      "voted": "Votou",
+      "notVoted": "Ainda não votou",
+      "ready": "Pronto"
+    },
+    "yourVote": "O teu voto",
+    "chooseCard": "Escolhe uma carta",
+    "spectatorsCantVote": "Os espectadores não podem votar",
+    "voteHintReady": "Toca na carta selecionada outra vez para a limpar antes da revelação.",
+    "voteHintIdle": "Escolhe uma carta quando estiveres pronto.",
+    "voteHintSpectator": "Os espectadores podem acompanhar o progresso sem participar na ronda.",
+    "shortcuts": "Atalhos: teclas numéricas para votar quando aplicável, Esc para limpar",
+    "actions": "Ações",
+    "nextSteps": "Próximos passos",
+    "moderatorControls": "Controlos do moderador",
+    "revealVotes": "Revelar votos",
+    "nextRound": "Próxima ronda",
+    "reset": "Repor",
+    "transferHost": "Transferir moderação",
+    "onlyModeratorReveal": "Só o moderador pode revelar esta ronda.",
+    "onlyModeratorAdvanceReset": "Só o moderador pode avançar ou repor esta ronda.",
+    "confirmTransfer": "Confirmar transferência",
+    "transferPrompt": "Escolhe a pessoa que deve passar a ser o novo moderador.",
+    "transferConfirmMessage": "Transferir os controlos do moderador para {{name}}? Vais perder os privilégios de anfitrião.",
+    "newModerator": "Novo moderador",
+    "transfer": "Transferir",
+    "yesTransfer": "Sim, transferir",
+    "back": "Voltar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "addParticipantBeforeTransfer": "Adiciona outra pessoa antes de transferires a moderação.",
+    "results": "Resultados",
+    "noVotesYet": "Ainda não há votos",
+    "revealedVotes": "Votos revelados",
+    "consensusReached": "Consenso alcançado",
+    "noConsensus": "Sem consenso",
+    "keyStats": "Estatísticas principais",
+    "average": "Média",
+    "median": "Mediana",
+    "mostCommon": "Mais comum",
+    "spread": "Amplitude",
+    "distribution": "Distribuição",
+    "plurality": "Pluralidade",
+    "consensus": "Consenso",
+    "tie": "Empate",
+    "notAvailable": "n/d",
+    "roomUnavailable": "Sala indisponível",
+    "roomMissing": "As salas são temporárias. Esta sala já não existe.",
+    "roomExpiredMessage": "A sala expirou após um período de inatividade.",
+    "roomMissingMessage": "Pode ter sido fechada ou reiniciada.",
+    "createNewRoom": "Criar nova sala",
+    "roomHeading": "Sala {{roomId}}",
+    "manualJoin": "Entrada manual",
+    "joinRoomTitle": "Entrar na sala {{roomId}}",
+    "manualJoinDescription": "Não foi possível entrar automaticamente nesta aba. Introduz o teu nome e função para continuar.",
+    "connecting": "A ligar",
+    "joiningRoom": "A entrar na sala…",
+    "waitingSnapshot": "À espera do estado mais recente da sala.",
+    "reconnectingTitle": "A reconectar…",
+    "disconnectedTitle": "Desligado",
+    "reconnectHint": "A tentar restabelecer a ligação. Se isto continuar, atualiza a página.",
+    "actionBlocked": "Ação bloqueada",
+    "session": "Sessão",
+    "sessionStatus": "Estado da sessão",
+    "readOnlyTitle": "Esta aba está agora em modo só de leitura",
+    "readOnlyBody": "Esta sala está ativa noutra aba.",
+    "takeControl": "Assumir o controlo nesta aba",
+    "closeTab": "Fechar esta aba",
+    "announce": {
+      "roundStarted": "Ronda {{count}} iniciada",
+      "votesRevealed": "Votos revelados",
+      "votesReset": "Votos repostos",
+      "moderatorChanged": "{{name}} é agora o moderador",
+      "allVotesIn": "Todos os votos chegaram",
+      "voteProgress": "{{voted}} de {{total}} votos enviados"
+    }
+  },
+  "documentTitle": {
+    "landing": "Scrum Poker",
+    "roomUnavailable": "Sala indisponível",
+    "joining": "A entrar em {{roomId}}",
+    "join": "Entrar em {{roomId}}",
+    "revealedSuffix": " · Revelado",
+    "roomRound": "Sala {{roomId}} · Ronda {{roundNumber}}{{revealedSuffix}}"
+  }
+}

@@ -23,7 +23,7 @@ function generateSessionId(): string {
 }
 
 /** Safe localStorage wrapper — returns null if storage is unavailable (private browsing, etc.) */
-function safeGetItem(key: string): string | null {
+export function safeGetStoredValue(key: string): string | null {
   try {
     return localStorage.getItem(key);
   } catch {
@@ -31,7 +31,7 @@ function safeGetItem(key: string): string | null {
   }
 }
 
-function safeSetItem(key: string, value: string): void {
+export function safeSetStoredValue(key: string, value: string): void {
   try {
     localStorage.setItem(key, value);
   } catch {
@@ -40,28 +40,28 @@ function safeSetItem(key: string, value: string): void {
 }
 
 export function getSessionId(): string {
-  let id = safeGetItem(SESSION_KEY);
+  let id = safeGetStoredValue(SESSION_KEY);
   if (!id) {
     id = generateSessionId();
-    safeSetItem(SESSION_KEY, id);
+    safeSetStoredValue(SESSION_KEY, id);
   }
   return id;
 }
 
 export function getStoredDisplayName(): string {
-  return safeGetItem(NAME_KEY) || "";
+  return safeGetStoredValue(NAME_KEY) || "";
 }
 
 export function setStoredDisplayName(name: string): void {
-  safeSetItem(NAME_KEY, name);
+  safeSetStoredValue(NAME_KEY, name);
 }
 
 export function getStoredRole(): ParticipantRole | null {
-  const v = safeGetItem(ROLE_KEY);
+  const v = safeGetStoredValue(ROLE_KEY);
   if (v === "voter" || v === "spectator") return v;
   return null;
 }
 
 export function setStoredRole(role: ParticipantRole): void {
-  safeSetItem(ROLE_KEY, role);
+  safeSetStoredValue(ROLE_KEY, role);
 }

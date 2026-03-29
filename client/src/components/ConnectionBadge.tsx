@@ -1,13 +1,23 @@
 import type { ConnectionStatus } from "../hooks/useSocket";
-
-const STATUS_LABELS: Record<ConnectionStatus, { full: string; short: string }> = {
-  connected: { full: "Connected", short: "Live" },
-  connecting: { full: "Reconnecting…", short: "Syncing…" },
-  disconnected: { full: "Disconnected", short: "Offline" },
-};
+import { useTranslation } from "react-i18next";
 
 export function ConnectionBadge({ status }: { status: ConnectionStatus }) {
-  const label = STATUS_LABELS[status];
+  const { t } = useTranslation();
+  const labels: Record<ConnectionStatus, { full: string; short: string }> = {
+    connected: {
+      full: t("connection.connectedFull"),
+      short: t("connection.connectedShort"),
+    },
+    connecting: {
+      full: t("connection.connectingFull"),
+      short: t("connection.connectingShort"),
+    },
+    disconnected: {
+      full: t("connection.disconnectedFull"),
+      short: t("connection.disconnectedShort"),
+    },
+  };
+  const label = labels[status];
 
   return (
     <div

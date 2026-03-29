@@ -1,0 +1,251 @@
+{
+  "meta": {
+    "appName": "YASP",
+    "github": "GitHub"
+  },
+  "common": {
+    "anonymous": "Anonymous"
+  },
+  "language": {
+    "label": "Language",
+    "option": {
+      "en": "English",
+      "es": "Español",
+      "fr": "Français",
+      "de": "Deutsch",
+      "pt": "Português",
+      "ja": "日本語",
+      "ko": "한국어",
+      "zh-Hans": "简体中文",
+      "zh-Hant": "繁體中文"
+    },
+    "short": {
+      "en": "EN",
+      "es": "ES",
+      "fr": "FR",
+      "de": "DE",
+      "pt": "PT",
+      "ja": "JA",
+      "ko": "KO",
+      "zh-Hans": "简",
+      "zh-Hant": "繁"
+    }
+  },
+  "connection": {
+    "connectedFull": "Connected",
+    "connectedShort": "Live",
+    "connectingFull": "Reconnecting…",
+    "connectingShort": "Syncing…",
+    "disconnectedFull": "Disconnected",
+    "disconnectedShort": "Offline"
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "roles": {
+    "voter": {
+      "label": "Voter",
+      "helper": "Choose a card"
+    },
+    "spectator": {
+      "label": "Spectator",
+      "helper": "Watch only"
+    }
+  },
+  "landing": {
+    "eyebrow": "Yet Another Scrum Poker",
+    "headlines": [
+      "Estimate together in seconds",
+      "One link. One room. Zero friction.",
+      "No accounts. No history. Just poker.",
+      "Point, vote, ship."
+    ],
+    "description": "Create a room and estimate together. No sign-up required.",
+    "connecting": "Connecting to the room service…",
+    "disconnected": "Disconnected. Trying to reconnect before you can create or join a room.",
+    "errorTitle": "Couldn't continue",
+    "identityTitle": "Who's joining?",
+    "displayNameLabel": "Display name",
+    "displayNamePlaceholder": "Enter your display name",
+    "roleLabel": "Role",
+    "createRoom": "Create room",
+    "joinRoom": "Join room",
+    "deckLabel": "Deck",
+    "customize": "Customize",
+    "roomCodeLabel": "Room code",
+    "roomCodePlaceholder": "Enter room code",
+    "creating": "Creating…",
+    "joining": "Joining…",
+    "roomNote": "Rooms expire after inactivity. No data is stored.",
+    "customDeckSummary": "Using custom deck: {{label}}",
+    "settingOn": "on",
+    "settingOff": "off"
+  },
+  "deck": {
+    "options": {
+      "fibonacci": "Fibonacci",
+      "modifiedFibonacci": "Modified Fibonacci",
+      "tshirt": "T-Shirt",
+      "powersOfTwo": "Powers of Two",
+      "custom": "Custom"
+    },
+    "coffee": "Coffee",
+    "coffeeBreak": "Coffee break",
+    "preview": {
+      "fibonacci": "Fibonacci · max {{max}}",
+      "modifiedFibonacci": "Modified Fibonacci · max {{max}}",
+      "powersOfTwo": "Powers of Two · max {{max}}",
+      "tshirt": "T-Shirt · {{range}}",
+      "default": "{{label}} (default)"
+    },
+    "errors": {
+      "addAtLeastOneCard": "Add at least one card.",
+      "maxLabelLength": "Card labels must be 12 characters or fewer. Problem: \"{{token}}\"",
+      "duplicateCards": "Remove duplicate cards: {{cards}}",
+      "maxCards": "Custom decks can include at most 30 cards."
+    },
+    "modal": {
+      "title": "Customize deck",
+      "close": "Close deck customization",
+      "tabs": {
+        "simple": "Simple",
+        "advanced": "Advanced",
+        "custom": "Custom"
+      },
+      "tabList": "Deck customization tabs",
+      "advancedOptions": "Advanced options",
+      "includeQuestion": "Include \"?\"",
+      "includeCoffee": "Include coffee break",
+      "questionDescription": "Keep the uncertainty card available.",
+      "coffeeDescription": "Add a coffee-break card near the end.",
+      "includeZero": "Include \"0\"",
+      "zeroNotUsed": "Not used for T-Shirt decks.",
+      "zeroNumericOnly": "Only affects generated numeric decks.",
+      "includeHalf": "Include \"0.5\"",
+      "halfUnavailable": "Only available for Modified Fibonacci.",
+      "halfDefault": "Matches the default Modified Fibonacci deck.",
+      "cardsLabel": "Cards",
+      "cardsPlaceholder": "Enter cards separated by commas or spaces, e.g. 1, 2, 3, 5, 8",
+      "preview": "Preview",
+      "cardsAppear": "Cards will appear here.",
+      "reset": "Reset to defaults",
+      "cancel": "Cancel",
+      "useDeck": "Use deck",
+      "footerNote": "Will create a Custom deck for this room.",
+      "maxValue": "Max value",
+      "minimumSize": "Minimum size",
+      "maximumSize": "Maximum size"
+    }
+  },
+  "room": {
+    "room": "Room",
+    "copyLink": "Copy link",
+    "copyShort": "Copy",
+    "copySuccess": "Room link copied",
+    "copyError": "Couldn't copy the room link",
+    "leave": "Leave",
+    "leaveRoom": "Leave room",
+    "round": "Round {{count}}",
+    "phase": {
+      "waiting": "Waiting",
+      "voting": "Voting",
+      "revealed": "Revealed"
+    },
+    "progress": "{{voted}}/{{total}} voted",
+    "liveBoard": "Live board",
+    "participants": "Participants",
+    "voteProgress": "Vote progress",
+    "voteProgressAria": "{{voted}} of {{total}} voted",
+    "hideRoster": "Hide roster",
+    "showRoster": "Show roster ({{count}})",
+    "participant": {
+      "you": "You",
+      "spectator": "Spectator",
+      "moderator": "Moderator",
+      "offline": "Offline",
+      "voted": "Voted",
+      "notVoted": "Not voted",
+      "ready": "Ready"
+    },
+    "yourVote": "Your vote",
+    "chooseCard": "Choose a card",
+    "spectatorsCantVote": "Spectators can’t vote",
+    "voteHintReady": "Tap the selected card again to clear it before reveal.",
+    "voteHintIdle": "Pick a card when you’re ready.",
+    "voteHintSpectator": "Spectators can watch progress without taking part in the round.",
+    "shortcuts": "Shortcuts: number keys to vote when applicable, Esc to clear",
+    "actions": "Actions",
+    "nextSteps": "Next steps",
+    "moderatorControls": "Moderator controls",
+    "revealVotes": "Reveal votes",
+    "nextRound": "Next round",
+    "reset": "Reset",
+    "transferHost": "Transfer host",
+    "onlyModeratorReveal": "Only the moderator can reveal this round.",
+    "onlyModeratorAdvanceReset": "Only the moderator can advance or reset this round.",
+    "confirmTransfer": "Confirm transfer",
+    "transferPrompt": "Choose the participant who should become the new moderator.",
+    "transferConfirmMessage": "Transfer moderator controls to {{name}}? You will lose host privileges.",
+    "newModerator": "New moderator",
+    "transfer": "Transfer",
+    "yesTransfer": "Yes, transfer",
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close",
+    "addParticipantBeforeTransfer": "Add another participant before transferring host.",
+    "results": "Results",
+    "noVotesYet": "No votes yet",
+    "revealedVotes": "Revealed votes",
+    "consensusReached": "Consensus reached",
+    "noConsensus": "No consensus",
+    "keyStats": "Key stats",
+    "average": "Average",
+    "median": "Median",
+    "mostCommon": "Most common",
+    "spread": "Spread",
+    "distribution": "Distribution",
+    "plurality": "Plurality",
+    "consensus": "Consensus",
+    "tie": "Tie",
+    "notAvailable": "n/a",
+    "roomUnavailable": "Room unavailable",
+    "roomMissing": "Rooms are temporary. This room no longer exists.",
+    "roomExpiredMessage": "The room expired after inactivity.",
+    "roomMissingMessage": "It may have been closed or restarted.",
+    "createNewRoom": "Create a new room",
+    "roomHeading": "Room {{roomId}}",
+    "manualJoin": "Manual join",
+    "joinRoomTitle": "Join room {{roomId}}",
+    "manualJoinDescription": "We couldn’t auto-join this tab. Enter your name and role to continue.",
+    "connecting": "Connecting",
+    "joiningRoom": "Joining room…",
+    "waitingSnapshot": "Waiting for the latest room snapshot.",
+    "reconnectingTitle": "Reconnecting…",
+    "disconnectedTitle": "Disconnected",
+    "reconnectHint": "Trying to reconnect. If this persists, refresh.",
+    "actionBlocked": "Action blocked",
+    "session": "Session",
+    "sessionStatus": "Session status",
+    "readOnlyTitle": "This tab is now read-only",
+    "readOnlyBody": "This room is active in another tab.",
+    "takeControl": "Take control in this tab",
+    "closeTab": "Close this tab",
+    "announce": {
+      "roundStarted": "Round {{count}} started",
+      "votesRevealed": "Votes revealed",
+      "votesReset": "Votes reset",
+      "moderatorChanged": "{{name}} is now the moderator",
+      "allVotesIn": "All votes are in",
+      "voteProgress": "{{voted}} of {{total}} votes submitted"
+    }
+  },
+  "documentTitle": {
+    "landing": "Scrum Poker",
+    "roomUnavailable": "Room unavailable",
+    "joining": "Joining {{roomId}}",
+    "join": "Join {{roomId}}",
+    "revealedSuffix": " · Revealed",
+    "roomRound": "Room {{roomId}} · Round {{roundNumber}}{{revealedSuffix}}"
+  }
+}
