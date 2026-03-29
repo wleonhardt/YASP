@@ -252,6 +252,8 @@ code {
 }
 
 .deck-modal {
+  position: relative;
+  z-index: 1;
   width: min(680px, 100%);
   max-height: min(90vh, 860px);
   display: flex;

@@ -5,6 +5,8 @@ dist/
 *.tsbuildinfo
 .vite/
 .dockerignore
+playwright-report/
+test-results/
 
 # CDK
 cdk.out/

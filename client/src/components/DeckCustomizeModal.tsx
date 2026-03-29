@@ -65,7 +65,6 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
   const simplePanelId = useId();
   const advancedPanelId = useId();
   const customPanelId = useId();
-
   useLayoutEffect(() => {
     if (!open) {
       return;
@@ -123,6 +122,28 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
       window.removeEventListener("keydown", handleKeyDown);
       previousActive?.focus();
     };
+  }, [onClose, open]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (modalRef.current?.contains(target)) {
+        return;
+      }
+
+      onClose();
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    return () => window.removeEventListener("mousedown", handlePointerDown);
   }, [onClose, open]);
 
   const mode: DeckCustomizeMode = activeTab === "custom" ? "custom" : "preset";
@@ -189,14 +210,7 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
   };
 
   return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
-      }}
-    >
+    <div className="modal-backdrop">
       <div
         ref={modalRef}
         className="deck-modal"
@@ -531,28 +545,39 @@ function ToggleField({
   checked,
   disabled = false,
   onChange,
+  accessibleLabel,
 }: {
   label: ReactNode;
   description: string;
   checked: boolean;
   disabled?: boolean;
   onChange(checked: boolean): void;
+  accessibleLabel?: string;
 }) {
+  const inputId = useId();
+  const labelId = useId();
+  const descriptionId = useId();
+
   return (
     <label
       className={["deck-modal__toggle", disabled ? "deck-modal__toggle--disabled" : ""]
         .filter(Boolean)
         .join(" ")}
+      htmlFor={inputId}
     >
       <input
+        id={inputId}
         type="checkbox"
         checked={checked}
         disabled={disabled}
+        aria-labelledby={labelId}
+        aria-describedby={descriptionId}
+        aria-label={accessibleLabel}
         onChange={(event) => onChange(event.target.checked)}
       />
       <span className="deck-modal__toggle-copy">
-        <strong>{label}</strong>
-        <small>{description}</small>
+        <strong id={labelId}>{label}</strong>
+        <small id={descriptionId}>{description}</small>
       </span>
     </label>
   );

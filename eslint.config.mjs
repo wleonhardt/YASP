@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
@@ -37,6 +38,11 @@ export default tseslint.config(
   {
     files: ["client/**/*.{ts,tsx}"],
     languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
       globals: {
         ...globals.browser,
       },
@@ -48,6 +54,15 @@ export default tseslint.config(
       globals: {
         ...globals.node,
       },
+    },
+  },
+  {
+    files: ["client/**/*.{tsx,jsx}"],
+    plugins: {
+      "jsx-a11y": jsxA11y,
+    },
+    rules: {
+      ...jsxA11y.configs.recommended.rules,
     },
   },
   {
