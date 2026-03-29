@@ -33,7 +33,7 @@
   },
   "connection": {
     "connectedFull": "Conectado",
-    "connectedShort": "En vivo",
+    "connectedShort": "En línea",
     "connectingFull": "Reconectando…",
     "connectingShort": "Sincronizando…",
     "disconnectedFull": "Desconectado",
@@ -109,7 +109,7 @@
       "title": "Personalizar mazo",
       "close": "Cerrar la personalización del mazo",
       "tabs": {
-        "simple": "Simple",
+        "simple": "Básico",
         "advanced": "Avanzado",
         "custom": "Personalizado"
       },
@@ -205,7 +205,7 @@
     "mostCommon": "Más común",
     "spread": "Rango",
     "distribution": "Distribución",
-    "plurality": "Pluralidad",
+    "plurality": "Mayoría relativa",
     "consensus": "Consenso",
     "tie": "Empate",
     "notAvailable": "n/d",
@@ -215,7 +215,7 @@
     "roomMissingMessage": "Puede que se haya cerrado o reiniciado.",
     "createNewRoom": "Crear una nueva sala",
     "roomHeading": "Sala {{roomId}}",
-    "manualJoin": "Unión manual",
+    "manualJoin": "Ingreso manual",
     "joinRoomTitle": "Unirse a la sala {{roomId}}",
     "manualJoinDescription": "No pudimos unir automáticamente esta pestaña. Escribe tu nombre y rol para continuar.",
     "connecting": "Conectando",

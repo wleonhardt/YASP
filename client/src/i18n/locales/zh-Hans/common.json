@@ -59,7 +59,7 @@
       "几秒内一起完成估算",
       "一个链接，一个房间，零摩擦。",
       "无需账号，没有历史，只做扑克估算。",
-      "给点数、投票、继续推进。"
+      "估点、投票、继续推进。"
     ],
     "description": "创建房间并一起估算。无需注册。",
     "connecting": "正在连接房间服务…",
@@ -134,8 +134,8 @@
       "useDeck": "使用牌组",
       "footerNote": "将为此房间创建一个自定义牌组。",
       "maxValue": "最大值",
-      "minimumSize": "最小范围",
-      "maximumSize": "最大范围"
+      "minimumSize": "最小尺码",
+      "maximumSize": "最大尺码"
     }
   },
   "room": {
@@ -150,7 +150,7 @@
     "phase": {
       "waiting": "等待中",
       "voting": "投票中",
-      "revealed": "已揭示"
+      "revealed": "已公开"
     },
     "progress": "{{voted}}/{{total}} 已投票",
     "liveBoard": "实时看板",
@@ -178,7 +178,7 @@
     "actions": "操作",
     "nextSteps": "下一步",
     "moderatorControls": "主持人控制",
-    "revealVotes": "揭示投票",
+    "revealVotes": "公开投票",
     "nextRound": "下一轮",
     "reset": "重置",
     "transferHost": "转移主持人",
@@ -196,7 +196,7 @@
     "addParticipantBeforeTransfer": "在转移主持人前，请先添加另一位参与者。",
     "results": "结果",
     "noVotesYet": "还没有投票",
-    "revealedVotes": "已揭示的投票",
+    "revealedVotes": "已公开的投票",
     "consensusReached": "已达成共识",
     "noConsensus": "尚未达成共识",
     "keyStats": "关键指标",
@@ -233,7 +233,7 @@
     "closeTab": "关闭此标签页",
     "announce": {
       "roundStarted": "第 {{count}} 轮已开始",
-      "votesRevealed": "投票已揭示",
+      "votesRevealed": "投票已公开",
       "votesReset": "投票已重置",
       "moderatorChanged": "{{name}} 现在是主持人",
       "allVotesIn": "所有投票已完成",
@@ -245,7 +245,7 @@
     "roomUnavailable": "房间不可用",
     "joining": "正在加入 {{roomId}}",
     "join": "加入 {{roomId}}",
-    "revealedSuffix": " · 已揭示",
+    "revealedSuffix": " · 已公开",
     "roomRound": "房间 {{roomId}} · 第 {{roundNumber}} 轮{{revealedSuffix}}"
   }
 }

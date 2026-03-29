@@ -33,10 +33,10 @@
   },
   "connection": {
     "connectedFull": "接続済み",
-    "connectedShort": "接続中",
+    "connectedShort": "オンライン",
     "connectingFull": "再接続中…",
     "connectingShort": "同期中…",
-    "disconnectedFull": "切断済み",
+    "disconnectedFull": "オフライン",
     "disconnectedShort": "オフライン"
   },
   "theme": {
@@ -84,8 +84,8 @@
   },
   "deck": {
     "options": {
-      "fibonacci": "Fibonacci",
-      "modifiedFibonacci": "Modified Fibonacci",
+      "fibonacci": "フィボナッチ",
+      "modifiedFibonacci": "修正版フィボナッチ",
       "tshirt": "Tシャツ",
       "powersOfTwo": "2の累乗",
       "custom": "カスタム"
@@ -93,8 +93,8 @@
     "coffee": "コーヒー",
     "coffeeBreak": "休憩カード",
     "preview": {
-      "fibonacci": "Fibonacci · 最大 {{max}}",
-      "modifiedFibonacci": "Modified Fibonacci · 最大 {{max}}",
+      "fibonacci": "フィボナッチ · 最大 {{max}}",
+      "modifiedFibonacci": "修正版フィボナッチ · 最大 {{max}}",
       "powersOfTwo": "2の累乗 · 最大 {{max}}",
       "tshirt": "Tシャツ · {{range}}",
       "default": "{{label}} (デフォルト)"
@@ -123,8 +123,8 @@
       "zeroNotUsed": "Tシャツデッキでは使われません。",
       "zeroNumericOnly": "自動生成される数値デッキにのみ影響します。",
       "includeHalf": "\"0.5\" を含める",
-      "halfUnavailable": "Modified Fibonacci でのみ利用できます。",
-      "halfDefault": "デフォルトの Modified Fibonacci デッキに合わせます。",
+      "halfUnavailable": "修正版フィボナッチでのみ利用できます。",
+      "halfDefault": "デフォルトの修正版フィボナッチデッキと同じです。",
       "cardsLabel": "カード",
       "cardsPlaceholder": "カードをカンマまたは空白区切りで入力。例: 1, 2, 3, 5, 8",
       "preview": "プレビュー",

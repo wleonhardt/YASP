@@ -33,7 +33,7 @@
   },
   "connection": {
     "connectedFull": "Verbunden",
-    "connectedShort": "Live",
+    "connectedShort": "Online",
     "connectingFull": "Verbindung wird wiederhergestellt…",
     "connectingShort": "Sync…",
     "disconnectedFull": "Getrennt",
@@ -45,7 +45,7 @@
   },
   "roles": {
     "voter": {
-      "label": "Voter",
+      "label": "Abstimmende",
       "helper": "Karte wählen"
     },
     "spectator": {
@@ -141,7 +141,7 @@
   "room": {
     "room": "Raum",
     "copyLink": "Link kopieren",
-    "copyShort": "Link",
+    "copyShort": "Kopieren",
     "copySuccess": "Raumlink kopiert",
     "copyError": "Der Raumlink konnte nicht kopiert werden",
     "leave": "Verlassen",
@@ -186,7 +186,7 @@
     "onlyModeratorAdvanceReset": "Nur der Moderator kann diese Runde fortsetzen oder zurücksetzen.",
     "confirmTransfer": "Übertragung bestätigen",
     "transferPrompt": "Wähle die Person aus, die neuer Moderator werden soll.",
-    "transferConfirmMessage": "Moderatorrechte an {{name}} übertragen? Du verlierst die Host-Rechte.",
+    "transferConfirmMessage": "Moderatorrechte an {{name}} übertragen? Du verlierst deine Moderationsrechte.",
     "newModerator": "Neuer Moderator",
     "transfer": "Übertragen",
     "yesTransfer": "Ja, übertragen",
@@ -205,7 +205,7 @@
     "mostCommon": "Am häufigsten",
     "spread": "Spanne",
     "distribution": "Verteilung",
-    "plurality": "Mehrheit",
+    "plurality": "Relative Mehrheit",
     "consensus": "Konsens",
     "tie": "Gleichstand",
     "notAvailable": "k. A.",
