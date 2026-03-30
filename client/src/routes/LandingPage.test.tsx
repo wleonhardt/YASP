@@ -150,7 +150,7 @@ describe("LandingPage create room deck behavior", () => {
     ["fr", "Créer une salle", "Rejoindre une salle", "Personnaliser", "Qui rejoint la salle ?"],
     ["de", "Raum erstellen", "Raum beitreten", "Anpassen", "Wer ist dabei?"],
     ["pt", "Criar sala", "Entrar na sala", "Personalizar", "Quem vai entrar?"],
-    ["ja", "ルームを作成", "ルームに参加", "カスタマイズ", "参加者"],
+    ["ja", "ルームを作成", "ルームに参加", "カスタマイズ", "誰が参加しますか？"],
     ["ko", "룸 만들기", "룸 참가", "커스텀", "참가자"],
     ["zh-Hans", "创建房间", "加入房间", "自定义", "谁要加入？"],
     ["zh-Hant", "建立房間", "加入房間", "自訂", "誰要加入？"],
