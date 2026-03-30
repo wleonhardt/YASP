@@ -8,6 +8,7 @@ import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ModeratorControls } from "../components/ModeratorControls";
 import { ParticipantsBoard } from "../components/ParticipantsBoard";
 import { ResultsPanel } from "../components/ResultsPanel";
+import { RoomTimer } from "../components/RoomTimer";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Toast, type ToastState } from "../components/Toast";
 import { TopBar } from "../components/TopBar";
@@ -18,6 +19,7 @@ import { useRoom } from "../hooks/useRoom";
 import { useSession } from "../hooks/useSession";
 import { useSocket } from "../hooks/useSocket";
 import { getConnectedVoterCounts, getSelf } from "../lib/room";
+import { getRoomShortcutAction } from "../lib/roomShortcuts";
 import { getStoredDisplayName, getStoredRole, setStoredDisplayName, setStoredRole } from "../lib/storage";
 
 type RoomUnavailableReason = "ROOM_NOT_FOUND" | "ROOM_EXPIRED";
@@ -42,6 +44,11 @@ export function RoomPage() {
     resetRound,
     nextRound,
     transferModerator,
+    setTimerDuration,
+    startTimer,
+    pauseTimer,
+    resetTimer: resetSharedTimer,
+    honkTimer,
   } = useRoom(socket, sessionId);
 
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
@@ -74,6 +81,7 @@ export function RoomPage() {
   const prevRevealedRef = useRef<boolean | null>(null);
   const prevVoteProgressRef = useRef<string | null>(null);
   const prevModeratorRef = useRef<string | null>(null);
+  const prevTimerCompletedRef = useRef<number | null>(null);
   const joinRoleRefs = useRef<Record<ParticipantRole, HTMLButtonElement | null>>({
     voter: null,
     spectator: null,
@@ -97,6 +105,7 @@ export function RoomPage() {
       prevRevealedRef.current = null;
       prevVoteProgressRef.current = null;
       prevModeratorRef.current = null;
+      prevTimerCompletedRef.current = null;
       return;
     }
 
@@ -113,6 +122,12 @@ export function RoomPage() {
         : t("room.announce.votesReset");
     } else if (prevModeratorRef.current !== null && moderator && moderator.id !== prevModeratorRef.current) {
       nextAnnouncement = t("room.announce.moderatorChanged", { name: moderator.name });
+    } else if (
+      prevTimerCompletedRef.current !== null &&
+      roomState.timer.completedAt !== null &&
+      roomState.timer.completedAt !== prevTimerCompletedRef.current
+    ) {
+      nextAnnouncement = t("room.timerState.complete");
     } else if (
       !roomState.revealed &&
       prevRevealedRef.current === roomState.revealed &&
@@ -134,6 +149,7 @@ export function RoomPage() {
     prevRevealedRef.current = roomState.revealed;
     prevVoteProgressRef.current = voteProgress;
     prevModeratorRef.current = moderator?.id ?? null;
+    prevTimerCompletedRef.current = roomState.timer.completedAt;
   }, [announce, roomState, t]);
 
   const navState = location.state as { role?: ParticipantRole } | null;
@@ -382,6 +398,49 @@ export function RoomPage() {
     navigate("/");
   }, [actionsDisabled, leaveRoom, navigate, roomId]);
 
+  const handleSetTimerDuration = useCallback(
+    async (durationSeconds: number) => {
+      if (!roomId || actionsDisabled) {
+        return;
+      }
+
+      await setTimerDuration(roomId, durationSeconds);
+    },
+    [actionsDisabled, roomId, setTimerDuration]
+  );
+
+  const handleStartTimer = useCallback(async () => {
+    if (!roomId || actionsDisabled) {
+      return;
+    }
+
+    await startTimer(roomId);
+  }, [actionsDisabled, roomId, startTimer]);
+
+  const handlePauseTimer = useCallback(async () => {
+    if (!roomId || actionsDisabled) {
+      return;
+    }
+
+    await pauseTimer(roomId);
+  }, [actionsDisabled, pauseTimer, roomId]);
+
+  const handleResetTimer = useCallback(async () => {
+    if (!roomId || actionsDisabled) {
+      return;
+    }
+
+    await resetSharedTimer(roomId);
+  }, [actionsDisabled, resetSharedTimer, roomId]);
+
+  const handleHonkTimer = useCallback(async () => {
+    if (!roomId || actionsDisabled) {
+      return;
+    }
+
+    await honkTimer(roomId);
+  }, [actionsDisabled, honkTimer, roomId]);
+
   useEffect(() => {
     if (!roomState || actionsDisabled || status !== "connected") {
       return;
@@ -395,30 +454,16 @@ export function RoomPage() {
     const availableCards = new Set(roomState.deck.cards);
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (
-        target &&
-        (target instanceof HTMLInputElement ||
-          target instanceof HTMLTextAreaElement ||
-          target instanceof HTMLSelectElement ||
-          target.isContentEditable)
-      ) {
+      const action = getRoomShortcutAction(event, availableCards, selectedCard);
+      if (!action) {
         return;
       }
 
-      if (event.key === "Escape" && selectedCard) {
-        event.preventDefault();
+      event.preventDefault();
+      if (action.type === "clear") {
         void handleClearVote();
-        return;
-      }
-
-      if (availableCards.has(event.key)) {
-        event.preventDefault();
-        if (selectedCard === event.key) {
-          void handleClearVote();
-        } else {
-          void handleVote(event.key);
-        }
+      } else {
+        void handleVote(action.value);
       }
     };
 
@@ -588,6 +633,16 @@ export function RoomPage() {
             </div>
           </section>
         )}
+
+        <RoomTimer
+          state={state}
+          onSetDuration={handleSetTimerDuration}
+          onStart={handleStartTimer}
+          onPause={handlePauseTimer}
+          onReset={handleResetTimer}
+          onHonk={handleHonkTimer}
+          disabled={actionsDisabled}
+        />
 
         <div className="room-layout">
           <div className="room-layout__main">

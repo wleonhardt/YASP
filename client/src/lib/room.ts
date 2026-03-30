@@ -6,11 +6,6 @@ export function getSelf(state: PublicRoomState): PublicParticipant | undefined {
   return state.participants.find((p) => p.isSelf);
 }
 
-export function isMeVoter(state: PublicRoomState): boolean {
-  const self = getSelf(state);
-  return self?.role === "voter";
-}
-
 export function isMeModerator(state: PublicRoomState): boolean {
   const self = getSelf(state);
   return self?.isModerator ?? false;
@@ -38,23 +33,6 @@ export function getRoomPhase(state: PublicRoomState): RoomPhase {
   return voted > 0 ? "voting" : "waiting";
 }
 
-export function getPhaseLabel(state: PublicRoomState): string {
-  const phase = getRoomPhase(state);
-  switch (phase) {
-    case "revealed":
-      return "Revealed";
-    case "voting":
-      return "Voting";
-    default:
-      return "Waiting";
-  }
-}
-
-export function getProgressText(state: PublicRoomState): string {
-  const { voted, total } = getConnectedVoterCounts(state);
-  return `${voted}/${total} voted`;
-}
-
 export function getParticipantInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
 
@@ -77,7 +55,7 @@ export function getNumericVotes(state: PublicRoomState): number[] {
   return Object.values(state.votes)
     .map((value) => {
       const parsed = Number(value);
-      return Number.isFinite(parsed) ? parsed : null;
+      return Number.isFinite(parsed) && String(parsed) === value ? parsed : null;
     })
     .filter((value): value is number => value !== null);
 }

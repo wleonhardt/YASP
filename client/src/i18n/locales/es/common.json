@@ -238,6 +238,20 @@
       "moderatorChanged": "{{name}} ahora es el moderador",
       "allVotesIn": "Ya llegaron todos los votos",
       "voteProgress": "{{voted}} de {{total}} votos enviados"
+    },
+    "timer": "Temporizador",
+    "timerDuration": "Duración",
+    "timerStart": "Iniciar",
+    "timerPause": "Pausar",
+    "timerReset": "Reiniciar",
+    "timerHonk": "Avisar",
+    "timerSoundOn": "Audio activado",
+    "timerSoundOff": "Audio desactivado",
+    "timerState": {
+      "ready": "Listo",
+      "running": "En marcha",
+      "paused": "En pausa",
+      "complete": "Se acabó el tiempo"
     }
   },
   "documentTitle": {

@@ -238,6 +238,20 @@
       "moderatorChanged": "{{name}}님이 새 진행자입니다",
       "allVotesIn": "모든 투표가 완료되었습니다",
       "voteProgress": "{{total}}표 중 {{voted}}표 제출됨"
+    },
+    "timer": "타이머",
+    "timerDuration": "시간",
+    "timerStart": "시작",
+    "timerPause": "일시정지",
+    "timerReset": "초기화",
+    "timerHonk": "알림",
+    "timerSoundOn": "소리 켜짐",
+    "timerSoundOff": "소리 꺼짐",
+    "timerState": {
+      "ready": "준비됨",
+      "running": "진행 중",
+      "paused": "일시정지",
+      "complete": "시간 종료"
     }
   },
   "documentTitle": {

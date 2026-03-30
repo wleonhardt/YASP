@@ -3,6 +3,7 @@ import type { ParticipantRole } from "@yasp/shared";
 const SESSION_KEY = "yasp.sessionId";
 const NAME_KEY = "yasp.displayName";
 const ROLE_KEY = "yasp.role";
+const TIMER_SOUND_KEY = "yasp.timerSoundEnabled";
 
 /**
  * Generate a UUID v4 session ID.
@@ -64,4 +65,12 @@ export function getStoredRole(): ParticipantRole | null {
 
 export function setStoredRole(role: ParticipantRole): void {
   safeSetStoredValue(ROLE_KEY, role);
+}
+
+export function getStoredTimerSoundEnabled(): boolean {
+  return safeGetStoredValue(TIMER_SOUND_KEY) === "1";
+}
+
+export function setStoredTimerSoundEnabled(enabled: boolean): void {
+  safeSetStoredValue(TIMER_SOUND_KEY, enabled ? "1" : "0");
 }

@@ -7,6 +7,7 @@ import type {
   ParticipantRole,
   Deck,
   RoomSettings,
+  RoomTimerState,
 } from "@yasp/shared";
 
 export type Participant = {
@@ -30,6 +31,7 @@ export type Room = {
   title?: string;
   deck: Deck;
   settings: RoomSettings;
+  timer: RoomTimerState;
   moderatorId: ParticipantId | null;
   /** Set when moderator is auto-transferred on disconnect; cleared on restore or manual transfer. */
   previousModeratorId: ParticipantId | null;

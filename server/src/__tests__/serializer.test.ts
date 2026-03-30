@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { serializeRoom } from "../transport/serializers.js";
 import type { Room, Participant } from "../domain/types.js";
 import { DEFAULT_ROOM_SETTINGS, DEFAULT_DECKS } from "@yasp/shared";
+import { createRoomTimerState } from "../domain/timer.js";
 
 function makeParticipant(overrides: Partial<Participant> = {}): Participant {
   return {
@@ -27,6 +28,7 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     roundNumber: 1,
     deck: DEFAULT_DECKS.fibonacci,
     settings: { ...DEFAULT_ROOM_SETTINGS },
+    timer: createRoomTimerState(),
     moderatorId: "p1",
     previousModeratorId: null,
     participants: new Map(),
@@ -79,6 +81,26 @@ describe("serializeRoom", () => {
     expect(state.votes).toEqual({ p1: "5" });
     expect(state.stats).not.toBeNull();
     expect(state.stats!.totalVotes).toBe(1);
+  });
+
+  it("serializes timer state with remaining seconds", () => {
+    const p1 = makeParticipant();
+    const room = makeRoom({
+      participants: new Map([["p1", p1]]),
+      timer: {
+        ...createRoomTimerState(),
+        durationSeconds: 60,
+        remainingSeconds: 60,
+        running: true,
+        endsAt: Date.now() + 45_000,
+      },
+    });
+
+    const state = serializeRoom(room, "s1");
+    expect(state.timer.durationSeconds).toBe(60);
+    expect(state.timer.running).toBe(true);
+    expect(state.timer.remainingSeconds).toBeGreaterThan(0);
+    expect(state.timer.remainingSeconds).toBeLessThanOrEqual(45);
   });
 
   it("does not leak socketId", () => {

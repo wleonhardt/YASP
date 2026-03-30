@@ -10,6 +10,7 @@ import type {
   JoinRoomInput,
   JoinRoomOutput,
   LeaveRoomInput,
+  SetTimerDurationInput,
   TransferModeratorInput,
   UpdateSettingsInput,
   PingInput,
@@ -76,12 +77,12 @@ function evaluateAutoReveal(
   store: RoomStore
 ): void {
   if (!room.settings.autoReveal || room.revealed) {
-    timerService.cancel(room.id);
+    timerService.cancelAutoReveal(room.id);
     return;
   }
 
   if (roomService.allConnectedVotersVoted(room)) {
-    timerService.schedule(room.id, room.settings.autoRevealDelayMs, () => {
+    timerService.scheduleAutoReveal(room.id, room.settings.autoRevealDelayMs, () => {
       const current = store.get(room.id);
       if (!current || current.revealed) return;
       if (!roomService.allConnectedVotersVoted(current)) return;
@@ -89,8 +90,33 @@ function evaluateAutoReveal(
       broadcastRoomState(io, room.id, store);
     });
   } else {
-    timerService.cancel(room.id);
+    timerService.cancelAutoReveal(room.id);
   }
+}
+
+function syncRoomTimer(
+  roomId: RoomId,
+  roomService: RoomService,
+  timerService: TimerService,
+  io: SocketServer,
+  store: RoomStore
+): void {
+  timerService.cancelRoomTimer(roomId);
+
+  const room = store.get(roomId);
+  if (!room || !room.timer.running || room.timer.endsAt === null) {
+    return;
+  }
+
+  const delayMs = Math.max(0, room.timer.endsAt - now());
+  timerService.scheduleRoomTimer(roomId, delayMs, () => {
+    const result = roomService.completeTimer(roomId);
+    if (!result.ok) {
+      return;
+    }
+
+    broadcastRoomState(io, roomId, store);
+  });
 }
 
 export function registerSocketHandlers(
@@ -110,7 +136,7 @@ export function registerSocketHandlers(
         participantId: string,
         input: I
       ) => AckResult<{ room: import("../domain/types.js").Room }>,
-      afterEffect: "autoReveal" | "cancelTimer" | "none" = "none"
+      afterEffect: "autoReveal" | "cancelAutoReveal" | "syncRoomTimer" | "cancelRoomTimer" | "none" = "none"
     ) {
       socket.on(event, (input: I, ack?: (res: AckResult) => void) => {
         const caller = resolveCallerFromSocket(socket, sessionService, input.roomId, store, ack);
@@ -123,10 +149,14 @@ export function registerSocketHandlers(
         }
 
         ack?.({ ok: true, data: undefined });
-        if (afterEffect === "cancelTimer") timerService.cancel(input.roomId);
+        if (afterEffect === "cancelAutoReveal") timerService.cancelAutoReveal(input.roomId);
+        if (afterEffect === "cancelRoomTimer") timerService.cancelRoomTimer(input.roomId);
         broadcastRoomState(io, input.roomId, store);
         if (afterEffect === "autoReveal") {
           evaluateAutoReveal(result.data.room, roomService, timerService, io, store);
+        }
+        if (afterEffect === "syncRoomTimer") {
+          syncRoomTimer(input.roomId, roomService, timerService, io, store);
         }
       });
     }
@@ -199,6 +229,7 @@ export function registerSocketHandlers(
       ack?.({ ok: true, data: { state } });
       broadcastRoomState(io, room.id, store);
       evaluateAutoReveal(room, roomService, timerService, io, store);
+      syncRoomTimer(room.id, roomService, timerService, io, store);
     });
 
     socket.on("leave_room", (input: LeaveRoomInput, ack?: (res: AckResult) => void) => {
@@ -217,6 +248,7 @@ export function registerSocketHandlers(
 
       broadcastRoomState(io, input.roomId, store);
       evaluateAutoReveal(result.data.room, roomService, timerService, io, store);
+      syncRoomTimer(input.roomId, roomService, timerService, io, store);
     });
 
     roomAction(
@@ -225,12 +257,21 @@ export function registerSocketHandlers(
       "autoReveal"
     );
     roomAction("clear_vote", (roomId, pid) => roomService.clearVote(roomId, pid), "autoReveal");
-    roomAction("reveal_votes", (roomId, pid) => roomService.revealVotes(roomId, pid), "cancelTimer");
-    roomAction("reset_round", (roomId, pid) => roomService.resetRound(roomId, pid), "cancelTimer");
-    roomAction("next_round", (roomId, pid) => roomService.nextRound(roomId, pid), "cancelTimer");
+    roomAction("reveal_votes", (roomId, pid) => roomService.revealVotes(roomId, pid), "cancelAutoReveal");
+    roomAction("reset_round", (roomId, pid) => roomService.resetRound(roomId, pid), "cancelAutoReveal");
+    roomAction("next_round", (roomId, pid) => roomService.nextRound(roomId, pid), "cancelAutoReveal");
     roomAction("transfer_moderator", (roomId, pid, i: TransferModeratorInput) =>
       roomService.transferModerator(roomId, pid, i.targetParticipantId)
     );
+    roomAction(
+      "set_timer_duration",
+      (roomId, pid, i: SetTimerDurationInput) => roomService.setTimerDuration(roomId, pid, i.durationSeconds),
+      "cancelRoomTimer"
+    );
+    roomAction("start_timer", (roomId, pid) => roomService.startTimer(roomId, pid), "syncRoomTimer");
+    roomAction("pause_timer", (roomId, pid) => roomService.pauseTimer(roomId, pid), "cancelRoomTimer");
+    roomAction("reset_timer", (roomId, pid) => roomService.resetTimer(roomId, pid), "cancelRoomTimer");
+    roomAction("honk_timer", (roomId, pid) => roomService.honkTimer(roomId, pid));
     roomAction("change_name", (roomId, pid, i: ChangeNameInput) =>
       roomService.changeName(roomId, pid, i.name)
     );
@@ -242,7 +283,7 @@ export function registerSocketHandlers(
     roomAction(
       "change_deck",
       (roomId, pid, i: ChangeDeckInput) => roomService.changeDeck(roomId, pid, i.deck),
-      "cancelTimer"
+      "cancelAutoReveal"
     );
     roomAction(
       "update_settings",
@@ -267,6 +308,7 @@ export function registerSocketHandlers(
           roomService.disconnectParticipant(roomId, sessionId);
           broadcastRoomState(io, roomId, store);
           evaluateAutoReveal(room, roomService, timerService, io, store);
+          syncRoomTimer(roomId, roomService, timerService, io, store);
         }
       }
 

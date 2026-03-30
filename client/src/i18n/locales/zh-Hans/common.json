@@ -238,6 +238,20 @@
       "moderatorChanged": "{{name}} 现在是主持人",
       "allVotesIn": "所有投票已完成",
       "voteProgress": "共 {{total}} 票，已提交 {{voted}} 票"
+    },
+    "timer": "计时器",
+    "timerDuration": "时长",
+    "timerStart": "开始",
+    "timerPause": "暂停",
+    "timerReset": "重置",
+    "timerHonk": "提醒",
+    "timerSoundOn": "声音开",
+    "timerSoundOff": "声音关",
+    "timerState": {
+      "ready": "就绪",
+      "running": "进行中",
+      "paused": "已暂停",
+      "complete": "时间到"
     }
   },
   "documentTitle": {

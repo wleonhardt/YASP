@@ -34,6 +34,16 @@ export type PublicParticipant = {
   isModerator: boolean;
 };
 
+export type RoomTimerState = {
+  durationSeconds: number;
+  remainingSeconds: number;
+  running: boolean;
+  endsAt: number | null;
+  completedAt: number | null;
+  lastHonkAt: number | null;
+  honkAvailableAt: number | null;
+};
+
 export type RevealStats = {
   totalVotes: number;
   numericAverage: number | null;
@@ -49,6 +59,7 @@ export type PublicRoomState = {
   revealed: boolean;
   deck: Deck;
   settings: RoomSettings;
+  timer: RoomTimerState;
   participants: PublicParticipant[];
   votes: Record<ParticipantId, VoteValue> | null;
   stats: RevealStats | null;
@@ -127,3 +138,6 @@ export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
   autoReveal: false,
   autoRevealDelayMs: 1500,
 };
+
+export const ROOM_TIMER_PRESET_SECONDS = [30, 60, 120, 300] as const;
+export const ROOM_TIMER_HONK_COOLDOWN_MS = 5000;

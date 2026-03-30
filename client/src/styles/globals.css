@@ -645,6 +645,7 @@ code {
 .action-card,
 .empty-state,
 .session-panel,
+.room-timer,
 .vote-deck,
 .controls-panel,
 .results-panel,
@@ -676,6 +677,7 @@ code {
 .identity-panel,
 .action-card,
 .participants-board,
+.room-timer,
 .vote-deck,
 .results-panel,
 .controls-panel,
@@ -1180,6 +1182,46 @@ select.input {
   min-width: 0;
 }
 
+/* ─── Room timer ───────────────────────────────────────────── */
+
+.room-timer {
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+}
+
+.room-timer__summary,
+.room-timer__controls,
+.room-timer__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.room-timer__summary,
+.room-timer__controls {
+  justify-content: space-between;
+}
+
+.room-timer__summary {
+  flex-wrap: wrap;
+}
+
+.room-timer__value {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  letter-spacing: -0.04em;
+}
+
+.room-timer__duration {
+  width: min(9rem, 100%);
+}
+
+.room-timer__actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 /* ─── Room status ─────────────────────────────────────────── */
 
 .room-status {
@@ -1654,11 +1696,15 @@ select.input {
 }
 
 .results-panel__section-title {
-  margin: 0;
-  font-size: var(--text-body);
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: var(--color-text-secondary);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .results-panel__key-grid,
@@ -2032,6 +2078,7 @@ select.input {
   .identity-panel,
   .action-card,
   .participants-board,
+  .room-timer,
   .vote-deck,
   .results-panel,
   .controls-panel,
@@ -2048,6 +2095,24 @@ select.input {
 
   .participants-board__toggle {
     display: inline-flex;
+  }
+
+  .room-timer__controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .room-timer__duration {
+    width: 100%;
+  }
+
+  .room-timer__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .room-timer__actions .button {
+    flex: 1 1 auto;
   }
 
   .participants-board__grid {

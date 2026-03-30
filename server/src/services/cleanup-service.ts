@@ -53,7 +53,7 @@ export class CleanupService {
 
       // Delete expired rooms with no connected participants
       if (room.expiresAt <= t && !hasConnectedParticipants(room)) {
-        this.timerService.cancel(room.id);
+        this.timerService.cancelRoom(room.id);
         this.store.delete(room.id);
         logger.info("Room expired", { roomId: room.id });
         continue;

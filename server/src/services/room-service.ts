@@ -8,12 +8,13 @@ import type {
   AckResult,
   ServerErrorEvent,
 } from "@yasp/shared";
-import { DEFAULT_ROOM_SETTINGS } from "@yasp/shared";
+import { DEFAULT_ROOM_SETTINGS, ROOM_TIMER_HONK_COOLDOWN_MS, ROOM_TIMER_PRESET_SECONDS } from "@yasp/shared";
 import type { DeckInput } from "@yasp/shared";
 import type { Room, Participant } from "../domain/types.js";
 import { RoomStore } from "./room-store.js";
 import { resolveDeck } from "../domain/deck.js";
 import { reassignModeratorIfNeeded, findNextModerator, hasConnectedParticipants } from "../domain/room.js";
+import { createRoomTimerState, getRemainingSeconds } from "../domain/timer.js";
 import * as permissions from "../domain/permissions.js";
 import { generateRoomId } from "../utils/id.js";
 import { now } from "../utils/time.js";
@@ -42,6 +43,10 @@ function touchRoom(room: Room): void {
   room.lastActivityAt = t;
   room.expiresAt = t + ROOM_TTL_MS;
 }
+
+const ROOM_TIMER_PRESETS = Array.isArray(ROOM_TIMER_PRESET_SECONDS)
+  ? ROOM_TIMER_PRESET_SECONDS
+  : ([30, 60, 120, 300] as const);
 
 export class RoomService {
   constructor(private store: RoomStore) {}
@@ -89,6 +94,7 @@ export class RoomService {
       roundNumber: 1,
       deck: resolveDeck(deckInput),
       settings: { ...DEFAULT_ROOM_SETTINGS },
+      timer: createRoomTimerState(),
       moderatorId: participantId,
       previousModeratorId: null,
       participants: new Map([[participantId, participant]]),
@@ -328,6 +334,102 @@ export class RoomService {
 
     room.moderatorId = targetParticipantId;
     room.previousModeratorId = null; // Manual transfer clears auto-restore
+    touchRoom(room);
+    return success({ room });
+  }
+
+  setTimerDuration(roomId: RoomId, participantId: string, durationSeconds: number): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.isModerator(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can change the timer" });
+    }
+    if (!ROOM_TIMER_PRESETS.includes(durationSeconds as (typeof ROOM_TIMER_PRESETS)[number])) {
+      return fail({ code: "NOT_ALLOWED", message: "Timer duration is not allowed" });
+    }
+    if (room.timer.running) {
+      return fail({ code: "NOT_ALLOWED", message: "Pause the timer before changing duration" });
+    }
+
+    room.timer.durationSeconds = durationSeconds;
+    room.timer.remainingSeconds = durationSeconds;
+    room.timer.completedAt = null;
+    room.timer.endsAt = null;
+    touchRoom(room);
+    return success({ room });
+  }
+
+  startTimer(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.isModerator(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can start the timer" });
+    }
+
+    const remainingSeconds = room.timer.remainingSeconds > 0 ? room.timer.remainingSeconds : room.timer.durationSeconds;
+    room.timer.running = true;
+    room.timer.remainingSeconds = remainingSeconds;
+    room.timer.endsAt = now() + remainingSeconds * 1000;
+    room.timer.completedAt = null;
+    touchRoom(room);
+    return success({ room });
+  }
+
+  pauseTimer(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.isModerator(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can pause the timer" });
+    }
+
+    room.timer.remainingSeconds = getRemainingSeconds(room.timer, now());
+    room.timer.running = false;
+    room.timer.endsAt = null;
+    touchRoom(room);
+    return success({ room });
+  }
+
+  resetTimer(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.isModerator(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can reset the timer" });
+    }
+
+    room.timer.running = false;
+    room.timer.endsAt = null;
+    room.timer.remainingSeconds = room.timer.durationSeconds;
+    room.timer.completedAt = null;
+    touchRoom(room);
+    return success({ room });
+  }
+
+  completeTimer(roomId: RoomId): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+
+    room.timer.running = false;
+    room.timer.endsAt = null;
+    room.timer.remainingSeconds = 0;
+    room.timer.completedAt = now();
+    touchRoom(room);
+    return success({ room });
+  }
+
+  honkTimer(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!permissions.isModerator(room, participantId)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can honk the timer" });
+    }
+
+    const t = now();
+    if (room.timer.honkAvailableAt !== null && t < room.timer.honkAvailableAt) {
+      return fail({ code: "NOT_ALLOWED", message: "Please wait before sending another reminder" });
+    }
+
+    room.timer.lastHonkAt = t;
+    room.timer.honkAvailableAt = t + ROOM_TIMER_HONK_COOLDOWN_MS;
     touchRoom(room);
     return success({ room });
   }

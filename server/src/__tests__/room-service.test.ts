@@ -661,3 +661,96 @@ describe("RoomService.allConnectedVotersVoted", () => {
     expect(service.allConnectedVotersVoted(room)).toBe(true);
   });
 });
+
+describe("RoomService timer controls", () => {
+  it("allows the moderator to start, pause, and reset the timer", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    const started = service.startTimer(roomId, "s1");
+    expect(started.ok).toBe(true);
+    if (!started.ok) return;
+    expect(started.data.room.timer.running).toBe(true);
+    expect(started.data.room.timer.endsAt).not.toBeNull();
+
+    const paused = service.pauseTimer(roomId, "s1");
+    expect(paused.ok).toBe(true);
+    if (!paused.ok) return;
+    expect(paused.data.room.timer.running).toBe(false);
+    expect(paused.data.room.timer.endsAt).toBeNull();
+
+    const reset = service.resetTimer(roomId, "s1");
+    expect(reset.ok).toBe(true);
+    if (!reset.ok) return;
+    expect(reset.data.room.timer.remainingSeconds).toBe(reset.data.room.timer.durationSeconds);
+    expect(reset.data.room.timer.completedAt).toBeNull();
+  });
+
+  it("rejects timer control actions from non-moderators", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    const started = service.startTimer(roomId, "s2");
+    expect(started.ok).toBe(false);
+    if (!started.ok) {
+      expect(started.error.code).toBe("NOT_ALLOWED");
+    }
+  });
+
+  it("updates timer duration and serializes it in room state", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    const updated = service.setTimerDuration(roomId, "s1", 120);
+    expect(updated.ok).toBe(true);
+    if (!updated.ok) return;
+
+    const state = serializeRoom(updated.data.room, "s1");
+    expect(state.timer.durationSeconds).toBe(120);
+    expect(state.timer.remainingSeconds).toBe(120);
+    expect(state.timer.running).toBe(false);
+  });
+
+  it("marks timer completion correctly", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    service.startTimer(roomId, "s1");
+    const completed = service.completeTimer(roomId);
+    expect(completed.ok).toBe(true);
+    if (!completed.ok) return;
+    expect(completed.data.room.timer.running).toBe(false);
+    expect(completed.data.room.timer.remainingSeconds).toBe(0);
+    expect(completed.data.room.timer.completedAt).not.toBeNull();
+  });
+
+  it("rate-limits honk and keeps it moderator-only", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    const first = service.honkTimer(roomId, "s1");
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    expect(first.data.room.timer.lastHonkAt).not.toBeNull();
+    expect(first.data.room.timer.honkAvailableAt).not.toBeNull();
+
+    const cooldown = service.honkTimer(roomId, "s1");
+    expect(cooldown.ok).toBe(false);
+    if (!cooldown.ok) {
+      expect(cooldown.error.code).toBe("NOT_ALLOWED");
+    }
+
+    const nonModerator = service.honkTimer(roomId, "s2");
+    expect(nonModerator.ok).toBe(false);
+    if (!nonModerator.ok) {
+      expect(nonModerator.error.code).toBe("NOT_ALLOWED");
+    }
+  });
+});

@@ -72,6 +72,27 @@ export type TransferModeratorInput = {
   targetParticipantId: ParticipantId;
 };
 
+export type SetTimerDurationInput = {
+  roomId: RoomId;
+  durationSeconds: number;
+};
+
+export type StartTimerInput = {
+  roomId: RoomId;
+};
+
+export type PauseTimerInput = {
+  roomId: RoomId;
+};
+
+export type ResetTimerInput = {
+  roomId: RoomId;
+};
+
+export type HonkTimerInput = {
+  roomId: RoomId;
+};
+
 export type ChangeNameInput = {
   roomId: RoomId;
   name: string;

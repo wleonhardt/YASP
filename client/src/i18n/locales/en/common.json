@@ -238,6 +238,20 @@
       "moderatorChanged": "{{name}} is now the moderator",
       "allVotesIn": "All votes are in",
       "voteProgress": "{{voted}} of {{total}} votes submitted"
+    },
+    "timer": "Timer",
+    "timerDuration": "Duration",
+    "timerStart": "Start",
+    "timerPause": "Pause",
+    "timerReset": "Reset",
+    "timerHonk": "Honk",
+    "timerSoundOn": "Sound on",
+    "timerSoundOff": "Sound off",
+    "timerState": {
+      "ready": "Ready",
+      "running": "Running",
+      "paused": "Paused",
+      "complete": "Time's up"
     }
   },
   "documentTitle": {

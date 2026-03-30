@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import * as permissions from "../domain/permissions.js";
 import type { Room } from "../domain/types.js";
 import { DEFAULT_ROOM_SETTINGS, DEFAULT_DECKS } from "@yasp/shared";
+import { createRoomTimerState } from "../domain/timer.js";
 
 function makeRoom(overrides: Partial<Room> = {}): Room {
   return {
@@ -13,6 +14,7 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     roundNumber: 1,
     deck: DEFAULT_DECKS.fibonacci,
     settings: { ...DEFAULT_ROOM_SETTINGS },
+    timer: createRoomTimerState(),
     moderatorId: "mod-1",
     previousModeratorId: null,
     participants: new Map(),

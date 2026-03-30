@@ -1,6 +1,37 @@
 import type { RevealStats, VoteValue } from "@yasp/shared";
 
-export function computeStats(votes: Map<string, VoteValue>): RevealStats {
+function isPlainNumericLabel(value: string): boolean {
+  const n = Number(value);
+  return Number.isFinite(n) && String(n) === value;
+}
+
+function getNumericDeckValues(deckCards: string[]): number[] {
+  return Array.from(
+    new Set(
+      deckCards
+        .filter(isPlainNumericLabel)
+        .map((value) => Number(value))
+        .sort((a, b) => a - b)
+    )
+  );
+}
+
+function roundToNearestDeckValue(mean: number, deckValues: number[]): number {
+  let nearest = deckValues[0];
+
+  for (const candidate of deckValues.slice(1)) {
+    const nearestDistance = Math.abs(mean - nearest);
+    const candidateDistance = Math.abs(mean - candidate);
+
+    if (candidateDistance < nearestDistance || (candidateDistance === nearestDistance && candidate > nearest)) {
+      nearest = candidate;
+    }
+  }
+
+  return nearest;
+}
+
+export function computeStats(votes: Map<string, VoteValue>, deckCards: string[]): RevealStats {
   const values = Array.from(votes.values());
   const totalVotes = values.length;
 
@@ -25,14 +56,17 @@ export function computeStats(votes: Map<string, VoteValue>): RevealStats {
   // ensuring "01", "1e2", " 3" etc. are not treated as numeric.
   const numericValues: number[] = [];
   for (const v of values) {
-    const n = Number(v);
-    if (Number.isFinite(n) && String(n) === v) {
-      numericValues.push(n);
+    if (isPlainNumericLabel(v)) {
+      numericValues.push(Number(v));
     }
   }
+  const deckNumericValues = getNumericDeckValues(deckCards);
   const numericAverage =
-    numericValues.length > 0
-      ? Math.round(numericValues.reduce((a, b) => a + b, 0) / numericValues.length)
+    numericValues.length > 0 && deckNumericValues.length > 0
+      ? roundToNearestDeckValue(
+          numericValues.reduce((a, b) => a + b, 0) / numericValues.length,
+          deckNumericValues
+        )
       : null;
 
   // Consensus: all votes identical and at least one vote

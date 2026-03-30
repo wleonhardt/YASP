@@ -238,6 +238,20 @@
       "moderatorChanged": "{{name}} がモデレーターになりました",
       "allVotesIn": "全員の投票が揃いました",
       "voteProgress": "{{total}}人中{{voted}}人が投票しました"
+    },
+    "timer": "タイマー",
+    "timerDuration": "時間",
+    "timerStart": "開始",
+    "timerPause": "一時停止",
+    "timerReset": "リセット",
+    "timerHonk": "鳴らす",
+    "timerSoundOn": "音あり",
+    "timerSoundOff": "音なし",
+    "timerState": {
+      "ready": "準備完了",
+      "running": "進行中",
+      "paused": "一時停止",
+      "complete": "時間です"
     }
   },
   "documentTitle": {

@@ -238,6 +238,20 @@
       "moderatorChanged": "{{name}} ist jetzt Moderator",
       "allVotesIn": "Alle Stimmen sind eingegangen",
       "voteProgress": "{{voted}} von {{total}} Stimmen abgegeben"
+    },
+    "timer": "Timer",
+    "timerDuration": "Dauer",
+    "timerStart": "Start",
+    "timerPause": "Pause",
+    "timerReset": "Zurücksetzen",
+    "timerHonk": "Signalton",
+    "timerSoundOn": "Ton an",
+    "timerSoundOff": "Ton aus",
+    "timerState": {
+      "ready": "Bereit",
+      "running": "Läuft",
+      "paused": "Pausiert",
+      "complete": "Zeit abgelaufen"
     }
   },
   "documentTitle": {

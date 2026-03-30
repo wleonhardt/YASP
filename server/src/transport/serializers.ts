@@ -1,6 +1,8 @@
 import type { SessionId, PublicRoomState, PublicParticipant, VoteValue, ParticipantId } from "@yasp/shared";
 import type { Room } from "../domain/types.js";
 import { computeStats } from "../domain/stats.js";
+import { getRemainingSeconds } from "../domain/timer.js";
+import { now } from "../utils/time.js";
 
 export function serializeRoom(room: Room, selfSessionId: SessionId): PublicRoomState {
   const sortedParticipants = Array.from(room.participants.values()).sort((a, b) => {
@@ -28,7 +30,8 @@ export function serializeRoom(room: Room, selfSessionId: SessionId): PublicRoomS
     }
   }
 
-  const stats = room.revealed ? computeStats(room.votes) : null;
+  const stats = room.revealed ? computeStats(room.votes, room.deck.cards) : null;
+  const currentTime = now();
 
   return {
     id: room.id,
@@ -37,6 +40,10 @@ export function serializeRoom(room: Room, selfSessionId: SessionId): PublicRoomS
     revealed: room.revealed,
     deck: room.deck,
     settings: room.settings,
+    timer: {
+      ...room.timer,
+      remainingSeconds: getRemainingSeconds(room.timer, currentTime),
+    },
     participants,
     votes,
     stats,

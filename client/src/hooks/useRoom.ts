@@ -133,6 +133,41 @@ export function useRoom(socket: Socket, sessionId: string) {
     [emitAck]
   );
 
+  const setTimerDuration = useCallback(
+    async (roomId: string, durationSeconds: number): Promise<AckResult> => {
+      return emitAck("set_timer_duration", { roomId, durationSeconds });
+    },
+    [emitAck]
+  );
+
+  const startTimer = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("start_timer", { roomId });
+    },
+    [emitAck]
+  );
+
+  const pauseTimer = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("pause_timer", { roomId });
+    },
+    [emitAck]
+  );
+
+  const resetTimer = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("reset_timer", { roomId });
+    },
+    [emitAck]
+  );
+
+  const honkTimer = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("honk_timer", { roomId });
+    },
+    [emitAck]
+  );
+
   return {
     roomState,
     error,
@@ -146,5 +181,10 @@ export function useRoom(socket: Socket, sessionId: string) {
     resetRound,
     nextRound,
     transferModerator,
+    setTimerDuration,
+    startTimer,
+    pauseTimer,
+    resetTimer,
+    honkTimer,
   };
 }
