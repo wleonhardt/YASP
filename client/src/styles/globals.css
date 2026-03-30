@@ -1021,7 +1021,7 @@ select.input {
   font-weight: 600;
   letter-spacing: 0.04em;
   cursor: pointer;
-  line-height: 1;
+  line-height: normal;
 }
 
 .language-switcher__select:hover {
