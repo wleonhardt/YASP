@@ -23,7 +23,10 @@ function roundToNearestDeckValue(mean: number, deckValues: number[]): number {
     const nearestDistance = Math.abs(mean - nearest);
     const candidateDistance = Math.abs(mean - candidate);
 
-    if (candidateDistance < nearestDistance || (candidateDistance === nearestDistance && candidate > nearest)) {
+    if (
+      candidateDistance < nearestDistance ||
+      (candidateDistance === nearestDistance && candidate > nearest)
+    ) {
       nearest = candidate;
     }
   }

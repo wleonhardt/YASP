@@ -127,7 +127,12 @@ export function RoomTimer({
             {formatCountdown(remainingSeconds)}
           </h2>
         </div>
-        <div className={["ui-chip", state.timer.completedAt && remainingSeconds === 0 ? "ui-chip--success" : "ui-chip--neutral"].join(" ")}>
+        <div
+          className={[
+            "ui-chip",
+            state.timer.completedAt && remainingSeconds === 0 ? "ui-chip--success" : "ui-chip--neutral",
+          ].join(" ")}
+        >
           {timerStateLabel}
         </div>
       </div>
@@ -190,7 +195,9 @@ export function RoomTimer({
                 onClick={() => void prepareAudioAndRun(onHonk)}
                 disabled={disabled || honkCooldownSeconds > 0}
               >
-                {honkCooldownSeconds > 0 ? `${t("room.timerHonk")} (${honkCooldownSeconds})` : t("room.timerHonk")}
+                {honkCooldownSeconds > 0
+                  ? `${t("room.timerHonk")} (${honkCooldownSeconds})`
+                  : t("room.timerHonk")}
               </button>
             </>
           )}

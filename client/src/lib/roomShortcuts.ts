@@ -13,7 +13,10 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 export function getRoomShortcutAction(
-  event: Pick<KeyboardEvent, "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey" | "defaultPrevented" | "target">,
+  event: Pick<
+    KeyboardEvent,
+    "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey" | "defaultPrevented" | "target"
+  >,
   availableCards: Set<string>,
   selectedCard: string | null
 ): RoomShortcutAction {

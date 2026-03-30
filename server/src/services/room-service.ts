@@ -338,7 +338,11 @@ export class RoomService {
     return success({ room });
   }
 
-  setTimerDuration(roomId: RoomId, participantId: string, durationSeconds: number): AckResult<{ room: Room }> {
+  setTimerDuration(
+    roomId: RoomId,
+    participantId: string,
+    durationSeconds: number
+  ): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
     if (!permissions.isModerator(room, participantId)) {
@@ -366,7 +370,8 @@ export class RoomService {
       return fail({ code: "NOT_ALLOWED", message: "Only the moderator can start the timer" });
     }
 
-    const remainingSeconds = room.timer.remainingSeconds > 0 ? room.timer.remainingSeconds : room.timer.durationSeconds;
+    const remainingSeconds =
+      room.timer.remainingSeconds > 0 ? room.timer.remainingSeconds : room.timer.durationSeconds;
     room.timer.running = true;
     room.timer.remainingSeconds = remainingSeconds;
     room.timer.endsAt = now() + remainingSeconds * 1000;

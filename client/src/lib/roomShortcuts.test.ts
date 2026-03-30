@@ -5,7 +5,10 @@ function makeEvent(
   overrides: Partial<
     Pick<KeyboardEvent, "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey" | "defaultPrevented" | "target">
   > = {}
-): Pick<KeyboardEvent, "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey" | "defaultPrevented" | "target"> {
+): Pick<
+  KeyboardEvent,
+  "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey" | "defaultPrevented" | "target"
+> {
   return {
     key: "1",
     metaKey: false,
@@ -88,7 +91,9 @@ describe("getRoomShortcutAction", () => {
   });
 
   it("returns clear action on Escape when a card is selected", () => {
-    expect(getRoomShortcutAction(makeEvent({ key: "Escape" }), availableCards, "3")).toEqual({ type: "clear" });
+    expect(getRoomShortcutAction(makeEvent({ key: "Escape" }), availableCards, "3")).toEqual({
+      type: "clear",
+    });
   });
 
   it("returns null on Escape when no card is selected", () => {
