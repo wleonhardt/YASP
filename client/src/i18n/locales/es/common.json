@@ -59,7 +59,7 @@
       "Estimen juntos en segundos",
       "Un enlace. Una sala. Cero fricción.",
       "Sin cuentas. Sin historial. Solo poker.",
-      "Puntúa, vota y sigue."
+      "Estima, vota y sigue."
     ],
     "description": "Crea una sala y estima en equipo. No hace falta registrarse.",
     "connecting": "Conectando con el servicio de salas…",
@@ -215,7 +215,7 @@
     "roomMissingMessage": "Puede que se haya cerrado o reiniciado.",
     "createNewRoom": "Crear una nueva sala",
     "roomHeading": "Sala {{roomId}}",
-    "manualJoin": "Ingreso manual",
+    "manualJoin": "Unirse manualmente",
     "joinRoomTitle": "Unirse a la sala {{roomId}}",
     "manualJoinDescription": "No pudimos unir automáticamente esta pestaña. Escribe tu nombre y rol para continuar.",
     "connecting": "Conectando",

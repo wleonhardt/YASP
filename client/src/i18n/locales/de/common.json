@@ -61,7 +61,7 @@
       "Keine Konten. Keine Historie. Nur Poker.",
       "Punkte setzen, abstimmen, weiter."
     ],
-    "description": "Erstelle einen Raum und schätzt gemeinsam. Keine Registrierung erforderlich.",
+    "description": "Erstelle einen Raum und schätze gemeinsam. Keine Registrierung erforderlich.",
     "connecting": "Verbindung zum Raumdienst wird hergestellt…",
     "disconnected": "Getrennt. Es wird versucht, die Verbindung wiederherzustellen, bevor du einen Raum erstellen oder beitreten kannst.",
     "errorTitle": "Fortfahren nicht möglich",
@@ -219,7 +219,7 @@
     "joinRoomTitle": "Raum {{roomId}} beitreten",
     "manualJoinDescription": "Dieser Tab konnte nicht automatisch beitreten. Gib deinen Namen und deine Rolle ein, um fortzufahren.",
     "connecting": "Verbinden",
-    "joiningRoom": "Raum wird betreten…",
+    "joiningRoom": "Beitritt zum Raum…",
     "waitingSnapshot": "Warten auf den neuesten Raumstatus.",
     "reconnectingTitle": "Verbindung wird wiederhergestellt…",
     "disconnectedTitle": "Getrennt",
@@ -243,7 +243,7 @@
   "documentTitle": {
     "landing": "Scrum Poker",
     "roomUnavailable": "Raum nicht verfügbar",
-    "joining": "Beitritt zu {{roomId}}",
+    "joining": "Beitritt zu Raum {{roomId}}…",
     "join": "{{roomId}} beitreten",
     "revealedSuffix": " · Aufgedeckt",
     "roomRound": "Raum {{roomId}} · Runde {{roundNumber}}{{revealedSuffix}}"

@@ -14,3 +14,5 @@ cdk/cdk.out/
 cdk/dist/
 cdk.context.json
 cdk/cdk.context.json
+server/.DS_Store
+.DS_Store
