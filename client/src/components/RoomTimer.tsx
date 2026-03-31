@@ -1,7 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ROOM_TIMER_PRESET_SECONDS, type PublicRoomState } from "@yasp/shared";
-import { playTimerComplete, playTimerHonk, playTimerTick, primeRoomAudio } from "../lib/audio";
+import { playTimerComplete, playTimerHonk, playTimerStart, playTimerTick, primeRoomAudio } from "../lib/audio";
 import { isMeModerator } from "../lib/room";
 import { getStoredTimerSoundEnabled, setStoredTimerSoundEnabled } from "../lib/storage";
 
@@ -115,6 +115,7 @@ export function RoomTimer({
   const previousCompletedAt = useRef<number | null>(state.timer.completedAt);
   const previousHonkAt = useRef<number | null>(state.timer.lastHonkAt);
   const previousRemainingSeconds = useRef<number>(state.timer.remainingSeconds);
+  const previousRunning = useRef<boolean>(state.timer.running);
   const localHonkPlayedAt = useRef<number | null>(null);
   const { remainingSeconds, honkCooldownSeconds } = useRoomTimerCountdown(state.timer);
   const timerStatus = getRoomTimerStatus(state.timer, remainingSeconds);
@@ -137,6 +138,7 @@ export function RoomTimer({
       previousCompletedAt.current = state.timer.completedAt;
       previousHonkAt.current = state.timer.lastHonkAt;
       previousRemainingSeconds.current = remainingSeconds;
+      previousRunning.current = state.timer.running;
       return;
     }
 
@@ -144,16 +146,21 @@ export function RoomTimer({
       previousCompletedAt.current = state.timer.completedAt;
       previousHonkAt.current = state.timer.lastHonkAt;
       previousRemainingSeconds.current = remainingSeconds;
+      previousRunning.current = state.timer.running;
       return;
+    }
+
+    if (state.timer.running && !previousRunning.current) {
+      void playTimerStart();
     }
 
     if (
       state.timer.running &&
       remainingSeconds > 0 &&
-      remainingSeconds <= 5 &&
+      remainingSeconds <= 10 &&
       remainingSeconds < previousRemainingSeconds.current
     ) {
-      void playTimerTick();
+      void playTimerTick(remainingSeconds <= 5 ? "fast" : "slow");
     }
 
     if (state.timer.completedAt !== null && state.timer.completedAt !== previousCompletedAt.current) {
@@ -169,6 +176,7 @@ export function RoomTimer({
     previousCompletedAt.current = state.timer.completedAt;
     previousHonkAt.current = state.timer.lastHonkAt;
     previousRemainingSeconds.current = remainingSeconds;
+    previousRunning.current = state.timer.running;
   }, [remainingSeconds, soundEnabled, state.timer.completedAt, state.timer.lastHonkAt, state.timer.running]);
 
   const handleToggleSound = async () => {

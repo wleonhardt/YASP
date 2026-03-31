@@ -9,6 +9,8 @@ type ToneSpec = {
   type?: OscillatorType;
 };
 
+type TimerTickMode = "slow" | "fast";
+
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") {
     return null;
@@ -86,17 +88,79 @@ async function playSequence(tones: ToneSpec[]): Promise<boolean> {
   return true;
 }
 
-export async function playTimerTick(): Promise<boolean> {
+export async function playTimerStart(): Promise<boolean> {
   return playSequence([
     {
       at: 0,
-      duration: 0.08,
-      frequency: 880,
-      endFrequency: 820,
-      volume: 0.06,
+      duration: 0.11,
+      frequency: 392,
+      endFrequency: 440,
+      volume: 0.045,
+      type: "sine",
+    },
+    {
+      at: 0.07,
+      duration: 0.16,
+      frequency: 523,
+      endFrequency: 587,
+      volume: 0.055,
       type: "triangle",
     },
+    {
+      at: 0.08,
+      duration: 0.18,
+      frequency: 196,
+      endFrequency: 220,
+      volume: 0.02,
+      type: "sine",
+    },
   ]);
+}
+
+function playTimerTickWithMode(mode: TimerTickMode): Promise<boolean> {
+  return playSequence(
+    mode === "slow"
+      ? [
+          {
+            at: 0,
+            duration: 0.08,
+            frequency: 740,
+            endFrequency: 680,
+            volume: 0.04,
+            type: "triangle",
+          },
+          {
+            at: 0.01,
+            duration: 0.06,
+            frequency: 1480,
+            endFrequency: 1320,
+            volume: 0.015,
+            type: "sine",
+          },
+        ]
+      : [
+          {
+            at: 0,
+            duration: 0.06,
+            frequency: 980,
+            endFrequency: 900,
+            volume: 0.055,
+            type: "triangle",
+          },
+          {
+            at: 0.008,
+            duration: 0.045,
+            frequency: 1960,
+            endFrequency: 1800,
+            volume: 0.018,
+            type: "sine",
+          },
+        ]
+  );
+}
+
+export async function playTimerTick(mode: TimerTickMode = "fast"): Promise<boolean> {
+  return playTimerTickWithMode(mode);
 }
 
 export async function playTimerComplete(): Promise<boolean> {
@@ -104,22 +168,33 @@ export async function playTimerComplete(): Promise<boolean> {
     {
       at: 0,
       duration: 0.18,
-      frequency: 659,
-      volume: 0.08,
+      frequency: 784,
+      endFrequency: 830,
+      volume: 0.06,
       type: "sine",
     },
     {
-      at: 0.14,
-      duration: 0.22,
-      frequency: 880,
-      volume: 0.09,
+      at: 0.15,
+      duration: 0.28,
+      frequency: 1047,
+      endFrequency: 1108,
+      volume: 0.07,
       type: "triangle",
     },
     {
-      at: 0.31,
-      duration: 0.28,
-      frequency: 988,
-      volume: 0.08,
+      at: 0.3,
+      duration: 0.48,
+      frequency: 1319,
+      endFrequency: 1397,
+      volume: 0.06,
+      type: "sine",
+    },
+    {
+      at: 0.16,
+      duration: 0.54,
+      frequency: 523,
+      endFrequency: 494,
+      volume: 0.022,
       type: "sine",
     },
   ]);

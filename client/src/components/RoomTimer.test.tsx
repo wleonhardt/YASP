@@ -7,6 +7,7 @@ import { makePublicRoomState } from "../test/roomState";
 const audioMocks = vi.hoisted(() => ({
   playTimerComplete: vi.fn().mockResolvedValue(true),
   playTimerHonk: vi.fn().mockResolvedValue(true),
+  playTimerStart: vi.fn().mockResolvedValue(true),
   playTimerTick: vi.fn().mockResolvedValue(true),
   primeRoomAudio: vi.fn().mockResolvedValue(true),
 }));
@@ -168,7 +169,70 @@ describe("RoomTimer", () => {
     expect(audioMocks.playTimerHonk).toHaveBeenCalledTimes(1);
   });
 
-  it("plays a gentle tick in the final five seconds when sound is enabled", async () => {
+  it("plays a start cue when the timer begins and sound is enabled", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(0));
+
+    const props = handlers();
+    const { rerender } = render(<RoomTimer state={makePublicRoomState()} {...props} />);
+
+    await act(async () => {
+      screen.getByRole("button", { name: /sound/i }).click();
+    });
+
+    rerender(
+      <RoomTimer
+        state={makePublicRoomState({
+          timer: {
+            durationSeconds: 60,
+            remainingSeconds: 60,
+            running: true,
+            endsAt: 60_000,
+            completedAt: null,
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
+        })}
+        {...props}
+      />
+    );
+
+    expect(audioMocks.playTimerStart).toHaveBeenCalledTimes(1);
+  });
+
+  it("plays a slower tick in the last ten seconds when sound is enabled", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(0));
+
+    render(
+      <RoomTimer
+        state={makePublicRoomState({
+          timer: {
+            durationSeconds: 10,
+            remainingSeconds: 10,
+            running: true,
+            endsAt: 10_000,
+            completedAt: null,
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
+        })}
+        {...handlers()}
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: /sound/i }).click();
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+
+    expect(audioMocks.playTimerTick).toHaveBeenCalledWith("slow");
+  });
+
+  it("plays a faster tick in the last five seconds when sound is enabled", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(0));
 
@@ -197,6 +261,34 @@ describe("RoomTimer", () => {
       vi.advanceTimersByTime(1_000);
     });
 
-    expect(audioMocks.playTimerTick).toHaveBeenCalled();
+    expect(audioMocks.playTimerTick).toHaveBeenCalledWith("fast");
+  });
+
+  it("plays the completion ring when the timer finishes and sound is enabled", async () => {
+    const props = handlers();
+    const { rerender } = render(<RoomTimer state={makePublicRoomState()} {...props} />);
+
+    await act(async () => {
+      screen.getByRole("button", { name: /sound/i }).click();
+    });
+
+    rerender(
+      <RoomTimer
+        state={makePublicRoomState({
+          timer: {
+            durationSeconds: 60,
+            remainingSeconds: 0,
+            running: false,
+            endsAt: null,
+            completedAt: 1234,
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
+        })}
+        {...props}
+      />
+    );
+
+    expect(audioMocks.playTimerComplete).toHaveBeenCalledTimes(1);
   });
 });
