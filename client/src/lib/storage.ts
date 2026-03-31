@@ -68,7 +68,14 @@ export function setStoredRole(role: ParticipantRole): void {
 }
 
 export function getStoredTimerSoundEnabled(): boolean {
-  return safeGetStoredValue(TIMER_SOUND_KEY) === "1";
+  const value = safeGetStoredValue(TIMER_SOUND_KEY);
+  if (value === "0") {
+    return false;
+  }
+  if (value === "1") {
+    return true;
+  }
+  return true;
 }
 
 export function setStoredTimerSoundEnabled(enabled: boolean): void {

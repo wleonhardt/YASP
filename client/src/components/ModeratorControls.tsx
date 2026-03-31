@@ -14,6 +14,7 @@ import {
 type Props = {
   compact: boolean;
   state: PublicRoomState;
+  serverClockOffsetMs?: number;
   onSetTimerDuration: (durationSeconds: number) => Promise<unknown> | unknown;
   onStartTimer: () => Promise<boolean> | boolean;
   onPauseTimer: () => Promise<unknown> | unknown;
@@ -58,6 +59,7 @@ type TimerSectionProps = {
   onHonkTimer: () => Promise<boolean> | boolean;
   roundActions?: ReactNode;
   disabled: boolean;
+  serverClockOffsetMs?: number;
 };
 
 type TransferSectionProps = {
@@ -158,7 +160,7 @@ function NextStepSection({
               disabled={!resetAllowed || disabled}
               aria-describedby={!resetAllowed && actionHint ? actionHintId : undefined}
             >
-              {t("room.reset")}
+              {t("room.resetRound")}
             </button>
           </>
         )}
@@ -187,6 +189,7 @@ function TimerSection({
   onHonkTimer,
   roundActions = null,
   disabled,
+  serverClockOffsetMs = 0,
 }: TimerSectionProps) {
   const { t } = useTranslation();
   return compact ? (
@@ -236,6 +239,8 @@ function TimerSection({
             showSectionLabel={false}
             showStatusChip={false}
             roundActions={roundActions}
+            compactActions
+            serverClockOffsetMs={serverClockOffsetMs}
           />
         </div>
       ) : null}
@@ -256,6 +261,7 @@ function TimerSection({
         showSectionLabel={false}
         showStatusChip={false}
         roundActions={roundActions}
+        serverClockOffsetMs={serverClockOffsetMs}
       />
     </div>
   );
@@ -279,20 +285,15 @@ function TransferSection({
 }: TransferSectionProps) {
   const { t } = useTranslation();
 
-  if (!isModerator) {
+  if (!isModerator || transferCandidates.length === 0) {
     return null;
   }
-
-  const disabledReason = !transferCandidates.length ? t("room.addParticipantBeforeTransfer") : null;
 
   return (
     <div className="controls-panel__section controls-panel__section--transfer">
       <div className="controls-panel__transfer-header">
         <div className="controls-panel__transfer-copy">
           <div className="controls-panel__transfer-title">{t("room.transferHost")}</div>
-          {transferDisabled && disabledReason ? (
-            <p className="controls-panel__hint">{disabledReason}</p>
-          ) : null}
         </div>
         <button
           className="button button--ghost controls-panel__transfer-trigger"
@@ -386,6 +387,7 @@ function TransferSection({
 export function ModeratorControls({
   compact,
   state,
+  serverClockOffsetMs = 0,
   onSetTimerDuration,
   onStartTimer,
   onPauseTimer,
@@ -417,7 +419,7 @@ export function ModeratorControls({
   const timerPanelId = useId();
   const actionHintId = useId();
   const transferSelectRef = useRef<HTMLSelectElement | null>(null);
-  const { remainingSeconds } = useRoomTimerCountdown(state.timer);
+  const { remainingSeconds } = useRoomTimerCountdown(state.timer, serverClockOffsetMs);
   const actionHint =
     !isModerator &&
     ((state.revealed && state.settings.resetPolicy === "moderator_only") ||
@@ -527,7 +529,7 @@ export function ModeratorControls({
           disabled={!resetAllowed || disabled}
           aria-describedby={!resetAllowed && actionHint ? actionHintId : undefined}
         >
-          {t("room.reset")}
+          {t("room.resetRound")}
         </button>
       ) : null}
       <button
@@ -600,6 +602,7 @@ export function ModeratorControls({
               onHonkTimer={onHonkTimer}
               roundActions={null}
               disabled={disabled}
+              serverClockOffsetMs={serverClockOffsetMs}
             />
           </>
         ) : (
@@ -617,6 +620,7 @@ export function ModeratorControls({
             onHonkTimer={onHonkTimer}
             roundActions={desktopRoundActions}
             disabled={disabled}
+            serverClockOffsetMs={serverClockOffsetMs}
           />
         )}
       </div>

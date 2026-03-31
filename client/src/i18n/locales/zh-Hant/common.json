@@ -58,7 +58,7 @@
     "eyebrow": "Yet Another Scrum Poker",
     "headlines": [
       "幾秒內一起完成估算",
-      "一個連結，一個房間，零阻力。",
+      "一個連結，一個房間，零摩擦。",
       "不需帳號，沒有歷史，只做撲克估算。",
       "估算、投票、繼續前進。"
     ],
@@ -148,7 +148,7 @@
     "copyError": "無法複製房間連結",
     "leave": "離開",
     "leaveRoom": "離開房間",
-    "preferences": "工作階段偏好",
+    "preferences": "偏好設定",
     "openPreferences": "開啟工作階段偏好",
     "round": "第 {{count}} 輪",
     "phase": {
@@ -170,7 +170,8 @@
       "offline": "離線",
       "voted": "已投票",
       "notVoted": "未投票",
-      "ready": "已就緒"
+      "ready": "已就緒",
+      "moreCount": "另有 {{count}} 位"
     },
     "yourVote": "你的投票",
     "chooseCard": "選擇一張牌",
@@ -186,7 +187,8 @@
     "revealVotes": "公開投票",
     "nextRound": "下一輪",
     "reset": "重設",
-    "transferHost": "轉移主持人",
+    "resetRound": "重設本輪",
+    "transferHost": "移交主持權限",
     "onlyModeratorReveal": "只有主持人可以揭示本輪結果。",
     "onlyModeratorAdvanceReset": "只有主持人可以推進或重設本輪。",
     "confirmTransfer": "確認轉移",
@@ -211,7 +213,7 @@
     "spread": "範圍",
     "distribution": "分佈",
     "plurality": "相對多數",
-    "consensus": "一致",
+    "consensus": "共識",
     "tie": "平手",
     "notAvailable": "無",
     "roomUnavailable": "房間不可用",

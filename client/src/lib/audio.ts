@@ -30,6 +30,10 @@ function getAudioContext(): AudioContext | null {
   return audioContext;
 }
 
+export function isRoomAudioPrimed(): boolean {
+  return audioContext?.state === "running";
+}
+
 export async function primeRoomAudio(): Promise<boolean> {
   const context = getAudioContext();
   if (!context) {

@@ -60,7 +60,7 @@
       "Gemeinsam in Sekunden schätzen",
       "Ein Link. Ein Raum. Keine Reibung.",
       "Keine Konten. Keine Historie. Nur Poker.",
-      "Punkte setzen, abstimmen, weiter."
+      "Schätzen, abstimmen, weiter."
     ],
     "description": "Erstelle einen Raum und schätze gemeinsam. Keine Registrierung erforderlich.",
     "connecting": "Verbindung zum Raumdienst wird hergestellt…",
@@ -170,7 +170,8 @@
       "offline": "Offline",
       "voted": "Abgestimmt",
       "notVoted": "Nicht abgestimmt",
-      "ready": "Bereit"
+      "ready": "Bereit",
+      "moreCount": "{{count}} weitere"
     },
     "yourVote": "Deine Stimme",
     "chooseCard": "Wähle eine Karte",
@@ -186,6 +187,7 @@
     "revealVotes": "Stimmen aufdecken",
     "nextRound": "Nächste Runde",
     "reset": "Zurücksetzen",
+    "resetRound": "Runde zurücksetzen",
     "transferHost": "Moderation übertragen",
     "onlyModeratorReveal": "Nur der Moderator kann diese Runde aufdecken.",
     "onlyModeratorAdvanceReset": "Nur der Moderator kann diese Runde fortsetzen oder zurücksetzen.",
@@ -204,7 +206,7 @@
     "revealedVotes": "Aufgedeckte Stimmen",
     "consensusReached": "Konsens erreicht",
     "noConsensus": "Kein Konsens",
-    "keyStats": "Kernwerte",
+    "keyStats": "Kennzahlen",
     "average": "Durchschnitt",
     "median": "Median",
     "mostCommon": "Am häufigsten",
@@ -245,7 +247,7 @@
       "voteProgress": "{{voted}} von {{total}} Stimmen abgegeben"
     },
     "timer": "Timer",
-    "timerSettings": "Timer und Taktung",
+    "timerSettings": "Timer und Tempo",
     "timerDuration": "Dauer",
     "timerStart": "Start",
     "timerPause": "Pause",
@@ -264,7 +266,7 @@
     "landing": "Scrum Poker",
     "roomUnavailable": "Raum nicht verfügbar",
     "joining": "Beitritt zu Raum {{roomId}}…",
-    "join": "{{roomId}} beitreten",
+    "join": "Raum {{roomId}} beitreten",
     "revealedSuffix": " · Aufgedeckt",
     "roomRound": "Raum {{roomId}} · Runde {{roundNumber}}{{revealedSuffix}}"
   }

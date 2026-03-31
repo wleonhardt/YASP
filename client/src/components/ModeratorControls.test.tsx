@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { PublicRoomState } from "@yasp/shared";
 import { ModeratorControls } from "./ModeratorControls";
 import { makePublicRoomState } from "../test/roomState";
+import * as storage from "../lib/storage";
 
 function makeState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   return makePublicRoomState({
@@ -54,9 +55,9 @@ describe("ModeratorControls", () => {
     const panel = screen.getByRole("region", { name: /moderator controls/i });
     const scope = within(panel);
 
-    expect(scope.getByRole("heading", { name: "01:00" })).toBeInTheDocument();
+    expect(scope.getByRole("heading", { name: "00:10" })).toBeInTheDocument();
     expect(scope.getByRole("button", { name: /start/i })).toBeInTheDocument();
-    expect(scope.getByRole("button", { name: /sound off/i })).toBeInTheDocument();
+    expect(scope.getByRole("button", { name: /sound on/i })).toBeInTheDocument();
     expect(scope.queryByRole("button", { name: /timer & pacing/i })).not.toBeInTheDocument();
     expect(scope.getByRole("button", { name: /reveal votes/i })).toBeInTheDocument();
     expect(scope.getByRole("button", { name: /^transfer$/i })).toBeInTheDocument();
@@ -84,12 +85,13 @@ describe("ModeratorControls", () => {
     expect(panel.querySelectorAll(".controls-panel__status-row .ui-chip")).toHaveLength(1);
     expect(scope.queryByRole("button", { name: /start/i })).not.toBeInTheDocument();
     expect(scope.getByRole("button", { name: /reveal votes/i })).toBeInTheDocument();
+    expect(scope.getByText(/duration 10s • sound on/i)).toBeInTheDocument();
 
     await user.click(timerToggle);
 
     expect(timerToggle).toHaveAttribute("aria-expanded", "true");
     expect(scope.getByRole("button", { name: /start/i })).toBeInTheDocument();
-    expect(scope.getByRole("button", { name: /sound off/i })).toBeInTheDocument();
+    expect(scope.getByRole("button", { name: /sound on/i })).toBeInTheDocument();
 
     rerender(
       <ModeratorControls
@@ -113,6 +115,17 @@ describe("ModeratorControls", () => {
     expect(scope.getByRole("button", { name: /pause/i })).toBeInTheDocument();
   });
 
+  it("shows sound off in the compact drawer summary when the stored preference is off", () => {
+    vi.spyOn(storage, "getStoredTimerSoundEnabled").mockReturnValue(false);
+
+    render(<ModeratorControls compact state={makeState()} {...handlers()} />);
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+    const scope = within(panel);
+
+    expect(scope.getByText(/duration 10s • sound off/i)).toBeInTheDocument();
+  });
+
   it("shows next round and reset inline on desktop after reveal", () => {
     render(<ModeratorControls compact={false} state={makeState({ revealed: true })} {...handlers()} />);
 
@@ -124,6 +137,31 @@ describe("ModeratorControls", () => {
     const roundScope = within(roundActions as HTMLElement);
 
     expect(scope.getByRole("button", { name: /next round/i })).toBeInTheDocument();
-    expect(roundScope.getByRole("button", { name: /^reset$/i })).toBeInTheDocument();
+    expect(roundScope.getByRole("button", { name: /reset round/i })).toBeInTheDocument();
+  });
+
+  it("hides transfer controls when the moderator is alone", () => {
+    render(
+      <ModeratorControls
+        compact={false}
+        state={makePublicRoomState({
+          participants: [
+            {
+              id: "me",
+              name: "Alice",
+              role: "voter",
+              connected: true,
+              hasVoted: false,
+              isSelf: true,
+              isModerator: true,
+            },
+          ],
+        })}
+        {...handlers()}
+      />
+    );
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+    expect(within(panel).queryByRole("button", { name: /^transfer$/i })).not.toBeInTheDocument();
   });
 });

@@ -170,7 +170,8 @@
       "offline": "Offline",
       "voted": "Voted",
       "notVoted": "Not voted",
-      "ready": "Ready"
+      "ready": "Ready",
+      "moreCount": "{{count}} more"
     },
     "yourVote": "Your vote",
     "chooseCard": "Choose a card",
@@ -186,6 +187,7 @@
     "revealVotes": "Reveal votes",
     "nextRound": "Next round",
     "reset": "Reset",
+    "resetRound": "Reset round",
     "transferHost": "Transfer moderation",
     "onlyModeratorReveal": "Only the moderator can reveal this round.",
     "onlyModeratorAdvanceReset": "Only the moderator can advance or reset this round.",

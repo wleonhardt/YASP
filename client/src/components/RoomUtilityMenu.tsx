@@ -105,6 +105,7 @@ export function RoomUtilityMenu({ status }: Props) {
         aria-expanded={open}
         aria-controls={panelId}
         aria-label={`${t("room.openPreferences")} — ${labels.full}`}
+        title={t("room.preferences")}
         onClick={() => setOpen((current) => !current)}
       >
         <span className="room-utility__dot" aria-hidden="true" />
@@ -114,6 +115,25 @@ export function RoomUtilityMenu({ status }: Props) {
         <span className="room-utility__trigger-label room-utility__trigger-label--short" aria-hidden="true">
           {labels.short}
         </span>
+        <svg
+          className="room-utility__preferences-icon"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <line x1="4" y1="6" x2="20" y2="6" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="18" x2="20" y2="18" />
+          <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none" />
+          <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none" />
+          <circle cx="12" cy="18" r="2" fill="currentColor" stroke="none" />
+        </svg>
         <svg
           className={["room-utility__chevron", open ? "room-utility__chevron--open" : ""].join(" ")}
           width="14"

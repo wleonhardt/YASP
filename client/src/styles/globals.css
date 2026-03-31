@@ -1271,6 +1271,12 @@ select.input {
   display: none;
 }
 
+.room-utility__preferences-icon {
+  color: var(--color-text-muted);
+  flex: 0 0 auto;
+  opacity: 0.82;
+}
+
 .room-utility__chevron {
   color: var(--color-text-muted);
   transition: transform var(--duration-fast) var(--ease-out);
@@ -1473,6 +1479,26 @@ select.input {
   min-height: 40px;
 }
 
+.room-timer__button-icon {
+  display: none;
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+}
+
+.room-timer__button-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.room-timer__button-label {
+  min-width: 0;
+}
+
+.room-timer__button-badge {
+  display: none;
+}
+
 .room-timer--embedded {
   padding: 0;
 }
@@ -1636,6 +1662,12 @@ select.input {
   color: #06101b;
   background: rgba(61, 216, 152, 0.92);
   border-color: rgba(61, 216, 152, 0.25);
+}
+
+.presence-row__dot--overflow {
+  color: var(--color-text);
+  background: rgba(22, 30, 46, 0.92);
+  border-color: rgba(148, 172, 204, 0.18);
 }
 
 .participants-board__toggle {
@@ -2099,7 +2131,7 @@ select.input {
 }
 
 .controls-panel--compact {
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .controls-panel--compact .controls-panel__header {
@@ -2110,11 +2142,16 @@ select.input {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .controls-panel--compact .controls-panel__timer-content {
-  gap: var(--space-3);
+  gap: var(--space-2);
+}
+
+.controls-panel--compact .controls-panel__section--transfer {
+  gap: var(--space-2);
+  padding-top: var(--space-3);
 }
 
 .controls-panel--compact .room-timer__summary {
@@ -2177,6 +2214,102 @@ select.input {
 
 .controls-panel--compact .room-timer__sound-toggle {
   justify-content: center;
+}
+
+.controls-panel--compact .room-timer--compact-actions .timerPacingLayout {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 16px;
+  row-gap: 14px;
+  align-items: start;
+}
+
+.controls-panel--compact .room-timer--compact-actions .room-timer__summary {
+  grid-column: 1;
+  grid-row: 1;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.controls-panel--compact .room-timer--compact-actions .room-timer__duration {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  min-width: 0;
+  gap: 8px;
+}
+
+.controls-panel--compact .room-timer--compact-actions .room-timer__duration .input {
+  width: 100%;
+}
+
+.controls-panel--compact .room-timer--compact-actions .timerControlsGrid {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 44px);
+  gap: 10px;
+  align-content: start;
+  justify-content: end;
+  align-self: start;
+}
+
+.controls-panel--compact .room-timer--compact-actions .timerControlsGrid .button {
+  position: relative;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  justify-content: center;
+  box-shadow: none;
+}
+
+.controls-panel--compact .room-timer--compact-actions .room-timer__button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controls-panel--compact .room-timer--compact-actions .room-timer__button-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.controls-panel--compact .room-timer--compact-actions .room-timer__button-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.3rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.2rem;
+  border-radius: var(--radius-pill);
+  background: rgba(148, 172, 204, 0.12);
+  color: var(--color-text-secondary);
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.controls-panel--compact .room-timer--compact-actions .timerControlsGrid .room-timer__toggle {
+  border-color: rgba(106, 173, 255, 0.34);
+  background: rgba(79, 150, 255, 0.12);
+}
+
+.controls-panel--compact .room-timer--compact-actions .timerControlsGrid .room-timer__secondary-action,
+.controls-panel--compact .room-timer--compact-actions .timerControlsGrid .room-timer__sound-toggle {
+  border-color: var(--color-border);
+  background: var(--color-surface-soft);
 }
 
 .controls-panel .room-timer--embedded .room-timer__summary {
@@ -2597,6 +2730,10 @@ select.input {
     display: inline;
   }
 
+  .room-utility__preferences-icon {
+    display: none;
+  }
+
   .topbar__leave-button {
     min-height: 36px;
     padding: 0.4rem 0.65rem;
@@ -2755,6 +2892,10 @@ select.input {
     flex: 1 1 auto;
   }
 
+  .controls-panel--compact .room-timer--compact-actions .timerPacingLayout {
+    row-gap: 14px;
+  }
+
   .controls-panel__section--next-step {
     order: -1;
   }
@@ -2768,6 +2909,13 @@ select.input {
 
   .controls-panel .room-timer--embedded .room-timer__sound-toggle {
     width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .controls-panel--compact .room-timer--compact-actions .timerControlsGrid {
+    grid-template-columns: 44px;
+    justify-content: end;
   }
 }
 

@@ -20,6 +20,9 @@ export function ParticipantsBoard({ state }: Props) {
   );
   const { voted, total, percent } = getConnectedVoterCounts(state);
   const compact = state.participants.length > 12 || isMobile;
+  const overflowCount = Math.max(0, state.participants.length - 8);
+  const visibleParticipants =
+    overflowCount > 0 ? state.participants.slice(0, 7) : state.participants.slice(0, 8);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 720px)");
@@ -65,7 +68,7 @@ export function ParticipantsBoard({ state }: Props) {
 
       <div className="participants-board__presence">
         <div className="presence-row">
-          {state.participants.slice(0, 8).map((participant) => (
+          {visibleParticipants.map((participant) => (
             <span
               key={participant.id}
               className={[
@@ -83,6 +86,15 @@ export function ParticipantsBoard({ state }: Props) {
               {participant.name.slice(0, 1).toUpperCase()}
             </span>
           ))}
+          {overflowCount > 0 ? (
+            <span
+              className="presence-row__dot presence-row__dot--overflow"
+              title={t("room.participant.moreCount", { count: overflowCount })}
+              aria-label={t("room.participant.moreCount", { count: overflowCount })}
+            >
+              +{overflowCount}
+            </span>
+          ) : null}
         </div>
 
         <button

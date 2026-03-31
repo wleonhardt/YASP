@@ -62,7 +62,7 @@
       "Sem contas. Sem histórico. Só poker.",
       "Estimar, votar, seguir."
     ],
-    "description": "Crie uma sala e estimem em conjunto. Não é necessário registo.",
+    "description": "Cria uma sala para estimarem em conjunto. Não é necessário registo.",
     "connecting": "A ligar ao serviço de salas…",
     "disconnected": "Desligado. A tentar restabelecer a ligação antes de poderes criar ou entrar numa sala.",
     "errorTitle": "Não foi possível continuar",
@@ -157,7 +157,7 @@
       "revealed": "Revelado"
     },
     "progress": "{{voted}}/{{total}} votaram",
-    "liveBoard": "Painel ao vivo",
+    "liveBoard": "Painel em direto",
     "participants": "Participantes",
     "voteProgress": "Progresso da votação",
     "voteProgressAria": "{{voted}} de {{total}} votaram",
@@ -170,7 +170,8 @@
       "offline": "Offline",
       "voted": "Votou",
       "notVoted": "Ainda não votou",
-      "ready": "Pronto"
+      "ready": "Pronto",
+      "moreCount": "{{count}} mais"
     },
     "yourVote": "O teu voto",
     "chooseCard": "Escolhe uma carta",
@@ -186,6 +187,7 @@
     "revealVotes": "Revelar votos",
     "nextRound": "Próxima ronda",
     "reset": "Repor",
+    "resetRound": "Repor ronda",
     "transferHost": "Transferir moderação",
     "onlyModeratorReveal": "Só o moderador pode revelar esta ronda.",
     "onlyModeratorAdvanceReset": "Só o moderador pode avançar ou repor esta ronda.",
@@ -251,8 +253,8 @@
     "timerPause": "Pausar",
     "timerReset": "Repor",
     "timerHonk": "Bip",
-    "timerSoundOn": "Áudio ligado",
-    "timerSoundOff": "Áudio desligado",
+    "timerSoundOn": "Som ligado",
+    "timerSoundOff": "Som desligado",
     "timerState": {
       "ready": "Pronto",
       "running": "A decorrer",

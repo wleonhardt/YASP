@@ -157,7 +157,7 @@
       "revealed": "Revelado"
     },
     "progress": "{{voted}}/{{total}} votaron",
-    "liveBoard": "Panel en vivo",
+    "liveBoard": "Panel en tiempo real",
     "participants": "Participantes",
     "voteProgress": "Progreso de la votación",
     "voteProgressAria": "{{voted}} de {{total}} votaron",
@@ -170,7 +170,8 @@
       "offline": "Desconectado",
       "voted": "Votó",
       "notVoted": "Sin votar",
-      "ready": "Listo"
+      "ready": "Listo",
+      "moreCount": "{{count}} más"
     },
     "yourVote": "Tu voto",
     "chooseCard": "Elige una carta",
@@ -186,6 +187,7 @@
     "revealVotes": "Revelar votos",
     "nextRound": "Siguiente ronda",
     "reset": "Reiniciar",
+    "resetRound": "Reiniciar ronda",
     "transferHost": "Transferir moderación",
     "onlyModeratorReveal": "Solo el moderador puede revelar esta ronda.",
     "onlyModeratorAdvanceReset": "Solo el moderador puede avanzar o reiniciar esta ronda.",
@@ -208,7 +210,7 @@
     "average": "Promedio",
     "median": "Mediana",
     "mostCommon": "Más común",
-    "spread": "Rango",
+    "spread": "Amplitud",
     "distribution": "Distribución",
     "plurality": "Mayoría relativa",
     "consensus": "Consenso",
@@ -251,8 +253,8 @@
     "timerPause": "Pausar",
     "timerReset": "Reiniciar",
     "timerHonk": "Pitido",
-    "timerSoundOn": "Audio activado",
-    "timerSoundOff": "Audio desactivado",
+    "timerSoundOn": "Sonido activado",
+    "timerSoundOff": "Sonido desactivado",
     "timerState": {
       "ready": "Listo",
       "running": "En marcha",

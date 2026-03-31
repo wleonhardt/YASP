@@ -48,7 +48,7 @@ function touchRoom(room: Room): void {
 
 const ROOM_TIMER_PRESETS = Array.isArray(ROOM_TIMER_PRESET_SECONDS)
   ? ROOM_TIMER_PRESET_SECONDS
-  : ([30, 60, 120, 300] as const);
+  : ([10, 30, 60, 120, 300] as const);
 
 export class RoomService {
   constructor(private store: RoomStore) {}

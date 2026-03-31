@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PublicRoomState } from "@yasp/shared";
 import { DeckToken } from "./DeckToken";
@@ -13,12 +13,33 @@ type Props = {
   disabled?: boolean;
 };
 
+const HIDE_SHORTCUTS_QUERY = "(hover: none), (pointer: coarse), (max-width: 720px)";
+
 export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }: Props) {
   const { t } = useTranslation();
   const headingId = useId();
   const self = getSelf(state);
   const isVoter = self?.role === "voter";
   const canVote = isVoter && !state.revealed && !disabled;
+  const [showShortcutHint, setShowShortcutHint] = useState(() =>
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? !window.matchMedia(HIDE_SHORTCUTS_QUERY).matches
+      : true
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(HIDE_SHORTCUTS_QUERY);
+    const syncShortcutHint = () => setShowShortcutHint(!mediaQuery.matches);
+    syncShortcutHint();
+    mediaQuery.addEventListener("change", syncShortcutHint);
+
+    return () => mediaQuery.removeEventListener("change", syncShortcutHint);
+  }, []);
+
   const voteLabel = selectedCard ? (
     <>
       <span>{t("room.yourVote")}: </span>
@@ -74,7 +95,9 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
         })}
       </div>
 
-      {isVoter && !state.revealed && <div className="vote-deck__shortcut">{t("room.shortcuts")}</div>}
+      {isVoter && !state.revealed && showShortcutHint ? (
+        <div className="vote-deck__shortcut">{t("room.shortcuts")}</div>
+      ) : null}
     </section>
   );
 }

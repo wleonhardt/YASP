@@ -13,6 +13,7 @@ import { Toast, type ToastState } from "../components/Toast";
 import { TopBar } from "../components/TopBar";
 import { VoteDeck } from "../components/VoteDeck";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useServerClockOffset } from "../hooks/useServerClockOffset";
 import { getNextRovingValue } from "../lib/rovingFocus";
 import { useRoom } from "../hooks/useRoom";
 import { useSession } from "../hooks/useSession";
@@ -75,6 +76,7 @@ export function RoomPage() {
         ? t("documentTitle.join", { roomId })
         : t("documentTitle.joining", { roomId });
   useDocumentTitle(roomTitle);
+  const serverClockOffsetMs = useServerClockOffset(socket, Boolean(roomState));
 
   const autoJoinAttempted = useRef(false);
   const lastConnectedStatus = useRef(status);
@@ -664,6 +666,7 @@ export function RoomPage() {
         <ModeratorControls
           compact={compactRoundLayout}
           state={state}
+          serverClockOffsetMs={serverClockOffsetMs}
           onSetTimerDuration={handleSetTimerDuration}
           onStartTimer={handleStartTimer}
           onPauseTimer={handlePauseTimer}

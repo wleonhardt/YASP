@@ -59,7 +59,7 @@
     "headlines": [
       "Estimez ensemble en quelques secondes",
       "Un lien. Une salle. Zéro friction.",
-      "Aucun compte. Aucun historique. Juste le poker.",
+      "Aucun compte. Aucun historique. Juste du poker.",
       "Estimez, votez, avancez."
     ],
     "description": "Créez une salle et estimez ensemble. Aucune inscription nécessaire.",
@@ -133,7 +133,7 @@
       "reset": "Réinitialiser",
       "cancel": "Annuler",
       "useDeck": "Utiliser le jeu",
-      "footerNote": "Créera un jeu personnalisé pour cette salle.",
+      "footerNote": "Cela créera un jeu personnalisé pour cette salle.",
       "maxValue": "Valeur maximale",
       "minimumSize": "Taille minimale",
       "maximumSize": "Taille maximale"
@@ -157,7 +157,7 @@
       "revealed": "Révélé"
     },
     "progress": "{{voted}}/{{total}} ont voté",
-    "liveBoard": "Tableau en direct",
+    "liveBoard": "Tableau en temps réel",
     "participants": "Participants",
     "voteProgress": "Progression du vote",
     "voteProgressAria": "{{voted}} votes sur {{total}}",
@@ -170,7 +170,8 @@
       "offline": "Hors ligne",
       "voted": "A voté",
       "notVoted": "N’a pas voté",
-      "ready": "Prêt"
+      "ready": "Prêt",
+      "moreCount": "{{count}} de plus"
     },
     "yourVote": "Votre vote",
     "chooseCard": "Choisissez une carte",
@@ -186,6 +187,7 @@
     "revealVotes": "Révéler les votes",
     "nextRound": "Tour suivant",
     "reset": "Réinitialiser",
+    "resetRound": "Réinitialiser le tour",
     "transferHost": "Transférer la modération",
     "onlyModeratorReveal": "Seul le modérateur peut révéler ce tour.",
     "onlyModeratorAdvanceReset": "Seul le modérateur peut avancer ou réinitialiser ce tour.",
