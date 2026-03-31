@@ -96,8 +96,8 @@ describe("RoomUtilityMenu", () => {
     ],
     ["ja", "セッション設定を開く — 接続済み", "セッション設定", "セッション状態", "表示", "接続済み"],
     ["ko", "세션 설정 열기 — 연결됨", "세션 설정", "세션 상태", "표시", "연결됨"],
-    ["zh-Hans", "打开会话偏好 — 已连接", "会话偏好", "会话状态", "外观", "已连接"],
-    ["zh-Hant", "開啟工作階段偏好 — 已連線", "工作階段偏好", "工作階段狀態", "外觀", "已連線"],
+    ["zh-Hans", "打开会话偏好 — 已连接", "偏好设置", "会话状态", "外观", "已连接"],
+    ["zh-Hant", "開啟工作階段偏好 — 已連線", "偏好設定", "工作階段狀態", "外觀", "已連線"],
   ] as const)(
     "renders localized utility labels in %s",
     async (locale, triggerLabel, title, sessionStatus, appearance, connected) => {
