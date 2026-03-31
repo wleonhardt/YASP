@@ -436,10 +436,11 @@ export function RoomPage() {
 
   const handleStartTimer = useCallback(async () => {
     if (!roomId || actionsDisabled) {
-      return;
+      return false;
     }
 
-    await startTimer(roomId);
+    const result = await startTimer(roomId);
+    return result.ok;
   }, [actionsDisabled, roomId, startTimer]);
 
   const handlePauseTimer = useCallback(async () => {

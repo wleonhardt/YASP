@@ -15,7 +15,7 @@ type Props = {
   compact: boolean;
   state: PublicRoomState;
   onSetTimerDuration: (durationSeconds: number) => Promise<unknown> | unknown;
-  onStartTimer: () => Promise<unknown> | unknown;
+  onStartTimer: () => Promise<boolean> | boolean;
   onPauseTimer: () => Promise<unknown> | unknown;
   onResetTimer: () => Promise<unknown> | unknown;
   onHonkTimer: () => Promise<boolean> | boolean;
@@ -52,7 +52,7 @@ type TimerSectionProps = {
   onToggle: () => void;
   state: PublicRoomState;
   onSetTimerDuration: (durationSeconds: number) => Promise<unknown> | unknown;
-  onStartTimer: () => Promise<unknown> | unknown;
+  onStartTimer: () => Promise<boolean> | boolean;
   onPauseTimer: () => Promise<unknown> | unknown;
   onResetTimer: () => Promise<unknown> | unknown;
   onHonkTimer: () => Promise<boolean> | boolean;
@@ -92,20 +92,20 @@ type StatusChipsProps = {
   readyChipLabel: string | null;
   timerChipLabel: string;
   timerChipTone: "ui-chip--neutral" | "ui-chip--success";
-  durationChipLabel: string;
+  durationChipLabel?: string | null;
 };
 
 function ModeratorStatusChips({
   readyChipLabel,
   timerChipLabel,
   timerChipTone,
-  durationChipLabel,
+  durationChipLabel = null,
 }: StatusChipsProps) {
   return (
     <>
       {readyChipLabel ? <span className="ui-chip ui-chip--success">{readyChipLabel}</span> : null}
       <span className={["ui-chip", timerChipTone].join(" ")}>{timerChipLabel}</span>
-      <span className="ui-chip ui-chip--neutral">{durationChipLabel}</span>
+      {durationChipLabel ? <span className="ui-chip ui-chip--neutral">{durationChipLabel}</span> : null}
     </>
   );
 }
@@ -567,7 +567,7 @@ export function ModeratorControls({
             readyChipLabel={readyChipLabel}
             timerChipLabel={timerSummaryChip}
             timerChipTone={timerChipTone}
-            durationChipLabel={durationChip}
+            durationChipLabel={null}
           />
         </div>
       )}

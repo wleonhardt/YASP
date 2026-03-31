@@ -715,6 +715,19 @@ describe("RoomService timer controls", () => {
     expect(state.timer.running).toBe(false);
   });
 
+  it("accepts the 10 second timer preset", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    const updated = service.setTimerDuration(roomId, "s1", 10);
+    expect(updated.ok).toBe(true);
+    if (!updated.ok) return;
+
+    expect(updated.data.room.timer.durationSeconds).toBe(10);
+    expect(updated.data.room.timer.remainingSeconds).toBe(10);
+  });
+
   it("marks timer completion correctly", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
@@ -727,6 +740,7 @@ describe("RoomService timer controls", () => {
     expect(completed.data.room.timer.running).toBe(false);
     expect(completed.data.room.timer.remainingSeconds).toBe(0);
     expect(completed.data.room.timer.completedAt).not.toBeNull();
+    expect(completed.data.room.revealed).toBe(true);
   });
 
   it("rate-limits honk and keeps it moderator-only", () => {

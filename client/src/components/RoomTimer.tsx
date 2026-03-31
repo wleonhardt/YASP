@@ -16,7 +16,7 @@ export type RoomTimerStatus = "running" | "complete" | "paused" | "ready";
 type Props = {
   state: PublicRoomState;
   onSetDuration: (durationSeconds: number) => Promise<unknown> | unknown;
-  onStart: () => Promise<unknown> | unknown;
+  onStart: () => Promise<boolean> | boolean;
   onPause: () => Promise<unknown> | unknown;
   onReset: () => Promise<unknown> | unknown;
   onHonk: () => Promise<boolean> | boolean;
@@ -66,7 +66,7 @@ export function useRoomTimerCountdown(timer: PublicRoomState["timer"]): {
       return timer.remainingSeconds;
     }
 
-    return Math.max(0, Math.ceil((timer.endsAt - nowMs) / 1000));
+    return Math.max(0, Math.min(timer.remainingSeconds, Math.ceil((timer.endsAt - nowMs) / 1000)));
   }, [nowMs, timer.endsAt, timer.remainingSeconds, timer.running]);
 
   const honkCooldownSeconds =
@@ -122,6 +122,7 @@ export function RoomTimer({
   const previousHonkAt = useRef<number | null>(state.timer.lastHonkAt);
   const previousRemainingSeconds = useRef<number>(state.timer.remainingSeconds);
   const previousRunning = useRef<boolean>(state.timer.running);
+  const localStartPlayedAt = useRef<number | null>(null);
   const localHonkPlayedAt = useRef<number | null>(null);
   const { remainingSeconds, honkCooldownSeconds } = useRoomTimerCountdown(state.timer);
   const timerStatus = getRoomTimerStatus(state.timer, remainingSeconds);
@@ -157,7 +158,11 @@ export function RoomTimer({
     }
 
     if (state.timer.running && !previousRunning.current) {
-      void playTimerStart();
+      if (localStartPlayedAt.current !== null && Date.now() - localStartPlayedAt.current < 1500) {
+        localStartPlayedAt.current = null;
+      } else {
+        void playTimerStart();
+      }
     }
 
     if (
@@ -207,6 +212,16 @@ export function RoomTimer({
 
     localHonkPlayedAt.current = Date.now();
     void playTimerHonk();
+  };
+
+  const handleStart = async () => {
+    const ok = await prepareAudioAndRun(onStart, soundEnabled);
+    if (!ok || !soundEnabled) {
+      return;
+    }
+
+    localStartPlayedAt.current = Date.now();
+    void playTimerStart();
   };
 
   return (
@@ -276,7 +291,7 @@ export function RoomTimer({
                   <button
                     className="button button--secondary room-timer__toggle"
                     type="button"
-                    onClick={() => void prepareAudioAndRun(onStart)}
+                    onClick={() => void handleStart()}
                     disabled={disabled}
                   >
                     {t("room.timerStart")}

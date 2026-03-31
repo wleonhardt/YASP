@@ -95,7 +95,7 @@ export async function playTimerStart(): Promise<boolean> {
       duration: 0.11,
       frequency: 392,
       endFrequency: 440,
-      volume: 0.045,
+      volume: 0.07,
       type: "sine",
     },
     {
@@ -103,7 +103,7 @@ export async function playTimerStart(): Promise<boolean> {
       duration: 0.16,
       frequency: 523,
       endFrequency: 587,
-      volume: 0.055,
+      volume: 0.08,
       type: "triangle",
     },
     {
@@ -111,7 +111,7 @@ export async function playTimerStart(): Promise<boolean> {
       duration: 0.18,
       frequency: 196,
       endFrequency: 220,
-      volume: 0.02,
+      volume: 0.03,
       type: "sine",
     },
   ]);
@@ -126,7 +126,7 @@ function playTimerTickWithMode(mode: TimerTickMode): Promise<boolean> {
             duration: 0.08,
             frequency: 740,
             endFrequency: 680,
-            volume: 0.04,
+            volume: 0.07,
             type: "triangle",
           },
           {
@@ -134,7 +134,7 @@ function playTimerTickWithMode(mode: TimerTickMode): Promise<boolean> {
             duration: 0.06,
             frequency: 1480,
             endFrequency: 1320,
-            volume: 0.015,
+            volume: 0.026,
             type: "sine",
           },
         ]
@@ -144,7 +144,7 @@ function playTimerTickWithMode(mode: TimerTickMode): Promise<boolean> {
             duration: 0.06,
             frequency: 980,
             endFrequency: 900,
-            volume: 0.055,
+            volume: 0.085,
             type: "triangle",
           },
           {
@@ -152,7 +152,7 @@ function playTimerTickWithMode(mode: TimerTickMode): Promise<boolean> {
             duration: 0.045,
             frequency: 1960,
             endFrequency: 1800,
-            volume: 0.018,
+            volume: 0.03,
             type: "sine",
           },
         ]
@@ -170,7 +170,7 @@ export async function playTimerComplete(): Promise<boolean> {
       duration: 0.18,
       frequency: 784,
       endFrequency: 830,
-      volume: 0.06,
+      volume: 0.085,
       type: "sine",
     },
     {
@@ -178,7 +178,7 @@ export async function playTimerComplete(): Promise<boolean> {
       duration: 0.28,
       frequency: 1047,
       endFrequency: 1108,
-      volume: 0.07,
+      volume: 0.095,
       type: "triangle",
     },
     {
@@ -186,7 +186,7 @@ export async function playTimerComplete(): Promise<boolean> {
       duration: 0.48,
       frequency: 1319,
       endFrequency: 1397,
-      volume: 0.06,
+      volume: 0.085,
       type: "sine",
     },
     {
@@ -194,7 +194,7 @@ export async function playTimerComplete(): Promise<boolean> {
       duration: 0.54,
       frequency: 523,
       endFrequency: 494,
-      volume: 0.022,
+      volume: 0.03,
       type: "sine",
     },
   ]);

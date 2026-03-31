@@ -148,8 +148,8 @@
     "copyError": "无法复制房间链接",
     "leave": "离开",
     "leaveRoom": "离开房间",
-    "preferences": "房间偏好",
-    "openPreferences": "打开房间偏好",
+    "preferences": "会话偏好",
+    "openPreferences": "打开会话偏好",
     "round": "第 {{count}} 轮",
     "phase": {
       "waiting": "等待中",
@@ -250,7 +250,7 @@
     "timerStart": "开始",
     "timerPause": "暂停",
     "timerReset": "重置",
-    "timerHonk": "提醒",
+    "timerHonk": "提示音",
     "timerSoundOn": "声音开",
     "timerSoundOff": "声音关",
     "timerState": {

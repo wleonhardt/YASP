@@ -419,6 +419,7 @@ export class RoomService {
     room.timer.endsAt = null;
     room.timer.remainingSeconds = 0;
     room.timer.completedAt = now();
+    room.revealed = true;
     touchRoom(room);
     return success({ room });
   }

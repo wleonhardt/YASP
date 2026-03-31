@@ -148,8 +148,8 @@
     "copyError": "Der Raumlink konnte nicht kopiert werden",
     "leave": "Verlassen",
     "leaveRoom": "Raum verlassen",
-    "preferences": "Raumeinstellungen",
-    "openPreferences": "Raumeinstellungen öffnen",
+    "preferences": "Sitzungseinstellungen",
+    "openPreferences": "Sitzungseinstellungen öffnen",
     "round": "Runde {{count}}",
     "phase": {
       "waiting": "Warten",
@@ -250,7 +250,7 @@
     "timerStart": "Start",
     "timerPause": "Pause",
     "timerReset": "Zurücksetzen",
-    "timerHonk": "Signalton",
+    "timerHonk": "Piep",
     "timerSoundOn": "Ton an",
     "timerSoundOff": "Ton aus",
     "timerState": {

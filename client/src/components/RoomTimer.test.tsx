@@ -16,7 +16,7 @@ vi.mock("../lib/audio", () => audioMocks);
 
 const handlers = () => ({
   onSetDuration: vi.fn(),
-  onStart: vi.fn(),
+  onStart: vi.fn().mockResolvedValue(true),
   onPause: vi.fn(),
   onReset: vi.fn(),
   onHonk: vi.fn().mockResolvedValue(true),
@@ -34,7 +34,7 @@ describe("RoomTimer", () => {
     expect(screen.getByRole("heading", { name: "01:00" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /start/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /reset/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /honk/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /beep/i })).toBeInTheDocument();
   });
 
   it("hides moderator-only actions for non-moderators", () => {
@@ -58,7 +58,7 @@ describe("RoomTimer", () => {
     );
 
     expect(screen.queryByRole("button", { name: /start/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /honk/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /beep/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /sound/i })).toBeInTheDocument();
   });
 
@@ -102,9 +102,9 @@ describe("RoomTimer", () => {
       />
     );
 
-    const honkButton = screen.getByRole("button", { name: /honk/i });
-    expect(honkButton).toBeDisabled();
-    expect(honkButton.textContent).toMatch(/\(\d\)/);
+    const beepButton = screen.getByRole("button", { name: /beep/i });
+    expect(beepButton).toBeDisabled();
+    expect(beepButton.textContent).toMatch(/\(\d\)/);
   });
 
   it("disables duration select while timer is running", () => {
@@ -156,17 +156,56 @@ describe("RoomTimer", () => {
     expect(screen.getByRole("heading", { name: "01:00" })).toBeInTheDocument();
   });
 
+  it("does not render one second above the server timer snapshot when clocks drift", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(0));
+
+    render(
+      <RoomTimer
+        state={makePublicRoomState({
+          timer: {
+            durationSeconds: 60,
+            remainingSeconds: 60,
+            running: true,
+            endsAt: 60_900,
+            completedAt: null,
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
+        })}
+        {...handlers()}
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "01:00" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "01:01" })).not.toBeInTheDocument();
+  });
+
   it("plays a local honk immediately after a successful honk action", async () => {
     const user = userEvent.setup();
     const props = handlers();
 
     render(<RoomTimer state={makePublicRoomState()} {...props} />);
 
-    await user.click(screen.getByRole("button", { name: /honk/i }));
+    await user.click(screen.getByRole("button", { name: /beep/i }));
 
     expect(audioMocks.primeRoomAudio).toHaveBeenCalled();
     expect(props.onHonk).toHaveBeenCalledTimes(1);
     expect(audioMocks.playTimerHonk).toHaveBeenCalledTimes(1);
+  });
+
+  it("plays a local start cue immediately after a successful start action when sound is on", async () => {
+    const user = userEvent.setup();
+    const props = handlers();
+
+    render(<RoomTimer state={makePublicRoomState()} {...props} />);
+
+    await user.click(screen.getByRole("button", { name: /sound/i }));
+    await user.click(screen.getByRole("button", { name: /start/i }));
+
+    expect(audioMocks.primeRoomAudio).toHaveBeenCalled();
+    expect(props.onStart).toHaveBeenCalledTimes(1);
+    expect(audioMocks.playTimerStart).toHaveBeenCalledTimes(1);
   });
 
   it("plays a start cue when the timer begins and sound is enabled", async () => {

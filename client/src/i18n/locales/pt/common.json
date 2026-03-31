@@ -148,8 +148,8 @@
     "copyError": "Não foi possível copiar o link da sala",
     "leave": "Sair",
     "leaveRoom": "Sair da sala",
-    "preferences": "Preferências da sala",
-    "openPreferences": "Abrir as preferências da sala",
+    "preferences": "Preferências da sessão",
+    "openPreferences": "Abrir as preferências da sessão",
     "round": "Ronda {{count}}",
     "phase": {
       "waiting": "À espera",
@@ -250,7 +250,7 @@
     "timerStart": "Iniciar",
     "timerPause": "Pausar",
     "timerReset": "Repor",
-    "timerHonk": "Sinal",
+    "timerHonk": "Bip",
     "timerSoundOn": "Áudio ligado",
     "timerSoundOff": "Áudio desligado",
     "timerState": {

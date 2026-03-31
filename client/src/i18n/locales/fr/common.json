@@ -148,8 +148,8 @@
     "copyError": "Impossible de copier le lien de la salle",
     "leave": "Quitter",
     "leaveRoom": "Quitter la salle",
-    "preferences": "Préférences de la salle",
-    "openPreferences": "Ouvrir les préférences de la salle",
+    "preferences": "Préférences de la session",
+    "openPreferences": "Ouvrir les préférences de la session",
     "round": "Tour {{count}}",
     "phase": {
       "waiting": "En attente",
@@ -250,7 +250,7 @@
     "timerStart": "Démarrer",
     "timerPause": "Mettre en pause",
     "timerReset": "Réinitialiser",
-    "timerHonk": "Relancer",
+    "timerHonk": "Bip",
     "timerSoundOn": "Son activé",
     "timerSoundOff": "Son désactivé",
     "timerState": {

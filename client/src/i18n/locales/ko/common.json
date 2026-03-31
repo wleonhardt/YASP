@@ -148,8 +148,8 @@
     "copyError": "룸 링크를 복사할 수 없습니다",
     "leave": "나가기",
     "leaveRoom": "룸 나가기",
-    "preferences": "룸 설정",
-    "openPreferences": "룸 설정 열기",
+    "preferences": "세션 설정",
+    "openPreferences": "세션 설정 열기",
     "round": "라운드 {{count}}",
     "phase": {
       "waiting": "대기 중",
@@ -250,7 +250,7 @@
     "timerStart": "시작",
     "timerPause": "일시정지",
     "timerReset": "초기화",
-    "timerHonk": "알림",
+    "timerHonk": "삑",
     "timerSoundOn": "소리 켜짐",
     "timerSoundOff": "소리 꺼짐",
     "timerState": {

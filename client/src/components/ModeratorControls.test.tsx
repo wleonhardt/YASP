@@ -34,7 +34,7 @@ function makeState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
 function handlers() {
   return {
     onSetTimerDuration: vi.fn(),
-    onStartTimer: vi.fn(),
+    onStartTimer: vi.fn().mockResolvedValue(true),
     onPauseTimer: vi.fn(),
     onResetTimer: vi.fn(),
     onHonkTimer: vi.fn().mockResolvedValue(true),
@@ -81,7 +81,7 @@ describe("ModeratorControls", () => {
 
     expect(timerToggle).toHaveAttribute("aria-expanded", "false");
     expect(panel.querySelector(".controls-panel__status-rail")).not.toBeInTheDocument();
-    expect(panel.querySelectorAll(".controls-panel__status-row .ui-chip")).toHaveLength(2);
+    expect(panel.querySelectorAll(".controls-panel__status-row .ui-chip")).toHaveLength(1);
     expect(scope.queryByRole("button", { name: /start/i })).not.toBeInTheDocument();
     expect(scope.getByRole("button", { name: /reveal votes/i })).toBeInTheDocument();
 

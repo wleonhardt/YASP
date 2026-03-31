@@ -117,6 +117,7 @@ function syncRoomTimer(
       return;
     }
 
+    timerService.cancelAutoReveal(roomId);
     broadcastRoomState(io, roomId, store);
   });
 }

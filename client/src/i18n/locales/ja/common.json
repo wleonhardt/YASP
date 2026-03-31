@@ -148,8 +148,8 @@
     "copyError": "ルームリンクをコピーできませんでした",
     "leave": "退出",
     "leaveRoom": "ルームを退出",
-    "preferences": "ルーム設定",
-    "openPreferences": "ルーム設定を開く",
+    "preferences": "セッション設定",
+    "openPreferences": "セッション設定を開く",
     "round": "ラウンド {{count}}",
     "phase": {
       "waiting": "待機中",
@@ -250,7 +250,7 @@
     "timerStart": "開始",
     "timerPause": "一時停止",
     "timerReset": "リセット",
-    "timerHonk": "鳴らす",
+    "timerHonk": "ビープ",
     "timerSoundOn": "音あり",
     "timerSoundOff": "音なし",
     "timerState": {

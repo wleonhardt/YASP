@@ -148,8 +148,8 @@
     "copyError": "Couldn't copy the room link",
     "leave": "Leave",
     "leaveRoom": "Leave room",
-    "preferences": "Room preferences",
-    "openPreferences": "Open room preferences",
+    "preferences": "Session preferences",
+    "openPreferences": "Open session preferences",
     "round": "Round {{count}}",
     "phase": {
       "waiting": "Waiting",
@@ -250,7 +250,7 @@
     "timerStart": "Start",
     "timerPause": "Pause",
     "timerReset": "Reset",
-    "timerHonk": "Honk",
+    "timerHonk": "Beep",
     "timerSoundOn": "Sound on",
     "timerSoundOff": "Sound off",
     "timerState": {
