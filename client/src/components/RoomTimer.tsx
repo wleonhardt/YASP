@@ -1,7 +1,13 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ROOM_TIMER_PRESET_SECONDS, type PublicRoomState } from "@yasp/shared";
-import { playTimerComplete, playTimerHonk, playTimerStart, playTimerTick, primeRoomAudio } from "../lib/audio";
+import {
+  playTimerComplete,
+  playTimerHonk,
+  playTimerStart,
+  playTimerTick,
+  primeRoomAudio,
+} from "../lib/audio";
 import { isMeModerator } from "../lib/room";
 import { getStoredTimerSoundEnabled, setStoredTimerSoundEnabled } from "../lib/storage";
 
