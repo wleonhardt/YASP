@@ -1,58 +1,34 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-import type { PublicRoomState } from "@yasp/shared";
-import { DEFAULT_DECKS, DEFAULT_ROOM_SETTINGS } from "@yasp/shared";
+import { act, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RoomTimer } from "./RoomTimer";
+import { makePublicRoomState } from "../test/roomState";
 
-function makeState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
-  return {
-    id: "ROOM01",
-    roundNumber: 1,
-    revealed: false,
-    deck: DEFAULT_DECKS.fibonacci,
-    settings: { ...DEFAULT_ROOM_SETTINGS },
-    timer: {
-      durationSeconds: 60,
-      remainingSeconds: 60,
-      running: false,
-      endsAt: null,
-      completedAt: null,
-      lastHonkAt: null,
-      honkAvailableAt: null,
-    },
-    participants: [
-      {
-        id: "me",
-        name: "Alice",
-        role: "voter",
-        connected: true,
-        hasVoted: false,
-        isSelf: true,
-        isModerator: true,
-      },
-    ],
-    votes: null,
-    stats: null,
-    me: {
-      participantId: "me",
-      sessionId: "session-1",
-      connected: true,
-    },
-    ...overrides,
-  };
-}
+const audioMocks = vi.hoisted(() => ({
+  playTimerComplete: vi.fn().mockResolvedValue(true),
+  playTimerHonk: vi.fn().mockResolvedValue(true),
+  playTimerTick: vi.fn().mockResolvedValue(true),
+  primeRoomAudio: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock("../lib/audio", () => audioMocks);
 
 const handlers = () => ({
   onSetDuration: vi.fn(),
   onStart: vi.fn(),
   onPause: vi.fn(),
   onReset: vi.fn(),
-  onHonk: vi.fn(),
+  onHonk: vi.fn().mockResolvedValue(true),
 });
 
 describe("RoomTimer", () => {
+  beforeEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
+
   it("renders moderator timer controls", () => {
-    render(<RoomTimer state={makeState()} {...handlers()} />);
+    render(<RoomTimer state={makePublicRoomState()} {...handlers()} />);
 
     expect(screen.getByRole("heading", { name: "01:00" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /start/i })).toBeInTheDocument();
@@ -63,7 +39,7 @@ describe("RoomTimer", () => {
   it("hides moderator-only actions for non-moderators", () => {
     render(
       <RoomTimer
-        state={makeState({
+        state={makePublicRoomState({
           participants: [
             {
               id: "me",
@@ -88,7 +64,7 @@ describe("RoomTimer", () => {
   it("shows Pause instead of Start when running", () => {
     render(
       <RoomTimer
-        state={makeState({
+        state={makePublicRoomState({
           timer: {
             durationSeconds: 60,
             remainingSeconds: 45,
@@ -110,7 +86,7 @@ describe("RoomTimer", () => {
   it("disables honk button during cooldown and shows remaining seconds", () => {
     render(
       <RoomTimer
-        state={makeState({
+        state={makePublicRoomState({
           timer: {
             durationSeconds: 60,
             remainingSeconds: 60,
@@ -133,7 +109,7 @@ describe("RoomTimer", () => {
   it("disables duration select while timer is running", () => {
     render(
       <RoomTimer
-        state={makeState({
+        state={makePublicRoomState({
           timer: {
             durationSeconds: 60,
             remainingSeconds: 30,
@@ -149,5 +125,78 @@ describe("RoomTimer", () => {
     );
 
     expect(screen.getByRole("combobox")).toBeDisabled();
+  });
+
+  it("synchronizes countdown immediately when a timer starts after mount", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(0));
+
+    const props = handlers();
+    const { rerender } = render(<RoomTimer state={makePublicRoomState()} {...props} />);
+
+    vi.setSystemTime(new Date(24_000));
+    rerender(
+      <RoomTimer
+        state={makePublicRoomState({
+          timer: {
+            durationSeconds: 60,
+            remainingSeconds: 60,
+            running: true,
+            endsAt: 84_000,
+            completedAt: null,
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
+        })}
+        {...props}
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "01:00" })).toBeInTheDocument();
+  });
+
+  it("plays a local honk immediately after a successful honk action", async () => {
+    const user = userEvent.setup();
+    const props = handlers();
+
+    render(<RoomTimer state={makePublicRoomState()} {...props} />);
+
+    await user.click(screen.getByRole("button", { name: /honk/i }));
+
+    expect(audioMocks.primeRoomAudio).toHaveBeenCalled();
+    expect(props.onHonk).toHaveBeenCalledTimes(1);
+    expect(audioMocks.playTimerHonk).toHaveBeenCalledTimes(1);
+  });
+
+  it("plays a gentle tick in the final five seconds when sound is enabled", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(0));
+
+    render(
+      <RoomTimer
+        state={makePublicRoomState({
+          timer: {
+            durationSeconds: 5,
+            remainingSeconds: 5,
+            running: true,
+            endsAt: 5_000,
+            completedAt: null,
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
+        })}
+        {...handlers()}
+      />
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: /sound/i }).click();
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+
+    expect(audioMocks.playTimerTick).toHaveBeenCalled();
   });
 });

@@ -40,6 +40,7 @@
     "disconnectedShort": "Offline"
   },
   "theme": {
+    "appearance": "Aspeto",
     "switchToLight": "Mudar para o modo claro",
     "switchToDark": "Mudar para o modo escuro"
   },
@@ -142,10 +143,13 @@
     "room": "Sala",
     "copyLink": "Copiar link",
     "copyShort": "Copiar",
+    "copied": "Copiado",
     "copySuccess": "Link da sala copiado",
     "copyError": "Não foi possível copiar o link da sala",
     "leave": "Sair",
     "leaveRoom": "Sair da sala",
+    "preferences": "Preferências da sala",
+    "openPreferences": "Abrir as preferências da sala",
     "round": "Ronda {{count}}",
     "phase": {
       "waiting": "À espera",
@@ -177,6 +181,7 @@
     "shortcuts": "Atalhos: teclas numéricas para votar quando aplicável, Esc para limpar",
     "actions": "Ações",
     "nextSteps": "Próximos passos",
+    "nextStep": "Próximo passo",
     "moderatorControls": "Controlos do moderador",
     "revealVotes": "Revelar votos",
     "nextRound": "Próxima ronda",
@@ -240,6 +245,7 @@
       "voteProgress": "{{voted}} de {{total}} votos enviados"
     },
     "timer": "Temporizador",
+    "timerSettings": "Temporizador e ritmo",
     "timerDuration": "Duração",
     "timerStart": "Iniciar",
     "timerPause": "Pausar",

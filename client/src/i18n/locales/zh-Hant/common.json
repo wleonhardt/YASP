@@ -40,6 +40,7 @@
     "disconnectedShort": "離線"
   },
   "theme": {
+    "appearance": "外觀",
     "switchToLight": "切換到淺色模式",
     "switchToDark": "切換到深色模式"
   },
@@ -142,10 +143,13 @@
     "room": "房間",
     "copyLink": "複製連結",
     "copyShort": "複製",
+    "copied": "已複製",
     "copySuccess": "已複製房間連結",
     "copyError": "無法複製房間連結",
     "leave": "離開",
     "leaveRoom": "離開房間",
+    "preferences": "房間偏好",
+    "openPreferences": "開啟房間偏好",
     "round": "第 {{count}} 輪",
     "phase": {
       "waiting": "等待中",
@@ -177,6 +181,7 @@
     "shortcuts": "快捷鍵：可用時按數字鍵投票，Esc 清除選擇",
     "actions": "操作",
     "nextSteps": "下一步",
+    "nextStep": "下一步",
     "moderatorControls": "主持人控制",
     "revealVotes": "公開投票",
     "nextRound": "下一輪",
@@ -240,6 +245,7 @@
       "voteProgress": "共 {{total}} 票，已提交 {{voted}} 票"
     },
     "timer": "計時器",
+    "timerSettings": "計時器與節奏",
     "timerDuration": "時長",
     "timerStart": "開始",
     "timerPause": "暫停",

@@ -2,10 +2,9 @@ import type { PublicRoomState } from "@yasp/shared";
 import { useTranslation } from "react-i18next";
 import type { ConnectionStatus } from "../hooks/useSocket";
 import { getDeckLabel } from "../i18n/decks";
-import { ConnectionBadge } from "./ConnectionBadge";
-import { LanguageSwitcher } from "./LanguageSwitcher";
+import { RoomCodeShare } from "./RoomCodeShare";
 import { RoomStatus } from "./RoomStatus";
-import { ThemeToggle } from "./ThemeToggle";
+import { RoomUtilityMenu } from "./RoomUtilityMenu";
 
 type Props = {
   state: PublicRoomState;
@@ -17,48 +16,14 @@ type Props = {
 
 export function TopBar({ state, connectionStatus, onLeave, onCopyFeedback, disabled = false }: Props) {
   const { t } = useTranslation();
-  const roomUrl = `${window.location.origin}/r/${state.id}`;
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(roomUrl);
-      onCopyFeedback("success", t("room.copySuccess"));
-    } catch {
-      onCopyFeedback("error", t("room.copyError"));
-    }
-  };
 
   return (
     <header className="topbar app-panel">
-      <div className="topbar__room">
-        <div className="topbar__label">{t("room.room")}</div>
-        <div className="topbar__room-row">
-          <code className="topbar__room-code topbar__room-code--desktop">{state.id}</code>
-          <button
-            className="button button--ghost topbar__copy-button topbar__copy-button--desktop"
-            onClick={handleCopy}
-            aria-label={t("room.copyLink")}
-          >
-            {t("room.copyLink")}
-          </button>
-          <button
-            className="button button--ghost topbar__room-link topbar__room-link--mobile"
-            onClick={handleCopy}
-            aria-label={t("room.copyLink")}
-          >
-            <code className="topbar__room-code">{state.id}</code>
-            <span className="topbar__copy-label topbar__copy-label--full">{t("room.copyLink")}</span>
-            <span className="topbar__copy-label topbar__copy-label--short">{t("room.copyShort")}</span>
-          </button>
-        </div>
-      </div>
+      <RoomCodeShare roomId={state.id} onCopyError={onCopyFeedback} />
 
       <RoomStatus state={state} deckLabel={getDeckLabel(t, state.deck)} />
 
       <div className="topbar__actions">
-        <LanguageSwitcher compact />
-        <ThemeToggle />
-        <ConnectionBadge status={connectionStatus} />
         <button
           className="button button--ghost topbar__leave-button"
           onClick={onLeave}
@@ -84,6 +49,7 @@ export function TopBar({ state, connectionStatus, onLeave, onCopyFeedback, disab
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
         </button>
+        <RoomUtilityMenu status={connectionStatus} />
       </div>
     </header>
   );

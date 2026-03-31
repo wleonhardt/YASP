@@ -40,6 +40,7 @@
     "disconnectedShort": "오프라인"
   },
   "theme": {
+    "appearance": "표시",
     "switchToLight": "라이트 모드로 전환",
     "switchToDark": "다크 모드로 전환"
   },
@@ -142,10 +143,13 @@
     "room": "룸",
     "copyLink": "링크 복사",
     "copyShort": "복사",
+    "copied": "복사됨",
     "copySuccess": "룸 링크를 복사했습니다",
     "copyError": "룸 링크를 복사할 수 없습니다",
     "leave": "나가기",
     "leaveRoom": "룸 나가기",
+    "preferences": "룸 설정",
+    "openPreferences": "룸 설정 열기",
     "round": "라운드 {{count}}",
     "phase": {
       "waiting": "대기 중",
@@ -177,6 +181,7 @@
     "shortcuts": "단축키: 숫자 키로 투표, Esc로 선택 해제",
     "actions": "작업",
     "nextSteps": "다음 단계",
+    "nextStep": "다음 단계",
     "moderatorControls": "진행자 제어",
     "revealVotes": "투표 공개",
     "nextRound": "다음 라운드",
@@ -240,6 +245,7 @@
       "voteProgress": "{{total}}표 중 {{voted}}표 제출됨"
     },
     "timer": "타이머",
+    "timerSettings": "타이머 및 페이싱",
     "timerDuration": "시간",
     "timerStart": "시작",
     "timerPause": "일시정지",

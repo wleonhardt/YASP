@@ -40,6 +40,7 @@
     "disconnectedShort": "Offline"
   },
   "theme": {
+    "appearance": "Darstellung",
     "switchToLight": "Zum hellen Modus wechseln",
     "switchToDark": "Zum dunklen Modus wechseln"
   },
@@ -142,10 +143,13 @@
     "room": "Raum",
     "copyLink": "Link kopieren",
     "copyShort": "Kopieren",
+    "copied": "Kopiert",
     "copySuccess": "Raumlink kopiert",
     "copyError": "Der Raumlink konnte nicht kopiert werden",
     "leave": "Verlassen",
     "leaveRoom": "Raum verlassen",
+    "preferences": "Raumeinstellungen",
+    "openPreferences": "Raumeinstellungen öffnen",
     "round": "Runde {{count}}",
     "phase": {
       "waiting": "Warten",
@@ -177,6 +181,7 @@
     "shortcuts": "Kurzbefehle: Zifferntasten zum Abstimmen, Esc zum Löschen",
     "actions": "Aktionen",
     "nextSteps": "Nächste Schritte",
+    "nextStep": "Nächster Schritt",
     "moderatorControls": "Moderator-Steuerung",
     "revealVotes": "Stimmen aufdecken",
     "nextRound": "Nächste Runde",
@@ -240,6 +245,7 @@
       "voteProgress": "{{voted}} von {{total}} Stimmen abgegeben"
     },
     "timer": "Timer",
+    "timerSettings": "Timer und Taktung",
     "timerDuration": "Dauer",
     "timerStart": "Start",
     "timerPause": "Pause",

@@ -40,6 +40,7 @@
     "disconnectedShort": "オフライン"
   },
   "theme": {
+    "appearance": "表示",
     "switchToLight": "ライトモードに切り替え",
     "switchToDark": "ダークモードに切り替え"
   },
@@ -142,10 +143,13 @@
     "room": "ルーム",
     "copyLink": "リンクをコピー",
     "copyShort": "コピー",
+    "copied": "コピー済み",
     "copySuccess": "ルームリンクをコピーしました",
     "copyError": "ルームリンクをコピーできませんでした",
     "leave": "退出",
     "leaveRoom": "ルームを退出",
+    "preferences": "ルーム設定",
+    "openPreferences": "ルーム設定を開く",
     "round": "ラウンド {{count}}",
     "phase": {
       "waiting": "待機中",
@@ -177,6 +181,7 @@
     "shortcuts": "ショートカット: 数字キーで投票、Esc でクリア",
     "actions": "操作",
     "nextSteps": "次の操作",
+    "nextStep": "次のステップ",
     "moderatorControls": "モデレーター操作",
     "revealVotes": "投票を公開",
     "nextRound": "次のラウンド",
@@ -240,6 +245,7 @@
       "voteProgress": "{{total}}人中{{voted}}人が投票しました"
     },
     "timer": "タイマー",
+    "timerSettings": "タイマーとペーシング",
     "timerDuration": "時間",
     "timerStart": "開始",
     "timerPause": "一時停止",

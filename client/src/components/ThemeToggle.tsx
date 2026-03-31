@@ -1,13 +1,26 @@
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "react-i18next";
 
-export function ThemeToggle() {
+type Props = {
+  showLabel?: boolean;
+  className?: string;
+};
+
+export function ThemeToggle({ showLabel = false, className }: Props) {
   const { theme, toggle } = useTheme();
   const { t } = useTranslation();
   const label = theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark");
 
   return (
-    <button type="button" className="theme-toggle" onClick={toggle} aria-label={label} title={label}>
+    <button
+      type="button"
+      className={["theme-toggle", showLabel ? "theme-toggle--labelled" : "", className]
+        .filter(Boolean)
+        .join(" ")}
+      onClick={toggle}
+      aria-label={label}
+      title={label}
+    >
       {theme === "dark" ? (
         // Sun icon
         <svg
@@ -49,6 +62,7 @@ export function ThemeToggle() {
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
         </svg>
       )}
+      {showLabel && <span className="theme-toggle__label">{label}</span>}
     </button>
   );
 }

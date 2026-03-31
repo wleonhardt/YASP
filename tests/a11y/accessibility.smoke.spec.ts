@@ -69,15 +69,15 @@ test("transfer-host disclosure open state is free of detectable accessibility vi
   page,
   browser,
 }) => {
-  const transferLabel = /^Transfer (host|moderation)$/;
+  const transferGroupLabel = /^Transfer (host|moderation)$/;
   const roomId = await createRoom(page);
   const participantContext = await browser.newContext();
 
   try {
     await joinRoomAsParticipant(participantContext, roomId, "Second voter");
     await expect(page.getByText("Second voter")).toBeVisible();
-    await page.getByRole("button", { name: transferLabel }).click();
-    const transferGroup = page.getByRole("group", { name: transferLabel });
+    await page.getByRole("button", { name: /^Transfer$/ }).click();
+    const transferGroup = page.getByRole("group", { name: transferGroupLabel });
     await expect(transferGroup).toBeVisible();
     await expect(transferGroup.getByLabel("New moderator")).toHaveValue(/.+/);
     await expectNoAccessibilityViolations(page);

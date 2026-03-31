@@ -8,7 +8,6 @@ import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ModeratorControls } from "../components/ModeratorControls";
 import { ParticipantsBoard } from "../components/ParticipantsBoard";
 import { ResultsPanel } from "../components/ResultsPanel";
-import { RoomTimer } from "../components/RoomTimer";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Toast, type ToastState } from "../components/Toast";
 import { TopBar } from "../components/TopBar";
@@ -24,6 +23,7 @@ import { getStoredDisplayName, getStoredRole, setStoredDisplayName, setStoredRol
 
 type RoomUnavailableReason = "ROOM_NOT_FOUND" | "ROOM_EXPIRED";
 const JOIN_ROLE_OPTIONS = ["voter", "spectator"] as const satisfies readonly ParticipantRole[];
+const COMPACT_ROUND_LAYOUT_QUERY = "(max-width: 640px)";
 
 export function RoomPage() {
   const { t } = useTranslation();
@@ -57,6 +57,11 @@ export function RoomPage() {
   const [joinRole, setJoinRole] = useState<ParticipantRole>("voter");
   const [toast, setToast] = useState<ToastState | null>(null);
   const [roomUnavailable, setRoomUnavailable] = useState<RoomUnavailableReason | null>(null);
+  const [compactRoundLayout, setCompactRoundLayout] = useState(() =>
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia(COMPACT_ROUND_LAYOUT_QUERY).matches
+      : false
+  );
 
   const roomTitle = roomUnavailable
     ? t("documentTitle.roomUnavailable")
@@ -180,6 +185,18 @@ export function RoomPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(COMPACT_ROUND_LAYOUT_QUERY);
+    const syncViewport = () => setCompactRoundLayout(mediaQuery.matches);
+    syncViewport();
+    mediaQuery.addEventListener("change", syncViewport);
+    return () => mediaQuery.removeEventListener("change", syncViewport);
+  }, []);
+
   const getIntendedRole = useCallback((): ParticipantRole => {
     if (navState?.role) {
       return navState.role;
@@ -187,6 +204,25 @@ export function RoomPage() {
 
     return getStoredRole() ?? "voter";
   }, [navState]);
+
+  const attemptJoinRoom = useCallback(
+    async (name: string, role: ParticipantRole, showManualJoinOnFailure = false) => {
+      if (!roomId) {
+        return null;
+      }
+
+      const result = await joinRoom(roomId, name, role);
+      if (!result.ok) {
+        checkRoomUnavailable(result);
+        if (showManualJoinOnFailure && !result.error.code.startsWith("ROOM_")) {
+          setNeedsManualJoin(true);
+        }
+      }
+
+      return result;
+    },
+    [checkRoomUnavailable, joinRoom, roomId]
+  );
 
   useEffect(() => {
     if (status !== "connected" || !roomId) {
@@ -200,10 +236,7 @@ export function RoomPage() {
       const self = getSelf(roomState);
       const name = getStoredDisplayName() || self?.name || t("common.anonymous");
       const role = self?.role ?? getIntendedRole();
-
-      joinRoom(roomId, name, role).then((result) => {
-        if (!result.ok) checkRoomUnavailable(result);
-      });
+      void attemptJoinRoom(name, role);
 
       return;
     }
@@ -214,17 +247,12 @@ export function RoomPage() {
 
       if (name) {
         const role = getIntendedRole();
-        joinRoom(roomId, name, role).then((result) => {
-          if (!result.ok) {
-            checkRoomUnavailable(result);
-            if (!result.error.code.startsWith("ROOM_")) setNeedsManualJoin(true);
-          }
-        });
+        void attemptJoinRoom(name, role, true);
       } else {
         setNeedsManualJoin(true);
       }
     }
-  }, [checkRoomUnavailable, getIntendedRole, joinRoom, roomId, roomState, status, t]);
+  }, [attemptJoinRoom, getIntendedRole, roomId, roomState, status, t]);
 
   useEffect(() => {
     if (status !== "connected") {
@@ -311,16 +339,13 @@ export function RoomPage() {
 
       setStoredDisplayName(joinName.trim());
       setStoredRole(joinRole);
-      const result = await joinRoom(roomId, joinName.trim(), joinRole);
+      const result = await attemptJoinRoom(joinName.trim(), joinRole);
 
-      if (result.ok) {
+      if (result?.ok) {
         setNeedsManualJoin(false);
-        return;
       }
-
-      checkRoomUnavailable(result);
     },
-    [checkRoomUnavailable, joinName, joinRole, joinRoom, roomId, status]
+    [attemptJoinRoom, joinName, joinRole, roomId, status]
   );
 
   const handleVote = useCallback(
@@ -435,10 +460,11 @@ export function RoomPage() {
 
   const handleHonkTimer = useCallback(async () => {
     if (!roomId || actionsDisabled) {
-      return;
+      return false;
     }
 
-    await honkTimer(roomId);
+    const result = await honkTimer(roomId);
+    return result.ok;
   }, [actionsDisabled, honkTimer, roomId]);
 
   useEffect(() => {
@@ -634,13 +660,18 @@ export function RoomPage() {
           </section>
         )}
 
-        <RoomTimer
+        <ModeratorControls
+          compact={compactRoundLayout}
           state={state}
-          onSetDuration={handleSetTimerDuration}
-          onStart={handleStartTimer}
-          onPause={handlePauseTimer}
-          onReset={handleResetTimer}
-          onHonk={handleHonkTimer}
+          onSetTimerDuration={handleSetTimerDuration}
+          onStartTimer={handleStartTimer}
+          onPauseTimer={handlePauseTimer}
+          onResetTimer={handleResetTimer}
+          onHonkTimer={handleHonkTimer}
+          onReveal={handleReveal}
+          onReset={handleReset}
+          onNextRound={handleNextRound}
+          onTransferModerator={handleTransferModerator}
           disabled={actionsDisabled}
         />
 
@@ -661,15 +692,6 @@ export function RoomPage() {
                 disabled={actionsDisabled}
               />
             )}
-
-            <ModeratorControls
-              state={state}
-              onReveal={handleReveal}
-              onReset={handleReset}
-              onNextRound={handleNextRound}
-              onTransferModerator={handleTransferModerator}
-              disabled={actionsDisabled}
-            />
           </aside>
         </div>
       </main>

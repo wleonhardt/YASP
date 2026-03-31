@@ -18,13 +18,14 @@ export function RoomStatus({ state, deckLabel }: Props) {
         ? t("room.phase.voting")
         : t("room.phase.waiting");
   const progressText = t("room.progress", { voted, total });
+  const phaseTone =
+    phase === "revealed" ? "ui-chip--success" : phase === "voting" ? "ui-chip--warning" : "ui-chip--neutral";
 
   return (
     <div className="room-status">
-      <div className="room-status__eyebrow">{t("room.round", { count: state.roundNumber })}</div>
       <div className="room-status__headline">
         <strong>{t("room.round", { count: state.roundNumber })}</strong>
-        <span className={`phase-chip phase-chip--${phase}`}>{phaseLabel}</span>
+        <span className={["ui-chip", phaseTone, "room-status__phase-chip"].join(" ")}>{phaseLabel}</span>
       </div>
       <div className="room-status__meta">
         <span>{progressText}</span>

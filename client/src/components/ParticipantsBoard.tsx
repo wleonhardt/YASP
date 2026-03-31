@@ -43,7 +43,7 @@ export function ParticipantsBoard({ state }: Props) {
           <div className="section-label">{t("room.liveBoard")}</div>
           <h2 id={headingId}>{t("room.participants")}</h2>
         </div>
-        <div className="participants-board__summary">
+        <div className="participants-board__summary ui-chip ui-chip--neutral">
           <strong>
             {voted}/{total}
           </strong>

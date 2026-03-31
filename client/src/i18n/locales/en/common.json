@@ -40,6 +40,7 @@
     "disconnectedShort": "Offline"
   },
   "theme": {
+    "appearance": "Appearance",
     "switchToLight": "Switch to light mode",
     "switchToDark": "Switch to dark mode"
   },
@@ -142,10 +143,13 @@
     "room": "Room",
     "copyLink": "Copy link",
     "copyShort": "Copy",
+    "copied": "Copied",
     "copySuccess": "Room link copied",
     "copyError": "Couldn't copy the room link",
     "leave": "Leave",
     "leaveRoom": "Leave room",
+    "preferences": "Room preferences",
+    "openPreferences": "Open room preferences",
     "round": "Round {{count}}",
     "phase": {
       "waiting": "Waiting",
@@ -177,6 +181,7 @@
     "shortcuts": "Shortcuts: number keys to vote when applicable, Esc to clear",
     "actions": "Actions",
     "nextSteps": "Next steps",
+    "nextStep": "Next step",
     "moderatorControls": "Moderator controls",
     "revealVotes": "Reveal votes",
     "nextRound": "Next round",
@@ -240,6 +245,7 @@
       "voteProgress": "{{voted}} of {{total}} votes submitted"
     },
     "timer": "Timer",
+    "timerSettings": "Timer & pacing",
     "timerDuration": "Duration",
     "timerStart": "Start",
     "timerPause": "Pause",
