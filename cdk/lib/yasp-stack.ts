@@ -7,6 +7,7 @@ import * as cw_actions from "aws-cdk-lib/aws-cloudwatch-actions";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as logs from "aws-cdk-lib/aws-logs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as sns from "aws-cdk-lib/aws-sns";
 import * as wafv2 from "aws-cdk-lib/aws-wafv2";
@@ -20,6 +21,7 @@ const DEFAULT_INSTANCE_TYPE = "t3.micro";
 const CONTAINER_PORT = 3001;
 const ORIGIN_PORT = 80;
 const CONTAINER_NAME = "yasp";
+const ORIGIN_LOG_RETENTION = logs.RetentionDays.ONE_MONTH;
 
 export interface YaspStackProps extends cdk.StackProps {
   ecrRepoName?: string;
@@ -166,6 +168,7 @@ export class YaspStack extends cdk.Stack {
     const alarmTopic = alarmTopicArn ? sns.Topic.fromTopicArn(this, "AlarmTopic", alarmTopicArn) : undefined;
 
     const registryUri = cdk.Fn.sub("${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com");
+    const originLogGroupName = `/${serviceName}/origin`;
 
     const vpc = new ec2.Vpc(this, "YaspVpc", {
       maxAzs: 1,
@@ -206,11 +209,26 @@ export class YaspStack extends cdk.Stack {
     });
     repo.grantPull(instanceRole);
 
+    const originLogGroup = new logs.LogGroup(this, "OriginLogGroup", {
+      logGroupName: originLogGroupName,
+      retention: ORIGIN_LOG_RETENTION,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    const originLogStreamArn = `${originLogGroup.logGroupArn}:log-stream:*`;
+    instanceRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["logs:CreateLogStream", "logs:DescribeLogStreams", "logs:PutLogEvents"],
+        resources: [originLogGroup.logGroupArn, originLogStreamArn],
+      })
+    );
+
     const userData = buildEc2OriginUserData({
       awsRegion: cdk.Stack.of(this).region,
       imageIdentifier,
       originSecret,
       originSecretHeaderName: ORIGIN_SECRET_HEADER,
+      logGroupName: originLogGroupName,
       registryUri,
       containerPort: CONTAINER_PORT,
       originPort: ORIGIN_PORT,
@@ -240,6 +258,7 @@ export class YaspStack extends cdk.Stack {
     });
     cdk.Tags.of(instance).add("Name", serviceName);
     instance.node.addDependency(allowCloudFrontIngress);
+    instance.node.addDependency(originLogGroup);
 
     let authFunction: cloudfront.Function | undefined;
 
@@ -480,6 +499,11 @@ export class YaspStack extends cdk.Stack {
     new cdk.CfnOutput(this, "AccessLogsBucket", {
       value: accessLogsBucket.bucketName,
       description: "S3 bucket for CloudFront access logs.",
+    });
+
+    new cdk.CfnOutput(this, "OriginLogGroupName", {
+      value: originLogGroupName,
+      description: "CloudWatch Logs group containing YASP origin container logs.",
     });
   }
 }

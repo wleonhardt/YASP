@@ -127,6 +127,7 @@ For digest pinning, use `-c imageDigest=<digest>` instead of `-c imageTag`.
 | ------ | ----------- |
 | `CloudFrontUrl` | Primary authenticated entry point |
 | `InstanceId` | EC2 instance ID |
+| `OriginLogGroupName` | CloudWatch Logs group for origin container logs |
 | `SsmStartSessionCommand` | Ready-to-run SSM session command |
 | `EcrRepositoryUri` | ECR repository URI |
 | `DeployedImageReference` | Exact tag or digest deployed |
@@ -146,6 +147,30 @@ aws ssm start-session --target <INSTANCE_ID>
 sudo systemctl status yasp
 sudo systemctl restart yasp
 sudo docker logs yasp --tail 200
+```
+
+### CloudWatch Logs
+
+The EC2 origin ships container stdout/stderr to CloudWatch Logs through Docker's `awslogs` driver.
+
+Default log group:
+
+```bash
+/yasp/origin
+```
+
+Tail recent origin logs:
+
+```bash
+aws logs tail /yasp/origin --since 1h --follow --region us-east-1
+```
+
+Useful CloudWatch Logs Insights filters:
+
+```text
+fields @timestamp, event, message, stack
+| filter event in ["uncaughtException", "unhandledRejection", "client_error"]
+| sort @timestamp desc
 ```
 
 ### Deploy a new image

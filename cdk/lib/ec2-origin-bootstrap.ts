@@ -5,6 +5,7 @@ export interface Ec2OriginBootstrapProps {
   readonly imageIdentifier: string;
   readonly originSecret: string;
   readonly originSecretHeaderName: string;
+  readonly logGroupName: string;
   readonly registryUri: string;
   readonly containerPort: number;
   readonly originPort: number;
@@ -66,9 +67,18 @@ export function buildEc2OriginUserData(props: Ec2OriginBootstrapProps): ec2.User
     `REGISTRY_URI="${props.registryUri}"`,
     `IMAGE_IDENTIFIER="${props.imageIdentifier}"`,
     `CONTAINER_NAME="${props.containerName}"`,
+    `LOG_GROUP_NAME="${props.logGroupName}"`,
     "",
     'aws ecr get-login-password --region "$AWS_REGION" | \\',
     '  docker login --username AWS --password-stdin "$REGISTRY_URI"',
+    "",
+    'TOKEN="$(curl -fsS -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" || true)"',
+    'if [ -n "$TOKEN" ]; then',
+    '  INSTANCE_ID="$(curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id || hostname)"',
+    "else",
+    '  INSTANCE_ID="$(hostname)"',
+    "fi",
+    'LOG_STREAM_NAME="${CONTAINER_NAME}-${INSTANCE_ID}"',
     "",
     'docker pull "$IMAGE_IDENTIFIER"',
     'docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true',
@@ -79,8 +89,11 @@ export function buildEc2OriginUserData(props: Ec2OriginBootstrapProps): ec2.User
     `  --publish 127.0.0.1:${props.containerPort}:${props.containerPort} \\`,
     "  --env NODE_ENV=production \\",
     `  --env PORT=${props.containerPort} \\`,
-    "  --log-opt max-size=10m \\",
-    "  --log-opt max-file=3 \\",
+    "  --log-driver awslogs \\",
+    '  --log-opt awslogs-region="$AWS_REGION" \\',
+    '  --log-opt awslogs-group="$LOG_GROUP_NAME" \\',
+    '  --log-opt awslogs-stream="$LOG_STREAM_NAME" \\',
+    "  --log-opt awslogs-create-group=false \\",
     '  "$IMAGE_IDENTIFIER"',
     "EOF",
     "chmod 755 /usr/local/bin/yasp-run.sh",

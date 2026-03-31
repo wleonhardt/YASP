@@ -3,8 +3,11 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import "./i18n";
+import { installGlobalCrashReporter } from "./lib/crashReporting";
 import "./styles/globals.css";
 import "./styles/theme.css";
+
+installGlobalCrashReporter();
 
 const root = document.getElementById("root");
 if (root) {

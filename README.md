@@ -187,6 +187,12 @@ Health check endpoint: `GET /api/health` returns `{ "ok": true }`.
 
 A CDK stack under [`cdk/`](./cdk/) deploys YASP behind CloudFront on a single EC2 instance with WAF and Basic Auth. See the [CDK README](./cdk/README.md).
 
+The deployed origin now ships container logs to CloudWatch Logs. With the default stack settings you can inspect recent origin logs with:
+
+```bash
+aws logs tail /yasp/origin --since 1h --follow
+```
+
 ## Roadmap
 
 - [x] Custom deck creation from the UI

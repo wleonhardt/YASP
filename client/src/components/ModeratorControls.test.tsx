@@ -115,6 +115,64 @@ describe("ModeratorControls", () => {
     expect(scope.getByRole("button", { name: /pause/i })).toBeInTheDocument();
   });
 
+  it("stays stable when a running timer completes during honk cooldown on compact screens", async () => {
+    const user = userEvent.setup();
+    const props = handlers();
+    const cooldownUntil = Date.now() + 4_000;
+    const { rerender } = render(<ModeratorControls compact state={makeState()} {...props} />);
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+    const scope = within(panel);
+    const timerToggle = scope.getByRole("button", { name: /timer & pacing/i });
+
+    await user.click(timerToggle);
+    expect(timerToggle).toHaveAttribute("aria-expanded", "true");
+
+    rerender(
+      <ModeratorControls
+        compact
+        state={makeState({
+          timer: {
+            durationSeconds: 10,
+            remainingSeconds: 9,
+            running: true,
+            endsAt: Date.now() + 9_000,
+            completedAt: null,
+            lastHonkAt: Date.now(),
+            honkAvailableAt: cooldownUntil,
+          },
+        })}
+        {...props}
+      />
+    );
+
+    expect(scope.getByRole("button", { name: /pause/i })).toBeInTheDocument();
+
+    rerender(
+      <ModeratorControls
+        compact
+        state={makeState({
+          revealed: true,
+          timer: {
+            durationSeconds: 10,
+            remainingSeconds: 0,
+            running: false,
+            endsAt: null,
+            completedAt: Date.now(),
+            lastHonkAt: Date.now(),
+            honkAvailableAt: cooldownUntil,
+          },
+        })}
+        {...props}
+      />
+    );
+
+    expect(scope.getByRole("button", { name: /timer & pacing/i })).toHaveAttribute("aria-expanded", "true");
+    expect(scope.getByRole("button", { name: /next round/i })).toBeInTheDocument();
+    expect(scope.getByRole("heading", { name: "00:00" })).toBeInTheDocument();
+    expect(scope.getByRole("button", { name: /beep/i })).toBeDisabled();
+  });
+
   it("shows sound off in the compact drawer summary when the stored preference is off", () => {
     vi.spyOn(storage, "getStoredTimerSoundEnabled").mockReturnValue(false);
 
