@@ -14,10 +14,29 @@ export function RoomUtilityMenu({ status }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const surfaceRef = useRef<HTMLElement | null>(null);
   const [surfaceStyle, setSurfaceStyle] = useState<CSSProperties>({});
+  const [compactViewport, setCompactViewport] = useState(() =>
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia("(max-width: 720px)").matches
+      : false
+  );
   const panelId = useId();
   const titleId = useId();
   const labels = getConnectionLabels(t, status);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(max-width: 720px)");
+    const syncViewport = () => setCompactViewport(mediaQuery.matches);
+
+    syncViewport();
+    mediaQuery.addEventListener("change", syncViewport);
+    return () => mediaQuery.removeEventListener("change", syncViewport);
+  }, []);
 
   useLayoutEffect(() => {
     if (!open || typeof window === "undefined") {
@@ -30,10 +49,7 @@ export function RoomUtilityMenu({ status }: Props) {
         return;
       }
 
-      const isMobile =
-        typeof window.matchMedia === "function" && window.matchMedia("(max-width: 720px)").matches;
-
-      if (isMobile) {
+      if (compactViewport) {
         setSurfaceStyle({});
         return;
       }
@@ -56,6 +72,14 @@ export function RoomUtilityMenu({ status }: Props) {
       window.removeEventListener("resize", updateSurfaceStyle);
       window.removeEventListener("scroll", updateSurfaceStyle, true);
     };
+  }, [compactViewport, open]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    surfaceRef.current?.focus();
   }, [open]);
 
   useEffect(() => {
@@ -63,8 +87,7 @@ export function RoomUtilityMenu({ status }: Props) {
       return;
     }
 
-    const shouldLockScroll =
-      typeof window.matchMedia === "function" && window.matchMedia("(max-width: 720px)").matches;
+    const shouldLockScroll = compactViewport;
     const previousOverflow = document.body.style.overflow;
     if (shouldLockScroll) {
       document.body.style.overflow = "hidden";
@@ -88,7 +111,7 @@ export function RoomUtilityMenu({ status }: Props) {
       }
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [compactViewport, open]);
 
   const closeMenu = () => {
     setOpen(false);
@@ -104,7 +127,7 @@ export function RoomUtilityMenu({ status }: Props) {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={panelId}
-        aria-label={`${t("room.openPreferences")} — ${labels.full}`}
+        aria-label={`${t("room.openPreferences")} — ${compactViewport ? labels.short : labels.full}`}
         title={t("room.preferences")}
         onClick={() => setOpen((current) => !current)}
       >
@@ -162,11 +185,13 @@ export function RoomUtilityMenu({ status }: Props) {
             />
 
             <section
+              ref={surfaceRef}
               id={panelId}
               className="room-utility__surface"
               role="dialog"
               aria-modal="false"
               aria-labelledby={titleId}
+              tabIndex={-1}
               style={surfaceStyle}
             >
               <div className="room-utility__header">

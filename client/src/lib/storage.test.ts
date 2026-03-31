@@ -1,24 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getStoredTimerSoundEnabled, setStoredTimerSoundEnabled } from "./storage";
 
 describe("timer sound storage", () => {
-  let values: Map<string, string>;
-
   beforeEach(() => {
-    values = new Map();
-    vi.stubGlobal("localStorage", {
-      getItem: (key: string) => values.get(key) ?? null,
-      setItem: (key: string, value: string) => {
-        values.set(key, value);
-      },
-      clear: () => {
-        values.clear();
-      },
-    });
+    window.localStorage.clear();
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    window.localStorage.clear();
   });
 
   it("defaults to on for fresh users", () => {

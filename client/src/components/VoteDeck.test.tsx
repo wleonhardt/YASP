@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VoteDeck } from "./VoteDeck";
 import { makePublicRoomState } from "../test/roomState";
+import i18n from "../i18n";
 
 describe("VoteDeck shortcuts hint", () => {
   let coarsePointer = false;
@@ -26,6 +27,10 @@ describe("VoteDeck shortcuts hint", () => {
         dispatchEvent: vi.fn(),
       })),
     });
+  });
+
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
   });
 
   afterEach(() => {

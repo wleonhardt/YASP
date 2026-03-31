@@ -3228,6 +3228,58 @@ select.input {
     -webkit-text-fill-color: unset;
     color: CanvasText;
   }
+
+  .ui-chip,
+  .vote-card,
+  .room-status__progress,
+  .participants-board__progress,
+  .distribution-row__bar,
+  .distribution-row__count {
+    forced-color-adjust: none;
+    color: CanvasText;
+    background: none;
+    background-color: Canvas;
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .vote-card:hover:not(:disabled),
+  .vote-card--selected,
+  .vote-card--selected:hover:not(:disabled) {
+    forced-color-adjust: none;
+    color: CanvasText;
+    background: none;
+    background-color: Canvas;
+    border-color: CanvasText;
+    box-shadow: none;
+    outline: 2px solid Highlight;
+    outline-offset: 0;
+  }
+
+  .vote-card:focus-visible {
+    forced-color-adjust: none;
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .vote-card:disabled {
+    forced-color-adjust: none;
+    color: GrayText;
+    background: Canvas;
+    border-color: GrayText;
+    opacity: 1;
+  }
+
+  .room-status__progress-fill,
+  .participants-board__progress-fill,
+  .distribution-row__fill {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+
+  .distribution-row__count {
+    background: Canvas;
+  }
 }
 
 /* ─── Reduced motion ─────────────────────────────────────── */

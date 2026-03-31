@@ -1,8 +1,13 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import i18n from "../i18n";
 
 describe("LanguageSwitcher", () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("en");
+  });
+
   it("renders all supported locale options with stable accessible names", () => {
     render(<LanguageSwitcher compact />);
 

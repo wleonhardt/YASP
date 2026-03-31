@@ -12,6 +12,7 @@ Most planning poker tools require sign-ups, store your data, and charge per seat
 
 - **Rooms** — create by code, join by link, no account required
 - **Voting** — hidden until reveal, change freely before reveal
+- **Shared round timer** — moderator-controlled countdown with presets, pause/reset, optional sound cues, manual beep, and auto-reveal at expiry
 - **Decks** — Fibonacci, Modified Fibonacci, T-shirt sizes, Powers of Two, with per-room customization (cap, toggles, fully custom cards)
 - **Stats** — average, median, mode, spread, consensus detection, distribution chart
 - **Roles** — vote as a participant or observe as a spectator
@@ -52,7 +53,7 @@ YASP runs as a single Node.js process. Fastify serves the static client bundle a
 └─────────────────────────────────────────────┘
 ```
 
-The server is authoritative — clients send commands (`cast_vote`, `reveal_votes`, etc.) and receive the full room state snapshot in response. Each browser tab generates a stable `sessionId` in `localStorage`, allowing the server to rebind returning users after a refresh or disconnect.
+The server is authoritative — clients send commands (`cast_vote`, `reveal_votes`, `start_timer`, etc.) and receive the full room state snapshot in response. Each browser tab generates a stable `sessionId` in `localStorage`, allowing the server to rebind returning users after a refresh or disconnect.
 
 ## Project Structure
 
@@ -197,7 +198,7 @@ aws logs tail /yasp/origin --since 1h --follow
 
 - [x] Custom deck creation from the UI
 - [x] WCAG 2.2 audit and core accessibility remediation pass
-- [ ] Timer for voting rounds
+- [x] Timer for voting rounds
 - [ ] Room settings panel (reveal policy, name change policy)
 - [ ] Manual assistive-technology validation (VoiceOver, TalkBack, zoom/reflow, speech input)
 - [ ] Horizontal scaling with Redis adapter (opt-in)

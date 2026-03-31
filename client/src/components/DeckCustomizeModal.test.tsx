@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { DeckCustomizeModal } from "./DeckCustomizeModal";
 
@@ -67,5 +68,43 @@ describe("DeckCustomizeModal", () => {
 
     expect(customTab).toHaveFocus();
     expect(customTab).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("returns focus to the opening trigger when closed", async () => {
+    const user = userEvent.setup();
+
+    function Harness() {
+      const [open, setOpen] = useState(false);
+      const triggerRef = useRef<HTMLButtonElement | null>(null);
+
+      return (
+        <>
+          <button ref={triggerRef} type="button" onClick={() => setOpen(true)}>
+            Open deck customization
+          </button>
+          <DeckCustomizeModal
+            open={open}
+            baseDeckType="fibonacci"
+            onClose={() => setOpen(false)}
+            onApply={vi.fn()}
+            returnFocusRef={triggerRef}
+          />
+        </>
+      );
+    }
+
+    render(<Harness />);
+
+    const trigger = screen.getByRole("button", { name: "Open deck customization" });
+    await user.click(trigger);
+
+    expect(screen.getByRole("dialog", { name: "Customize deck" })).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Customize deck" })).not.toBeInTheDocument();
+      expect(trigger).toHaveFocus();
+    });
   });
 });

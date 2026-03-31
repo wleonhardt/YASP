@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "node ./scripts/run-vitest.mjs run"
   },
   "dependencies": {
     "@yasp/shared": "*",

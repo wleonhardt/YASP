@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DeckType } from "@yasp/shared";
@@ -24,6 +24,7 @@ type Props = {
   baseDeckType: Exclude<DeckType, "custom">;
   onClose(): void;
   onApply(deckInput: DeckInput): void;
+  returnFocusRef?: RefObject<HTMLElement | null>;
 };
 
 type DeckTab = "simple" | "advanced" | "custom";
@@ -43,7 +44,22 @@ function arraysEqual(a: string[], b: string[]) {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
-export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Props) {
+function resolveReturnFocusTarget(
+  returnFocusRef: RefObject<HTMLElement | null> | undefined,
+  previousActive: HTMLElement | null
+) {
+  if (returnFocusRef?.current && returnFocusRef.current.isConnected) {
+    return returnFocusRef.current;
+  }
+
+  if (previousActive?.isConnected) {
+    return previousActive;
+  }
+
+  return null;
+}
+
+export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply, returnFocusRef }: Props) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<DeckTab>("simple");
   const [draft, setDraft] = useState<DeckDraft>(() => createDefaultDeckDraft(baseDeckType));
@@ -77,7 +93,7 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
       return;
     }
 
-    const previousActive = document.activeElement as HTMLElement | null;
+    const previousActive = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closeButtonRef.current?.focus();
@@ -118,9 +134,12 @@ export function DeckCustomizeModal({ open, baseDeckType, onClose, onApply }: Pro
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
-      previousActive?.focus();
+
+      window.requestAnimationFrame(() => {
+        resolveReturnFocusTarget(returnFocusRef, previousActive)?.focus();
+      });
     };
-  }, [onClose, open]);
+  }, [onClose, open, returnFocusRef]);
 
   useLayoutEffect(() => {
     if (!open) {

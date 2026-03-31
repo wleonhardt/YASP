@@ -1,11 +1,33 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
 import { RoomUtilityMenu } from "./RoomUtilityMenu";
 
 describe("RoomUtilityMenu", () => {
+  const originalMatchMedia = window.matchMedia;
+
+  const mockMatchMedia = (matches: boolean) => {
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches,
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+  };
+
   afterEach(async () => {
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: originalMatchMedia,
+    });
     await i18n.changeLanguage("en");
   });
 
@@ -23,6 +45,16 @@ describe("RoomUtilityMenu", () => {
 
     expect(screen.queryByRole("dialog", { name: /session preferences/i })).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
+  });
+
+  it("moves focus into the session preferences dialog on open", async () => {
+    const user = userEvent.setup();
+
+    render(<RoomUtilityMenu status="connected" />);
+
+    await user.click(screen.getByRole("button", { name: /open session preferences/i }));
+
+    expect(screen.getByRole("dialog", { name: /session preferences/i })).toHaveFocus();
   });
 
   it("toggles closed when the trigger is pressed again", async () => {
@@ -119,4 +151,12 @@ describe("RoomUtilityMenu", () => {
       expect(dialogScope.getAllByText(connected).length).toBeGreaterThan(0);
     }
   );
+
+  it('uses the visible "Live" label in the trigger accessible name on narrow screens', () => {
+    mockMatchMedia(true);
+
+    render(<RoomUtilityMenu status="connected" />);
+
+    expect(screen.getByRole("button", { name: "Open session preferences — Live" })).toBeInTheDocument();
+  });
 });

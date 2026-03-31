@@ -4,7 +4,7 @@
 
 This document tracks the current accessibility status of YASP against the latest stable W3C recommendation, [WCAG 2.2](https://www.w3.org/TR/WCAG22/), with **AAA** as the target conformance level.
 
-It reflects the current codebase after the semantic, contrast, focus, motion, modal, and keyboard remediation passes completed through March 29, 2026.
+It reflects the current codebase after the semantic, contrast, focus, motion, modal, and keyboard remediation passes completed through March 29, 2026, and a manual accessibility QA pass on March 31, 2026.
 
 ## Current Assessment
 
@@ -28,6 +28,19 @@ The main reason is no longer obvious code-level failure in the tested flows. The
 - **Code-level remediation status:** major baseline findings addressed
 - **Formal WCAG AAA claim:** not yet supportable
 - **Main remaining work:** manual validation and conformance proof
+
+## Manual Validation Package
+
+The remaining manual work now has a dedicated validation package:
+
+- [ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md](/Users/william/Projects/yasp/ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md)
+- [Windows High Contrast Checklist](/Users/william/Projects/yasp/docs/a11y/windows-high-contrast-checklist.md)
+- [Screen Reader Checklist](/Users/william/Projects/yasp/docs/a11y/screen-reader-checklist.md)
+- [Speech Input Checklist](/Users/william/Projects/yasp/docs/a11y/speech-input-checklist.md)
+- [AAA Contrast Signoff Matrix](/Users/william/Projects/yasp/docs/a11y/aaa-contrast-signoff-matrix.md)
+- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
+
+These documents are the authoritative workflow for the remaining specialist validation. They are intentionally evidence-oriented and do not imply that the validations are already complete.
 
 ## What Has Been Remediated
 
@@ -53,10 +66,18 @@ These items were identified in the original baseline audit and have since been a
 ### Visual accessibility and adaptability
 
 - reduced-motion support is present
-- forced-colors fallback is present for gradient heading treatments
+- forced-colors fallback is present for gradient heading treatments, vote cards, chips/badges, and progress indicators
 - focus-visible styling is stronger and more explicit than the original baseline
 - dark/light theme tokens were adjusted to improve contrast robustness relative to the initial audit
 - the coffee card now uses a scalable SVG icon rather than an emoji glyph dependency
+
+### Follow-up remediation after the 2026-03-31 manual QA pass
+
+- deck customize modal now restores focus to the opening trigger when that trigger still exists
+- session preferences now moves focus into the dialog surface on open while remaining non-modal
+- the responsive session-preferences trigger accessible name now includes the visible narrow-screen label ("Live")
+- forced-colors fallback coverage was extended beyond headings to vote cards, chips/badges, and progress bars
+- a post-remediation browser verification pass confirmed the modal/session-preferences fixes and validated the forced-colors fallback under Chromium forced-colors emulation
 
 ## Latest Verification Evidence
 
@@ -87,7 +108,39 @@ Artifacts from the latest browser pass are stored under:
 
 - `/Users/william/Projects/yasp/tmp/a11y-audit`
 
-## 2. Interaction-specific verification
+## 2. Manual accessibility QA pass (2026-03-31)
+
+A comprehensive manual accessibility QA pass was completed via browser automation. Full report: `tmp/ACCESSIBILITY-MANUAL-QA-REPORT.md`.
+
+**Validated and passing:**
+
+- keyboard-only walkthrough of landing page and room page (all controls reachable, logical tab order)
+- role selector radiogroup with roving tabindex and arrow-key navigation
+- deck customize modal: focus trap, Escape close, `aria-modal="true"`, `aria-labelledby`
+- session preferences non-modal dialog: Escape close, focus return to trigger, `aria-haspopup="dialog"`
+- focus visibility in dark mode (`rgb(106, 173, 255)` 2px outline) and light mode (`rgb(20, 80, 158)` 2px outline)
+- zoom/reflow at 320px (400% equivalent) and 640px (200% equivalent) — no horizontal overflow
+- text scaling at 200% root font-size — no overflow or content loss
+- `prefers-reduced-motion: reduce` universal selector rule verified
+- `forced-colors: active` heading fallback verified (code review)
+- all form controls have associated labels
+- label-in-name alignment verified for all primary controls
+
+**Issues found during the QA pass:**
+
+- deck customize modal focus return went to `<body>` instead of the Customize trigger button
+- session preferences panel did not move focus into the panel on open
+- "Live" visible label on narrow screens was not contained in the session preferences `aria-label`
+- forced-colors CSS coverage was limited to headings
+
+**Status after targeted follow-up remediation and post-fix verification:**
+
+- the modal focus-return issue is fixed and browser-verified
+- the session-preferences initial focus issue is fixed and browser-verified
+- the "Live" label-in-name gap is fixed and browser-verified on a narrow viewport
+- forced-colors fallback coverage is improved and verified in Chromium forced-colors emulation, but real Windows High Contrast rendering still requires manual validation
+
+## 3. Earlier interaction-specific verification
 
 Additional browser checks confirmed:
 
@@ -125,6 +178,11 @@ These are the items that still keep YASP from being responsibly described as WCA
 **Status:** Open  
 **Why it matters:** automated tooling cannot prove real usability with assistive technologies.
 
+Execution workflow:
+
+- [Screen Reader Checklist](/Users/william/Projects/yasp/docs/a11y/screen-reader-checklist.md)
+- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
+
 Still needed:
 
 - VoiceOver on macOS
@@ -140,34 +198,45 @@ Areas to verify manually:
 - moderator controls and disabled-state explanations
 - results panel comprehension and reading order
 
-## 2. Speech-input label matching has not been explicitly validated
+## 2. Real speech-input validation
 
-**Status:** Open  
-**Likely criteria impacted:** WCAG 2.5.3 confidence still needs manual proof
+**Status:** Code-level label matching validated; real speech-input validation still open
+**Likely criteria impacted:** WCAG 2.5.3
 
-The visible/control label alignment work is in much better shape, but speech-input testing has not been completed across the current UI.
+Execution workflow:
 
-Still needed:
+- [Speech Input Checklist](/Users/william/Projects/yasp/docs/a11y/speech-input-checklist.md)
+- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
 
-- verify that visible labels can be spoken naturally for primary controls
-- verify copy-link, theme-toggle, room actions, and modal buttons specifically
+A programmatic label-in-name audit was completed across all interactive elements on both landing and room pages. All primary controls have accessible names that contain their visible text.
 
-## 3. Zoom and reflow need deliberate manual validation at 200% and 400%
-
-**Status:** Open  
-**Why it matters:** automated overflow checks help, but they do not replace real high-zoom review.
+The previously identified narrow-screen "Live" gap in the session preferences trigger was remediated in follow-up code, so the current code-level state is aligned.
 
 Still needed:
 
-- landing page at `200%` and `400%`
-- deck-customization modal at `200%` and `400%`
-- room page pre-reveal and revealed states at `200%` and `400%`
-- mobile narrow-width plus larger browser text-size combinations
+- validate with real speech-input software (Dragon NaturallySpeaking, macOS Voice Control)
+
+## 3. Zoom and reflow
+
+**Status:** Validated (2026-03-31)
+
+Manual testing confirmed no horizontal overflow or content loss at:
+
+- 640px viewport (200% zoom equivalent)
+- 320px viewport (400% zoom equivalent / WCAG 1.4.10 Reflow target)
+- 200% root font-size scaling
+
+Tested pages: landing page, room page. All content reflows to single column, header elements adapt (icon-only buttons, abbreviated labels), timer collapses to disclosure, vote cards adjust grid columns. `scrollWidth === clientWidth` confirmed programmatically at 320px on both pages.
 
 ## 4. AAA contrast needs complete state-by-state manual signoff
 
 **Status:** Open  
 **Why it matters:** representative token fixes and browser checks are encouraging, but AAA claims require a very high standard.
+
+Execution workflow:
+
+- [AAA Contrast Signoff Matrix](/Users/william/Projects/yasp/docs/a11y/aaa-contrast-signoff-matrix.md)
+- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
 
 The current design system is materially improved, but a complete contrast matrix has not been documented across every text size/state combination, including:
 
@@ -178,17 +247,35 @@ The current design system is materially improved, but a complete contrast matrix
 - modal secondary copy
 - focus indicators against all backgrounds
 
-## 5. Cognitive and timing comfort still need human review
+## 5. Real Windows High Contrast review is still incomplete
 
 **Status:** Open  
-**Why it matters:** WCAG conformance is not only about semantic correctness.
+**Why it matters:** Chromium forced-colors emulation is supporting evidence, not a substitute for Windows High Contrast validation.
+
+Execution workflow:
+
+- [Windows High Contrast Checklist](/Users/william/Projects/yasp/docs/a11y/windows-high-contrast-checklist.md)
+- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
 
 Still needed:
 
+- at least one real Windows High Contrast pass in Edge or Chrome
+- screenshots of the key YASP states
+- explicit notes on selected states, chips/badges, progress bars, focus visibility, and disabled states
+
+## 6. Cognitive and timing comfort still need human review
+
+**Status:** Partially addressed (2026-03-31)
+**Why it matters:** WCAG conformance is not only about semantic correctness.
+
+Validated:
+- reduced-motion CSS uses universal selector to disable all animations/transitions (gold standard approach)
+- room layout remains clear under 200% text magnification (confirmed via font-size scaling test)
+
+Still needed:
 - confirm toast timing remains reasonable in real use
 - confirm live-region announcements are informative without becoming noisy
-- confirm state transitions remain understandable under reduced motion
-- confirm the room layout remains clear under large text and magnification
+- confirm state transitions remain understandable under reduced motion with real user flow timing
 
 ## Current Risk Statement
 
@@ -200,7 +287,7 @@ Based on the current code and automated/browser evidence:
 
 That means the current status is best described as:
 
-> YASP has completed a substantial accessibility remediation pass and currently tests clean in its core flows, but it still requires manual assistive-technology and high-zoom validation before any WCAG 2.2 A/AA/AAA conformance claim should be made.
+> YASP has completed a substantial accessibility remediation pass and currently tests clean in its core flows, but it still requires manual assistive-technology validation, real Windows High Contrast review, real speech-input validation, and AAA contrast signoff before any WCAG 2.2 A/AA/AAA conformance claim should be made.
 
 ## Files Most Relevant to Accessibility
 
@@ -221,18 +308,24 @@ Key files touched by the remediation work include:
 - `/Users/william/Projects/yasp/client/src/styles/globals.css`
 - `/Users/william/Projects/yasp/client/src/styles/theme.css`
 
-## Verification Checklist Still To Complete
+## Verification Checklist
 
 Before claiming conformance, complete this list:
 
-- keyboard-only walkthrough of all landing, modal, room, moderator, and reconnect flows
+- ~~keyboard-only walkthrough of all landing, modal, room, moderator, and reconnect flows~~ ✅ (2026-03-31)
+- ~~zoom/reflow at `200%` and `400%`~~ ✅ (2026-03-31)
+- ~~speech-input label matching~~ ✅ code-level validation complete after follow-up remediation
+- ~~focus visibility in both themes~~ ✅ (2026-03-31)
 - VoiceOver on macOS
 - VoiceOver on iOS
 - TalkBack on Android
-- zoom/reflow at `200%` and `400%`
-- speech-input label matching
-- high-contrast / forced-colors review beyond the current smoke test
+- NVDA or JAWS on Windows
+- high-contrast / forced-colors review beyond the current smoke test (requires Windows)
+- complete the manual validation package under [ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md](/Users/william/Projects/yasp/ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md)
 - reduced-motion review with real user flow timing
+- AAA contrast ratio documentation for all text/background combinations
+- ~~fix deck modal focus return~~ ✅ remediated in follow-up code pass
+- ~~fix "Live" label gap in session preferences aria-label~~ ✅ remediated in follow-up code pass
 
 ## Conclusion
 
@@ -241,7 +334,7 @@ YASP is no longer in the same state as the original audit baseline. The codebase
 The remaining work is narrower and more disciplined:
 
 - finish manual assistive-technology validation
-- finish high-zoom and speech-input validation
+- finish real Windows High Contrast and speech-input validation
 - document final contrast/focus signoff carefully
 
 Until that is complete, YASP should be presented as **actively accessibility-improved and under ongoing WCAG 2.2 AAA review**, not as fully conformant.

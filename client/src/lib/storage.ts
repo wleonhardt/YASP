@@ -5,6 +5,8 @@ const NAME_KEY = "yasp.displayName";
 const ROLE_KEY = "yasp.role";
 const TIMER_SOUND_KEY = "yasp.timerSoundEnabled";
 
+type StorageLike = Pick<Storage, "getItem" | "setItem">;
+
 /**
  * Generate a UUID v4 session ID.
  * crypto.randomUUID() is only available in secure contexts (https or localhost).
@@ -24,9 +26,17 @@ function generateSessionId(): string {
 }
 
 /** Safe localStorage wrapper — returns null if storage is unavailable (private browsing, etc.) */
+function getStorage(): StorageLike | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage;
+}
+
 export function safeGetStoredValue(key: string): string | null {
   try {
-    return localStorage.getItem(key);
+    return getStorage()?.getItem(key) ?? null;
   } catch {
     return null;
   }
@@ -34,7 +44,7 @@ export function safeGetStoredValue(key: string): string | null {
 
 export function safeSetStoredValue(key: string, value: string): void {
   try {
-    localStorage.setItem(key, value);
+    getStorage()?.setItem(key, value);
   } catch {
     // Storage full or unavailable — silently ignore
   }

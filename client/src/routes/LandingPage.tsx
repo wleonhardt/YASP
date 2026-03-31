@@ -81,6 +81,7 @@ export function LandingPage() {
     voter: null,
     spectator: null,
   });
+  const customizeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const handleRoleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, currentRole: ParticipantRole) => {
     const nextRole = getNextRovingValue(
@@ -230,6 +231,7 @@ export function LandingPage() {
                   {t("landing.deckLabel")}
                 </label>
                 <button
+                  ref={customizeButtonRef}
                   className="landing-page__customize-trigger"
                   type="button"
                   onClick={() => {
@@ -329,6 +331,7 @@ export function LandingPage() {
           setDeckOverride(customDeck);
           setShowDeckModal(false);
         }}
+        returnFocusRef={customizeButtonRef}
       />
     </div>
   );
