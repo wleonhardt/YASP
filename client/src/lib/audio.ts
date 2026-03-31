@@ -73,7 +73,20 @@ function scheduleTone(context: AudioContext, destination: AudioNode, startAt: nu
   oscillator.stop(noteEnd);
 }
 
-async function playSequence(tones: ToneSpec[]): Promise<boolean> {
+/** Dedup map: prevents the same sound from being scheduled more than once per call site within a short window (React Strict Mode fires effects twice). */
+const lastPlayedAt = new Map<string, number>();
+const DEDUP_WINDOW_MS = 80;
+
+async function playSequence(tones: ToneSpec[], key?: string): Promise<boolean> {
+  if (key) {
+    const now = performance.now();
+    const last = lastPlayedAt.get(key);
+    if (last !== undefined && now - last < DEDUP_WINDOW_MS) {
+      return true;
+    }
+    lastPlayedAt.set(key, now);
+  }
+
   const ready = await primeRoomAudio();
   const context = getAudioContext();
   if (!ready || !context) {
@@ -93,32 +106,35 @@ async function playSequence(tones: ToneSpec[]): Promise<boolean> {
 }
 
 export async function playTimerStart(): Promise<boolean> {
-  return playSequence([
-    {
-      at: 0,
-      duration: 0.11,
-      frequency: 392,
-      endFrequency: 440,
-      volume: 0.07,
-      type: "sine",
-    },
-    {
-      at: 0.07,
-      duration: 0.16,
-      frequency: 523,
-      endFrequency: 587,
-      volume: 0.08,
-      type: "triangle",
-    },
-    {
-      at: 0.08,
-      duration: 0.18,
-      frequency: 196,
-      endFrequency: 220,
-      volume: 0.03,
-      type: "sine",
-    },
-  ]);
+  return playSequence(
+    [
+      {
+        at: 0,
+        duration: 0.14,
+        frequency: 392,
+        endFrequency: 440,
+        volume: 0.12,
+        type: "sine",
+      },
+      {
+        at: 0.07,
+        duration: 0.2,
+        frequency: 523,
+        endFrequency: 587,
+        volume: 0.14,
+        type: "triangle",
+      },
+      {
+        at: 0.08,
+        duration: 0.22,
+        frequency: 196,
+        endFrequency: 220,
+        volume: 0.05,
+        type: "sine",
+      },
+    ],
+    "start"
+  );
 }
 
 function playTimerTickWithMode(mode: TimerTickMode): Promise<boolean> {
@@ -127,39 +143,40 @@ function playTimerTickWithMode(mode: TimerTickMode): Promise<boolean> {
       ? [
           {
             at: 0,
-            duration: 0.08,
+            duration: 0.12,
             frequency: 740,
             endFrequency: 680,
-            volume: 0.07,
+            volume: 0.14,
             type: "triangle",
           },
           {
             at: 0.01,
-            duration: 0.06,
+            duration: 0.09,
             frequency: 1480,
             endFrequency: 1320,
-            volume: 0.026,
+            volume: 0.05,
             type: "sine",
           },
         ]
       : [
           {
             at: 0,
-            duration: 0.06,
+            duration: 0.09,
             frequency: 980,
             endFrequency: 900,
-            volume: 0.085,
+            volume: 0.16,
             type: "triangle",
           },
           {
             at: 0.008,
-            duration: 0.045,
+            duration: 0.07,
             frequency: 1960,
             endFrequency: 1800,
-            volume: 0.03,
+            volume: 0.055,
             type: "sine",
           },
-        ]
+        ],
+    "tick"
   );
 }
 
@@ -168,77 +185,83 @@ export async function playTimerTick(mode: TimerTickMode = "fast"): Promise<boole
 }
 
 export async function playTimerComplete(): Promise<boolean> {
-  return playSequence([
-    {
-      at: 0,
-      duration: 0.18,
-      frequency: 784,
-      endFrequency: 830,
-      volume: 0.085,
-      type: "sine",
-    },
-    {
-      at: 0.15,
-      duration: 0.28,
-      frequency: 1047,
-      endFrequency: 1108,
-      volume: 0.095,
-      type: "triangle",
-    },
-    {
-      at: 0.3,
-      duration: 0.48,
-      frequency: 1319,
-      endFrequency: 1397,
-      volume: 0.085,
-      type: "sine",
-    },
-    {
-      at: 0.16,
-      duration: 0.54,
-      frequency: 523,
-      endFrequency: 494,
-      volume: 0.03,
-      type: "sine",
-    },
-  ]);
+  return playSequence(
+    [
+      {
+        at: 0,
+        duration: 0.22,
+        frequency: 784,
+        endFrequency: 830,
+        volume: 0.14,
+        type: "sine",
+      },
+      {
+        at: 0.15,
+        duration: 0.32,
+        frequency: 1047,
+        endFrequency: 1108,
+        volume: 0.15,
+        type: "triangle",
+      },
+      {
+        at: 0.3,
+        duration: 0.52,
+        frequency: 1319,
+        endFrequency: 1397,
+        volume: 0.14,
+        type: "sine",
+      },
+      {
+        at: 0.16,
+        duration: 0.58,
+        frequency: 523,
+        endFrequency: 494,
+        volume: 0.05,
+        type: "sine",
+      },
+    ],
+    "complete"
+  );
 }
 
 export async function playTimerHonk(): Promise<boolean> {
-  return playSequence([
-    {
-      at: 0,
-      duration: 0.13,
-      frequency: 554,
-      endFrequency: 500,
-      volume: 0.12,
-      type: "triangle",
-    },
-    {
-      at: 0.02,
-      duration: 0.12,
-      frequency: 277,
-      endFrequency: 250,
-      volume: 0.045,
-      type: "sine",
-    },
-    {
-      at: 0.17,
-      duration: 0.15,
-      frequency: 659,
-      endFrequency: 587,
-      volume: 0.12,
-      type: "triangle",
-    },
-    {
-      at: 0.19,
-      duration: 0.14,
-      frequency: 330,
-      endFrequency: 294,
-      volume: 0.05,
-      type: "sine",
-    },
-  ]);
+  return playSequence(
+    [
+      {
+        at: 0,
+        duration: 0.13,
+        frequency: 554,
+        endFrequency: 500,
+        volume: 0.12,
+        type: "triangle",
+      },
+      {
+        at: 0.02,
+        duration: 0.12,
+        frequency: 277,
+        endFrequency: 250,
+        volume: 0.045,
+        type: "sine",
+      },
+      {
+        at: 0.17,
+        duration: 0.15,
+        frequency: 659,
+        endFrequency: 587,
+        volume: 0.12,
+        type: "triangle",
+      },
+      {
+        at: 0.19,
+        duration: 0.14,
+        frequency: 330,
+        endFrequency: 294,
+        volume: 0.05,
+        type: "sine",
+      },
+    ],
+    "honk"
+  );
 }
 
 export const primeChimeAudio = primeRoomAudio;
