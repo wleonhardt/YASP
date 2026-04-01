@@ -18,6 +18,7 @@ import type {
   PingInput,
   PongEvent,
 } from "@yasp/shared";
+import type { Room } from "../domain/types.js";
 import { RoomService } from "../services/room-service.js";
 import { SessionService } from "../services/session-service.js";
 import { TimerService } from "../services/timer-service.js";
@@ -25,6 +26,8 @@ import type { RoomStore } from "../services/room-store.js";
 import { serializeRoom } from "./serializers.js";
 import { validateSessionId, validateRoomId } from "./validators.js";
 import { now } from "../utils/time.js";
+
+type RoomActionAfterEffect = "autoReveal" | "cancelAutoReveal" | "syncRoomTimer" | "cancelRoomTimer" | "none";
 
 function ackFail(code: ErrorCode, message: string): AckResult<never> {
   return { ok: false, error: { code, message } };
@@ -72,7 +75,7 @@ function resolveCallerFromSocket(
 }
 
 function evaluateAutoReveal(
-  room: import("../domain/types.js").Room,
+  room: Room,
   roomService: RoomService,
   timerService: TimerService,
   io: SocketServer,
@@ -130,16 +133,20 @@ export function registerSocketHandlers(
   store: RoomStore
 ): void {
   io.on("connection", (socket: Socket) => {
+    const refreshRoomState = (roomId: RoomId, room: Room | null = store.get(roomId) ?? null) => {
+      broadcastRoomState(io, roomId, store);
+      if (room) {
+        evaluateAutoReveal(room, roomService, timerService, io, store);
+      }
+      syncRoomTimer(roomId, roomService, timerService, io, store);
+    };
+
     // Helper: resolve caller, run service method, ack+broadcast on success.
     // afterEffect controls timer/auto-reveal behavior after broadcast.
     function roomAction<I extends { roomId: RoomId } & Record<string, unknown>>(
       event: string,
-      serviceFn: (
-        roomId: RoomId,
-        participantId: string,
-        input: I
-      ) => AckResult<{ room: import("../domain/types.js").Room }>,
-      afterEffect: "autoReveal" | "cancelAutoReveal" | "syncRoomTimer" | "cancelRoomTimer" | "none" = "none"
+      serviceFn: (roomId: RoomId, participantId: string, input: I) => AckResult<{ room: Room }>,
+      afterEffect: RoomActionAfterEffect = "none"
     ) {
       socket.on(event, (input: I, ack?: (res: AckResult) => void) => {
         const caller = resolveCallerFromSocket(socket, sessionService, input.roomId, store, ack);
@@ -230,9 +237,7 @@ export function registerSocketHandlers(
 
       const state = serializeRoom(room, input.sessionId);
       ack?.({ ok: true, data: { state } });
-      broadcastRoomState(io, room.id, store);
-      evaluateAutoReveal(room, roomService, timerService, io, store);
-      syncRoomTimer(room.id, roomService, timerService, io, store);
+      refreshRoomState(room.id, room);
     });
 
     socket.on("leave_room", (input: LeaveRoomInput, ack?: (res: AckResult) => void) => {
@@ -249,9 +254,7 @@ export function registerSocketHandlers(
       socket.leave(input.roomId);
       ack?.({ ok: true, data: undefined });
 
-      broadcastRoomState(io, input.roomId, store);
-      evaluateAutoReveal(result.data.room, roomService, timerService, io, store);
-      syncRoomTimer(input.roomId, roomService, timerService, io, store);
+      refreshRoomState(input.roomId, result.data.room);
     });
 
     roomAction(
@@ -308,10 +311,10 @@ export function registerSocketHandlers(
       if (room) {
         const participant = room.participants.get(sessionId);
         if (participant && participant.socketId === socket.id) {
-          roomService.disconnectParticipant(roomId, sessionId);
-          broadcastRoomState(io, roomId, store);
-          evaluateAutoReveal(room, roomService, timerService, io, store);
-          syncRoomTimer(roomId, roomService, timerService, io, store);
+          const result = roomService.disconnectParticipant(roomId, sessionId);
+          if (result.ok) {
+            refreshRoomState(roomId, result.data.room);
+          }
         }
       }
 

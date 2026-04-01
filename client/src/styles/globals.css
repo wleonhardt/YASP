@@ -1529,33 +1529,6 @@ select.input {
   flex: 0 0 auto;
 }
 
-.phase-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--color-border);
-  font-size: var(--text-tiny);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.phase-chip--waiting {
-  color: var(--color-info);
-  background: var(--color-info-surface);
-}
-
-.phase-chip--voting {
-  color: var(--color-warning);
-  background: var(--color-warning-surface);
-}
-
-.phase-chip--revealed {
-  color: var(--color-success);
-  background: var(--color-ready-surface);
-}
-
 .room-status__meta {
   min-width: 0;
   flex-wrap: wrap;

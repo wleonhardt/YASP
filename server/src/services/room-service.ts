@@ -46,6 +46,16 @@ function touchRoom(room: Room): void {
   room.expiresAt = t + ROOM_TTL_MS;
 }
 
+function resetRoundState(room: Room): void {
+  room.votes.clear();
+  room.revealed = false;
+}
+
+function stopRoomTimer(room: Room): void {
+  room.timer.running = false;
+  room.timer.endsAt = null;
+}
+
 const ROOM_TIMER_PRESETS = Array.isArray(ROOM_TIMER_PRESET_SECONDS)
   ? ROOM_TIMER_PRESET_SECONDS
   : ([10, 30, 60, 120, 300] as const);
@@ -133,11 +143,12 @@ export class RoomService {
     let replacedSocketId: SocketId | null = null;
 
     if (existing) {
+      const reconnectedAt = now();
       // Reconnect / tab takeover
       replacedSocketId = existing.socketId;
       existing.socketId = socketId;
       existing.connected = true;
-      existing.lastSeenAt = now();
+      existing.lastSeenAt = reconnectedAt;
       // Only update name on reconnect if name changes are allowed
       if (room.settings.allowNameChange) {
         existing.name = sanitizeName(displayName);
@@ -150,6 +161,7 @@ export class RoomService {
       }
       // Preserve prior vote for current round
     } else {
+      const joinedAt = now();
       // New participant
       const participant: Participant = {
         id: participantId,
@@ -158,8 +170,8 @@ export class RoomService {
         role: requestedRole,
         connected: true,
         socketId,
-        joinedAt: now(),
-        lastSeenAt: now(),
+        joinedAt,
+        lastSeenAt: joinedAt,
       };
       room.participants.set(participantId, participant);
     }
@@ -196,11 +208,6 @@ export class RoomService {
       reassignModeratorIfNeeded(room);
     }
 
-    // If no connected participants, reset expiry
-    if (!hasConnectedParticipants(room)) {
-      room.expiresAt = now() + ROOM_TTL_MS;
-    }
-
     touchRoom(room);
     return success({ room });
   }
@@ -212,9 +219,10 @@ export class RoomService {
     const participant = room.participants.get(participantId);
     if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
 
+    const disconnectedAt = now();
     participant.connected = false;
     participant.socketId = null;
-    participant.lastSeenAt = now();
+    participant.lastSeenAt = disconnectedAt;
 
     // If the moderator disconnected, hand off to the next connected participant
     // so the room isn't stuck without anyone who can reveal/reset.
@@ -234,7 +242,7 @@ export class RoomService {
 
     // If no connected participants remain, reset expiry
     if (!hasConnectedParticipants(room)) {
-      room.expiresAt = now() + ROOM_TTL_MS;
+      room.expiresAt = disconnectedAt + ROOM_TTL_MS;
     }
 
     logger.info("Participant disconnected", { roomId, participantId });
@@ -292,8 +300,7 @@ export class RoomService {
       return fail({ code: "NOT_ALLOWED", message: "Not allowed to reset round" });
     }
 
-    room.votes.clear();
-    room.revealed = false;
+    resetRoundState(room);
     touchRoom(room);
     return success({ room });
   }
@@ -305,8 +312,7 @@ export class RoomService {
       return fail({ code: "NOT_ALLOWED", message: "Not allowed to advance round" });
     }
 
-    room.votes.clear();
-    room.revealed = false;
+    resetRoundState(room);
     room.roundNumber += 1;
     touchRoom(room);
     return success({ room });
@@ -390,8 +396,7 @@ export class RoomService {
     }
 
     room.timer.remainingSeconds = getRemainingSeconds(room.timer, now());
-    room.timer.running = false;
-    room.timer.endsAt = null;
+    stopRoomTimer(room);
     touchRoom(room);
     return success({ room });
   }
@@ -403,8 +408,7 @@ export class RoomService {
       return fail({ code: "NOT_ALLOWED", message: "Only the moderator can reset the timer" });
     }
 
-    room.timer.running = false;
-    room.timer.endsAt = null;
+    stopRoomTimer(room);
     room.timer.remainingSeconds = room.timer.durationSeconds;
     room.timer.completedAt = null;
     touchRoom(room);
@@ -415,8 +419,7 @@ export class RoomService {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
 
-    room.timer.running = false;
-    room.timer.endsAt = null;
+    stopRoomTimer(room);
     room.timer.remainingSeconds = 0;
     room.timer.completedAt = now();
     room.revealed = true;
@@ -502,8 +505,7 @@ export class RoomService {
     room.deck = resolveDeck(normalized);
 
     // Clear votes and reset reveal since deck changed
-    room.votes.clear();
-    room.revealed = false;
+    resetRoundState(room);
 
     touchRoom(room);
     return success({ room });

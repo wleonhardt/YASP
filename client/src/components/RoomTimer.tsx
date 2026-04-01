@@ -1,4 +1,13 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { ROOM_TIMER_PRESET_SECONDS, type PublicRoomState } from "@yasp/shared";
 import {
@@ -32,6 +41,13 @@ type Props = {
   roundActions?: ReactNode;
   compactActions?: boolean;
   serverClockOffsetMs?: number;
+};
+
+type PreviousTimerSnapshotRefs = {
+  completedAt: MutableRefObject<number | null>;
+  honkAt: MutableRefObject<number | null>;
+  remainingSeconds: MutableRefObject<number>;
+  running: MutableRefObject<boolean>;
 };
 
 export function formatCountdown(totalSeconds: number): string {
@@ -92,6 +108,17 @@ export function getCooldownSeconds(
 
   const adjustedNowMs = nowMs + serverClockOffsetMs;
   return targetAtMs > adjustedNowMs ? Math.ceil((targetAtMs - adjustedNowMs) / 1000) : 0;
+}
+
+function syncPreviousTimerSnapshot(
+  refs: PreviousTimerSnapshotRefs,
+  timer: Pick<PublicRoomState["timer"], "completedAt" | "lastHonkAt" | "running">,
+  remainingSeconds: number
+): void {
+  refs.completedAt.current = timer.completedAt;
+  refs.honkAt.current = timer.lastHonkAt;
+  refs.remainingSeconds.current = remainingSeconds;
+  refs.running.current = timer.running;
 }
 
 export function useRoomTimerCountdown(
@@ -264,18 +291,38 @@ export function RoomTimer({
   useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
-      previousCompletedAt.current = state.timer.completedAt;
-      previousHonkAt.current = state.timer.lastHonkAt;
-      previousRemainingSeconds.current = remainingSeconds;
-      previousRunning.current = state.timer.running;
+      syncPreviousTimerSnapshot(
+        {
+          completedAt: previousCompletedAt,
+          honkAt: previousHonkAt,
+          remainingSeconds: previousRemainingSeconds,
+          running: previousRunning,
+        },
+        {
+          completedAt: state.timer.completedAt,
+          lastHonkAt: state.timer.lastHonkAt,
+          running: state.timer.running,
+        },
+        remainingSeconds
+      );
       return;
     }
 
     if (!soundEnabled || !audioReadyRef.current) {
-      previousCompletedAt.current = state.timer.completedAt;
-      previousHonkAt.current = state.timer.lastHonkAt;
-      previousRemainingSeconds.current = remainingSeconds;
-      previousRunning.current = state.timer.running;
+      syncPreviousTimerSnapshot(
+        {
+          completedAt: previousCompletedAt,
+          honkAt: previousHonkAt,
+          remainingSeconds: previousRemainingSeconds,
+          running: previousRunning,
+        },
+        {
+          completedAt: state.timer.completedAt,
+          lastHonkAt: state.timer.lastHonkAt,
+          running: state.timer.running,
+        },
+        remainingSeconds
+      );
       return;
     }
 
@@ -306,10 +353,20 @@ export function RoomTimer({
       }
     }
 
-    previousCompletedAt.current = state.timer.completedAt;
-    previousHonkAt.current = state.timer.lastHonkAt;
-    previousRemainingSeconds.current = remainingSeconds;
-    previousRunning.current = state.timer.running;
+    syncPreviousTimerSnapshot(
+      {
+        completedAt: previousCompletedAt,
+        honkAt: previousHonkAt,
+        remainingSeconds: previousRemainingSeconds,
+        running: previousRunning,
+      },
+      {
+        completedAt: state.timer.completedAt,
+        lastHonkAt: state.timer.lastHonkAt,
+        running: state.timer.running,
+      },
+      remainingSeconds
+    );
   }, [remainingSeconds, soundEnabled, state.timer.completedAt, state.timer.lastHonkAt, state.timer.running]);
 
   const handleToggleSound = async () => {
@@ -323,8 +380,8 @@ export function RoomTimer({
     setSoundEnabled(false);
   };
 
-  const prepareAudioAndRun = async <T,>(action: () => Promise<T> | T, forceAudio = false): Promise<T> => {
-    if (soundEnabled || forceAudio) {
+  const prepareAudioAndRun = async <T,>(action: () => Promise<T> | T): Promise<T> => {
+    if (soundEnabled) {
       audioReadyRef.current = await primeRoomAudio();
     }
     return action();

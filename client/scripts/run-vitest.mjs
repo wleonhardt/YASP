@@ -12,6 +12,10 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const clientDir = path.resolve(scriptDir, "..");
 const localStorageFile = path.join(os.tmpdir(), `yasp-vitest-localstorage-${process.pid}-${Date.now()}.json`);
 
+// --localstorage-file is only available in Node 22+.
+const nodeVersion = process.versions.node.split(".").map(Number);
+const supportsLocalStorageFile = nodeVersion[0] >= 22;
+
 function formatNodeOptionValue(value) {
   if (!/\s/.test(value)) {
     return value;
@@ -24,6 +28,10 @@ function normalizeNodeOptions(nodeOptions = "") {
   const withoutLocalStorageFile = nodeOptions
     .replace(/(?:^|\s)--localstorage-file(?:=(?:"[^"]*"|'[^']*'|[^\s]+))?/g, " ")
     .trim();
+
+  if (!supportsLocalStorageFile) {
+    return withoutLocalStorageFile;
+  }
 
   return [withoutLocalStorageFile, `--localstorage-file=${formatNodeOptionValue(localStorageFile)}`]
     .filter(Boolean)
