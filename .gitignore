@@ -17,3 +17,4 @@ cdk.context.json
 cdk/cdk.context.json
 server/.DS_Store
 .DS_Store
+plans/
