@@ -27,7 +27,7 @@ Most planning poker tools require sign-ups, store your data, and charge per seat
 
 | Layer   | Technology                     |
 | ------- | ------------------------------ |
-| Client  | React 19, Vite, TypeScript     |
+| Client  | React 18, Vite, TypeScript     |
 | Server  | Fastify, Socket.IO, TypeScript |
 | Shared  | TypeScript (project references) |
 | Runtime | Node.js 20+                    |
@@ -193,6 +193,16 @@ The deployed origin now ships container logs to CloudWatch Logs. With the defaul
 ```bash
 aws logs tail /yasp/origin --since 1h --follow
 ```
+
+## Security
+
+YASP is intentionally no-auth: room URLs are bearer-style meeting links, and `sessionId` is a per-browser continuity token — not an account. Within that product boundary, the runtime has been hardened against the usual abuse surfaces (DoS shaping, input validation, CSP, non-root + read-only Docker runtime, deploy rollback). The full story lives in three documents:
+
+- [`SECURITY_THREAT_MODEL.md`](./SECURITY_THREAT_MODEL.md) — what YASP does and does not defend against, and the accepted product tradeoffs.
+- [`SECURITY_AUDIT_REPORT.md`](./SECURITY_AUDIT_REPORT.md) — findings inventory (F-01 … F-22) with current remediation status.
+- [`SECURITY_REMEDIATION_PLAN.md`](./SECURITY_REMEDIATION_PLAN.md) — shipped remediation PRs and the remaining future-hardening backlog.
+
+If you plan to add accounts, persistence, integrations, or stronger identity claims, re-read the threat model first — several current tradeoffs stop being "accepted" at that point.
 
 ## Roadmap
 
