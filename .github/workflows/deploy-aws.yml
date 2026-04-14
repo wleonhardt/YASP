@@ -31,6 +31,29 @@ jobs:
       HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
 
     steps:
+      # Fail fast with a human-readable message if the production
+      # environment forgot to set INSTANCE_ID (or any other required
+      # var). Otherwise the failure surfaces downstream as an opaque
+      # `aws ssm send-command` ValidationException.
+      - name: Preflight required variables
+        run: |
+          missing=()
+          [ -n "${INSTANCE_ID}" ] || missing+=("INSTANCE_ID")
+          [ -n "${AWS_REGION}" ]  || missing+=("AWS_REGION")
+          [ -n "${ECR_REPO}" ]    || missing+=("ECR_REPO")
+          [ -n "${DOCKERHUB_IMAGE}" ] || missing+=("DOCKERHUB_IMAGE")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Deploy aborted — missing required variables: ${missing[*]}."
+            echo "::error::Set these under Settings → Environments → production → Environment variables."
+            exit 1
+          fi
+          # INSTANCE_ID format sanity check (EC2 = i-<8 or 17 hex>, SSM-managed = mi-<17 hex>).
+          if ! [[ "$INSTANCE_ID" =~ ^(i-([0-9a-f]{8}|[0-9a-f]{17})|mi-[0-9a-f]{17})$ ]]; then
+            echo "::error::INSTANCE_ID='${INSTANCE_ID}' does not look like an EC2/SSM instance id."
+            exit 1
+          fi
+          echo "Preflight OK — deploying to ${INSTANCE_ID} in ${AWS_REGION}."
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
