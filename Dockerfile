@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:25-alpine AS base
 WORKDIR /app
 
 # Install dependencies
@@ -24,7 +24,7 @@ RUN npm run build:client
 RUN npm run build:server
 
 # Production stage
-FROM node:20-alpine
+FROM node:25-alpine
 WORKDIR /app
 
 # Copy build artifacts and runtime deps. Files retain their default root:root
