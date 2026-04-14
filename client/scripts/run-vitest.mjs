@@ -6,7 +6,18 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const vitestPath = require.resolve("vitest/vitest.mjs");
+
+// vitest v2 exposed `vitest/vitest.mjs` as a package subpath; v3 dropped it
+// from `exports`. Resolve the package root and read `bin.vitest` from
+// package.json — that entry exists in both majors and points at the CLI
+// script we want to spawn.
+const vitestPkgJsonPath = require.resolve("vitest/package.json");
+const vitestPkg = JSON.parse(fs.readFileSync(vitestPkgJsonPath, "utf8"));
+const vitestBin = typeof vitestPkg.bin === "string" ? vitestPkg.bin : vitestPkg.bin?.vitest;
+if (!vitestBin) {
+  throw new Error("Could not resolve vitest bin entry from package.json");
+}
+const vitestPath = path.resolve(path.dirname(vitestPkgJsonPath), vitestBin);
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const clientDir = path.resolve(scriptDir, "..");
