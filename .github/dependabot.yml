@@ -12,11 +12,21 @@ updates:
     open-pull-requests-limit: 10
     ignore:
       # eslint-plugin-jsx-a11y@6.10.x peer-depends on eslint ^3..^9.
-      # Block eslint majors until jsx-a11y ships a release that accepts
-      # eslint 10+ (track https://github.com/jsx-eslint/eslint-plugin-jsx-a11y
-      # releases). Minors/patches still flow through. Remove this entry once
-      # the plugin's peer range is widened.
+      # Block eslint + its sibling packages' majors until jsx-a11y ships
+      # a release that accepts eslint 10+ (track
+      # https://github.com/jsx-eslint/eslint-plugin-jsx-a11y releases).
+      # Minors/patches still flow through. Remove these entries once the
+      # plugin's peer range is widened.
       - dependency-name: eslint
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "@eslint/js"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "@types/eslint"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "@types/eslint__js"
         update-types:
           - version-update:semver-major
 
