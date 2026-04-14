@@ -29,6 +29,32 @@ updates:
       - dependency-name: "@types/eslint__js"
         update-types:
           - version-update:semver-major
+      # React 19 migration is a deliberate piece of work (stricter child
+      # validation broke ~55 client tests in PR #39). Pin majors on React
+      # and the i18n stack that ships tight peer ranges against React so
+      # grouped bumps stay mergeable. Minors/patches continue to flow.
+      # When scheduling the React 19 upgrade, remove these four entries
+      # in the same PR that does the migration.
+      - dependency-name: react
+        update-types:
+          - version-update:semver-major
+      - dependency-name: react-dom
+        update-types:
+          - version-update:semver-major
+      - dependency-name: react-i18next
+        update-types:
+          - version-update:semver-major
+      - dependency-name: i18next
+        update-types:
+          - version-update:semver-major
+      # eslint-plugin-react-hooks 6.x introduced new
+      # `react-hooks/set-state-in-effect` / ref-during-render / impure-
+      # render rules that flag 11 pre-existing patterns (see PR #40).
+      # Pin majors until the code is cleaned up in a dedicated PR, then
+      # remove this entry.
+      - dependency-name: eslint-plugin-react-hooks
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /
