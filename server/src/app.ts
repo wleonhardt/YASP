@@ -1,105 +1,85 @@
 import Fastify from "fastify";
+import fastifyHelmet from "@fastify/helmet";
 import fastifyStatic from "@fastify/static";
 import fastifyCors from "@fastify/cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import { logger } from "./utils/logger.js";
+import { CLIENT_ERROR_BODY_LIMIT, TRUSTED_PROXY_HOP_COUNT } from "./config.js";
+import {
+  normalizeClientErrorReport,
+  recordAndCheckGlobalClientErrorRate,
+  recordAndCheckPerIpClientErrorRate,
+  redactReferer,
+} from "./transport/client-error.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_ERROR_EVENT = "client_error";
-const MAX_LOG_FIELD_LENGTH = 4_000;
-const MAX_STACK_LENGTH = 12_000;
-
-function truncate(value: string, maxLength: number): string {
-  return value.length > maxLength ? value.slice(0, maxLength) : value;
-}
-
-function toOptionalString(value: unknown, maxLength = MAX_LOG_FIELD_LENGTH): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  if (trimmed.length === 0) {
-    return null;
-  }
-
-  return truncate(trimmed, maxLength);
-}
-
-function toOptionalNumber(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function summarizeUnknown(value: unknown): string | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  if (typeof value === "string") {
-    return truncate(value, MAX_LOG_FIELD_LENGTH);
-  }
-
-  if (typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-
-  if (value instanceof Error) {
-    return truncate(`${value.name}: ${value.message}`, MAX_LOG_FIELD_LENGTH);
-  }
-
-  try {
-    const serialized = JSON.stringify(value);
-    return serialized ? truncate(serialized, MAX_LOG_FIELD_LENGTH) : null;
-  } catch {
-    return Object.prototype.toString.call(value);
-  }
-}
-
-function normalizeClientErrorPayload(body: unknown): Record<string, unknown> {
-  const raw =
-    typeof body === "string"
-      ? (() => {
-          try {
-            return JSON.parse(body);
-          } catch {
-            return { message: body };
-          }
-        })()
-      : body;
-
-  if (!raw || typeof raw !== "object") {
-    return {
-      reportType: "unknown",
-      message: "Invalid client crash payload",
-      stack: null,
-      context: {},
-    };
-  }
-
-  const record = raw as Record<string, unknown>;
-
-  return {
-    reportType: toOptionalString(record.type) ?? "unknown",
-    message: toOptionalString(record.message) ?? "Client crash report received without a message",
-    stack: toOptionalString(record.stack, MAX_STACK_LENGTH),
-    context: {
-      name: toOptionalString(record.name),
-      reason: summarizeUnknown(record.reason),
-      source: toOptionalString(record.source),
-      line: toOptionalNumber(record.line),
-      column: toOptionalNumber(record.column),
-      href: toOptionalString(record.href),
-      path: toOptionalString(record.path),
-      userAgent: toOptionalString(record.userAgent),
-      reportedAt: toOptionalString(record.timestamp),
-    },
-  };
-}
 
 export async function createApp() {
-  const app = Fastify({ logger: false });
+  // trustProxy tells Fastify how many hops of X-Forwarded-For to trust when
+  // computing `request.ip`. See config.ts for the topology. Passing 0 as
+  // `false` keeps dev/tests (no proxy) behaving like a direct TCP peer.
+  const app = Fastify({
+    logger: false,
+    trustProxy: TRUSTED_PROXY_HOP_COUNT > 0 ? TRUSTED_PROXY_HOP_COUNT : false,
+  });
+
+  // Helmet config (PR E / F-08).
+  //
+  // CSP is enabled with a strict policy tuned to the current Vite-built
+  // client. The production `client/dist/index.html` contains NO inline
+  // scripts and NO inline <style> tags — all JS and CSS are external
+  // same-origin assets. That means:
+  //   - script-src 'self'                   (strict; no eval, no inline)
+  //   - style-src  'self' 'unsafe-inline'   (React sets `style={...}` via the
+  //                                           DOM in a few components, and
+  //                                           CSP style-src guards inline
+  //                                           style attributes in most UAs —
+  //                                           keep 'unsafe-inline' here for
+  //                                           robustness; script remains
+  //                                           strict, which is the path that
+  //                                           matters for XSS)
+  //   - connect-src 'self'                  (Socket.IO is same-origin; no
+  //                                           cross-origin XHR/fetch targets)
+  //   - font-src   'self'                   (we self-host the Inter font)
+  //   - img-src    'self' data:             (favicon + any inline SVG)
+  //   - frame-ancestors 'none'              (supersedes X-Frame-Options)
+  //   - base-uri   'self' / form-action 'self' / object-src 'none'
+  //
+  // `useDefaults: false` — we don't want Helmet's defaults silently adding
+  // `https:` to font/style sources or `upgrade-insecure-requests` (which is
+  // a no-op when the document is HTTPS via CloudFront but can surprise local
+  // testing of the production build over http://localhost).
+  await app.register(fastifyHelmet, {
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        fontSrc: ["'self'"],
+        imgSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        objectSrc: ["'none'"],
+      },
+    },
+    // Tighter than Helmet's default `no-referrer`: preserves origin on
+    // same-origin navigations (useful for analytics/debugging) while
+    // stripping the path on cross-origin requests.
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  });
+
+  // Permissions-Policy — not shipped as a Helmet middleware today, so set it
+  // via an onSend hook. Disables a handful of sensitive hardware APIs the app
+  // has never needed and never will.
+  app.addHook("onSend", async (_request, reply) => {
+    reply.header("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=()");
+  });
 
   if (process.env.NODE_ENV !== "production") {
     await app.register(fastifyCors, {
@@ -107,34 +87,54 @@ export async function createApp() {
     });
   }
 
-  // API routes
   app.get("/api/health", async () => {
     return { ok: true };
   });
 
-  app.post("/api/client-error", async (request, reply) => {
-    const normalized = normalizeClientErrorPayload(request.body);
+  app.post(
+    "/api/client-error",
+    {
+      // Route-scoped body cap. Fastify emits 413 at the parser before any
+      // handler / sanitizer work runs.
+      bodyLimit: CLIENT_ERROR_BODY_LIMIT,
+    },
+    async (request, reply) => {
+      // Global ceiling first: rejects cheaply under a distributed flood.
+      if (recordAndCheckGlobalClientErrorRate()) {
+        return reply.code(429).send({ ok: false, error: "Server is dropping crash reports" });
+      }
 
-    logger.error("Client runtime error", {
-      event: CLIENT_ERROR_EVENT,
-      timestamp: new Date().toISOString(),
-      reportType: normalized.reportType,
-      message: normalized.message,
-      stack: normalized.stack,
-      context: {
-        requestId: request.id,
-        forwardedFor:
-          typeof request.headers["x-forwarded-for"] === "string" ? request.headers["x-forwarded-for"] : null,
-        userAgent:
-          (normalized.context as Record<string, unknown>).userAgent ??
-          (typeof request.headers["user-agent"] === "string" ? request.headers["user-agent"] : null),
-        referer: typeof request.headers.referer === "string" ? request.headers.referer : null,
-        ...((normalized.context as Record<string, unknown>) ?? {}),
-      },
-    });
+      // Per-IP limit using the trusted `request.ip`. With trustProxy set,
+      // this is the real viewer IP — not an attacker-forgeable XFF entry.
+      const clientIp = request.ip;
+      if (recordAndCheckPerIpClientErrorRate(clientIp)) {
+        return reply.code(429).send({ ok: false, error: "Too many error reports" });
+      }
 
-    return reply.code(202).send({ ok: true });
-  });
+      const normalized = normalizeClientErrorReport(request.body);
+      const refererRedacted = redactReferer(request.headers.referer);
+
+      // Demoted to `warn`: these are client-side crashes that we want visible
+      // but should not page on; previous `error` level caused alert noise.
+      logger.warn("Client runtime error", {
+        event: CLIENT_ERROR_EVENT,
+        reportType: normalized.reportType,
+        message: normalized.message,
+        stack: normalized.stack,
+        // Only whitelisted fields below. Raw forwarded-for / user-agent / raw
+        // referer are NOT logged — they're either attacker-controlled,
+        // privacy-sensitive (F-11), or duplicated by the trusted clientIp.
+        context: {
+          requestId: request.id,
+          clientIp,
+          referer: refererRedacted,
+          ...normalized.context,
+        },
+      });
+
+      return reply.code(202).send({ ok: true });
+    }
+  );
 
   // In production, serve static assets from the client build
   const clientDistPath = path.resolve(__dirname, "../../client/dist");

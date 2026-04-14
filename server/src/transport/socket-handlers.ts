@@ -25,7 +25,12 @@ import { TimerService } from "../services/timer-service.js";
 import type { RoomStore } from "../services/room-store.js";
 import { serializeRoom } from "./serializers.js";
 import { validateSessionId, validateRoomId } from "./validators.js";
+import { applySocketRateLimit } from "./rate-limiter.js";
+import { tryAcquireConnection, releaseConnection } from "./connection-limiter.js";
+import { extractClientIp } from "./ip.js";
+import { TRUSTED_PROXY_HOP_COUNT } from "../config.js";
 import { now } from "../utils/time.js";
+import { logger } from "../utils/logger.js";
 
 type RoomActionAfterEffect = "autoReveal" | "cancelAutoReveal" | "syncRoomTimer" | "cancelRoomTimer" | "none";
 
@@ -49,7 +54,7 @@ function resolveCallerFromSocket(
   roomId: RoomId,
   store: RoomStore,
   ack?: (res: AckResult) => void
-): { participantId: string } | null {
+): { sessionId: string } | null {
   const binding = sessionService.resolve(socket.id);
   if (!binding || binding.roomId !== roomId) {
     ack?.(ackFail("PARTICIPANT_NOT_FOUND", "Not in this room"));
@@ -71,7 +76,7 @@ function resolveCallerFromSocket(
     return null;
   }
 
-  return { participantId: binding.sessionId };
+  return { sessionId: binding.sessionId };
 }
 
 function evaluateAutoReveal(
@@ -132,7 +137,37 @@ export function registerSocketHandlers(
   timerService: TimerService,
   store: RoomStore
 ): void {
+  // Per-IP concurrent connection cap. Runs as Socket.IO connect middleware
+  // so rejected upgrades never enter the main connection handler and never
+  // allocate the downstream rate-limiter / handler state.
+  io.use((socket, next) => {
+    const handshake = socket.handshake;
+    // Resolve the real viewer IP through the trusted proxy chain. In
+    // production this strips the nginx loopback hop and the CloudFront edge
+    // hop from the right of X-Forwarded-For; in dev/tests (no proxy) this
+    // collapses to the direct TCP peer.
+    const ip = extractClientIp(handshake.headers, handshake.address, TRUSTED_PROXY_HOP_COUNT);
+    if (!tryAcquireConnection(ip)) {
+      logger.warn("Socket connection rejected: per-IP cap", { ip });
+      next(new Error("CONNECTION_LIMIT"));
+      return;
+    }
+    // Stash the resolved IP on the socket so downstream handlers don't
+    // re-derive it (and so tests / logs have one source of truth).
+    socket.data.clientIp = ip;
+    next();
+  });
+
   io.on("connection", (socket: Socket) => {
+    const clientIp: string = socket.data.clientIp ?? "unknown";
+    applySocketRateLimit(socket, clientIp);
+
+    // Pair the connection acquire/release. Use `disconnect` which fires for
+    // normal closes, transport errors, and server-side disconnects alike.
+    socket.on("disconnect", () => {
+      releaseConnection(clientIp);
+    });
+
     const refreshRoomState = (roomId: RoomId, room: Room | null = store.get(roomId) ?? null) => {
       broadcastRoomState(io, roomId, store);
       if (room) {
@@ -145,14 +180,14 @@ export function registerSocketHandlers(
     // afterEffect controls timer/auto-reveal behavior after broadcast.
     function roomAction<I extends { roomId: RoomId } & Record<string, unknown>>(
       event: string,
-      serviceFn: (roomId: RoomId, participantId: string, input: I) => AckResult<{ room: Room }>,
+      serviceFn: (roomId: RoomId, sessionId: string, input: I) => AckResult<{ room: Room }>,
       afterEffect: RoomActionAfterEffect = "none"
     ) {
       socket.on(event, (input: I, ack?: (res: AckResult) => void) => {
         const caller = resolveCallerFromSocket(socket, sessionService, input.roomId, store, ack);
         if (!caller) return;
 
-        const result = serviceFn(input.roomId, caller.participantId, input);
+        const result = serviceFn(input.roomId, caller.sessionId, input);
         if (!result.ok) {
           ack?.(result);
           return;
@@ -244,7 +279,7 @@ export function registerSocketHandlers(
       const caller = resolveCallerFromSocket(socket, sessionService, input.roomId, store, ack);
       if (!caller) return;
 
-      const result = roomService.leaveRoom(input.roomId, caller.participantId);
+      const result = roomService.leaveRoom(input.roomId, caller.sessionId);
       if (!result.ok) {
         ack?.(result);
         return;

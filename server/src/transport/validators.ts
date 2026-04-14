@@ -3,6 +3,17 @@ import type { DeckInput } from "@yasp/shared";
 
 export type ValidationResult = { valid: true } | { valid: false; error: ServerErrorEvent };
 
+// Cap on the free-text label attached to a custom deck. Prevents an abusive
+// client from stuffing a multi-kB string into a field that gets rebroadcast
+// as part of every room_state push (F-02).
+export const MAX_CUSTOM_DECK_LABEL_LENGTH = 60;
+
+// Cap on the room title field. No socket event writes `room.title` today —
+// this validator is provided so any future title-setting code path has a
+// canonical boundary check ready (F-02: "future footgun"). Matches the
+// custom-deck-label cap so both user-visible-string surfaces agree.
+export const MAX_ROOM_TITLE_LENGTH = 60;
+
 export function validateName(name: unknown): ValidationResult {
   if (typeof name !== "string") {
     return { valid: false, error: { code: "INVALID_NAME", message: "Name must be a string" } };
@@ -46,6 +57,15 @@ export function validateDeckInput(input: unknown): ValidationResult {
   if (deck.type === "custom") {
     if (typeof deck.label !== "string" || deck.label.trim().length === 0) {
       return { valid: false, error: { code: "INVALID_DECK", message: "Custom deck must have a label" } };
+    }
+    if (deck.label.trim().length > MAX_CUSTOM_DECK_LABEL_LENGTH) {
+      return {
+        valid: false,
+        error: {
+          code: "INVALID_DECK",
+          message: `Custom deck label must be at most ${MAX_CUSTOM_DECK_LABEL_LENGTH} characters`,
+        },
+      };
     }
     if (!Array.isArray(deck.cards) || deck.cards.length === 0) {
       return {
@@ -103,8 +123,10 @@ export function validateVote(value: unknown, deckCards: string[]): ValidationRes
   return { valid: true };
 }
 
+const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export function validateSessionId(sessionId: unknown): ValidationResult {
-  if (typeof sessionId !== "string" || sessionId.trim().length === 0) {
+  if (typeof sessionId !== "string" || !UUID_V4_RE.test(sessionId)) {
     return { valid: false, error: { code: "INTERNAL_ERROR", message: "Invalid session ID" } };
   }
   return { valid: true };
@@ -118,6 +140,55 @@ export function validateRoomId(roomId: unknown): ValidationResult {
     return { valid: false, error: { code: "INVALID_ROOM_ID", message: "Invalid room ID format" } };
   }
   return { valid: true };
+}
+
+/**
+ * Canonical validator for an optional room title. Not wired to any current
+ * socket event — `shared/src/types.ts` exposes `title?: string` on the public
+ * room state, but there is no create/update-title operation in the event
+ * surface today. F-02 flags this field as a future footgun: any code that
+ * later writes `room.title` from user input MUST go through this helper so
+ * we don't ship the same "unbounded user string broadcast back to every
+ * room member" issue we just fixed on the custom deck label.
+ *
+ * Semantics:
+ *  - `undefined` / `null` → valid (title is optional)
+ *  - string → trimmed; empty-after-trim is valid (means "clear title")
+ *  - non-string → invalid
+ *  - >`MAX_ROOM_TITLE_LENGTH` after trim → invalid
+ *  - interior whitespace is preserved (matches `sanitizeName`'s "trim only"
+ *    posture — do not collapse spaces; users may legitimately want them)
+ *
+ * Callers should use `sanitizeRoomTitle` to get the normalized value to
+ * store, after a successful `validateRoomTitle` check.
+ */
+export function validateRoomTitle(title: unknown): ValidationResult {
+  if (title === undefined || title === null) return { valid: true };
+  if (typeof title !== "string") {
+    return { valid: false, error: { code: "INTERNAL_ERROR", message: "Title must be a string" } };
+  }
+  if (title.trim().length > MAX_ROOM_TITLE_LENGTH) {
+    return {
+      valid: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: `Title must be at most ${MAX_ROOM_TITLE_LENGTH} characters`,
+      },
+    };
+  }
+  return { valid: true };
+}
+
+/**
+ * Normalize a room title after `validateRoomTitle` has accepted it. Returns
+ * `undefined` for absent or whitespace-only input so callers can delete the
+ * field rather than store an empty string. Intentionally does NOT collapse
+ * interior whitespace (see `validateRoomTitle`).
+ */
+export function sanitizeRoomTitle(title: string | undefined | null): string | undefined {
+  if (typeof title !== "string") return undefined;
+  const trimmed = title.trim();
+  return trimmed.length === 0 ? undefined : trimmed;
 }
 
 export function validateSettingsUpdate(settings: unknown): ValidationResult {
@@ -146,10 +217,10 @@ export function validateSettingsUpdate(settings: unknown): ValidationResult {
     }
   }
   if ("autoRevealDelayMs" in s) {
-    if (typeof s.autoRevealDelayMs !== "number" || s.autoRevealDelayMs < 0) {
+    if (typeof s.autoRevealDelayMs !== "number" || s.autoRevealDelayMs < 0 || s.autoRevealDelayMs > 30_000) {
       return {
         valid: false,
-        error: { code: "INTERNAL_ERROR", message: "autoRevealDelayMs must be a non-negative number" },
+        error: { code: "INTERNAL_ERROR", message: "autoRevealDelayMs must be between 0 and 30000" },
       };
     }
   }

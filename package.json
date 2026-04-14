@@ -16,7 +16,7 @@
     "dev:client": "npm run dev -w client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "test": "npm run test:scripts && npm run test -w server && npm run test -w client",
-    "test:scripts": "node --test tests/scripts/check-i18n.test.mjs",
+    "test:scripts": "node --test tests/scripts/check-i18n.test.mjs tests/scripts/check-ec2-bootstrap.test.mjs",
     "test:a11y": "playwright test --config=playwright.a11y.config.ts",
     "i18n:check": "node scripts/check-i18n.mjs",
     "lint": "eslint . --max-warnings=0",

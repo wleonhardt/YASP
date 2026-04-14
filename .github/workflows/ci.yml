@@ -50,6 +50,43 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
+      # Advisory-only production dependency audit (F-20).
+      #
+      # Runs `npm audit --omit=dev --audit-level=high`:
+      #   - `--omit=dev`        : ignore devDependencies (test/build tooling
+      #                            doesn't ship in the runtime image).
+      #   - `--audit-level=high`: non-zero exit only for high/critical
+      #                            advisories; moderate/low still appear in
+      #                            the output but do not set the exit code.
+      #
+      # The step uses `continue-on-error: true` so that a newly-published
+      # advisory cannot red a PR before someone has had a chance to triage
+      # it. The raw audit text and the JSON summary are appended to the
+      # GitHub Actions step summary so the posture is visible on every run.
+      #
+      # Flip `continue-on-error` off (or drop it entirely) once the audit
+      # run is reliably clean — see SECURITY_REMEDIATION_PLAN.md F-20.
+      - name: Production dependency audit (advisory)
+        id: npm-audit
+        continue-on-error: true
+        run: |
+          echo "## Production npm audit (advisory, non-blocking)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          set +e
+          npm audit --omit=dev --audit-level=high | tee /tmp/npm-audit.txt
+          AUDIT_EXIT=$?
+          set -e
+          cat /tmp/npm-audit.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$AUDIT_EXIT" -ne 0 ]; then
+            echo "_Advisory: high/critical production advisory present. Triage via Dependabot; this step is not yet a hard gate._" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "_Clean at high/critical._" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$AUDIT_EXIT"
+
   a11y-smoke:
     needs: validate
     runs-on: ubuntu-latest

@@ -1,4 +1,19 @@
 import type { Room, Participant } from "./types.js";
+import type { ParticipantId, SessionId } from "@yasp/shared";
+
+export function findParticipantBySessionId(room: Room, sessionId: SessionId): Participant | null {
+  return room.participants.get(sessionId) ?? null;
+}
+
+export function findParticipantByPublicId(room: Room, participantId: ParticipantId): Participant | null {
+  for (const participant of room.participants.values()) {
+    if (participant.id === participantId) {
+      return participant;
+    }
+  }
+
+  return null;
+}
 
 /**
  * Find the next moderator candidate by joinedAt.
@@ -19,7 +34,7 @@ export function findNextModerator(room: Room, excludeId?: string): Participant |
  * Reassign moderator if the current one is gone.
  */
 export function reassignModeratorIfNeeded(room: Room): void {
-  if (room.moderatorId && room.participants.has(room.moderatorId)) {
+  if (room.moderatorId && findParticipantByPublicId(room, room.moderatorId)) {
     return;
   }
   const next = findNextModerator(room);

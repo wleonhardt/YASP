@@ -86,6 +86,9 @@ export type ErrorCode =
   | "NOT_REVEALED"
   | "PARTICIPANT_NOT_FOUND"
   | "SESSION_REPLACED"
+  | "ROOM_FULL"
+  | "TOO_MANY_ROOMS"
+  | "SERVER_BUSY"
   | "INTERNAL_ERROR";
 
 export type ServerErrorEvent = {

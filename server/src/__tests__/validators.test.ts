@@ -9,6 +9,10 @@ import {
   validateRoomId,
   validateSessionId,
   validateSettingsUpdate,
+  validateRoomTitle,
+  sanitizeRoomTitle,
+  MAX_CUSTOM_DECK_LABEL_LENGTH,
+  MAX_ROOM_TITLE_LENGTH,
 } from "../transport/validators.js";
 
 describe("validateName", () => {
@@ -100,6 +104,32 @@ describe("validateDeckInput", () => {
     const r = validateDeckInput({ type: "invalid" });
     expect(r.valid).toBe(false);
   });
+
+  it(`accepts custom deck label at exactly ${MAX_CUSTOM_DECK_LABEL_LENGTH} characters`, () => {
+    const r = validateDeckInput({
+      type: "custom",
+      label: "a".repeat(MAX_CUSTOM_DECK_LABEL_LENGTH),
+      cards: ["1", "2"],
+    });
+    expect(r).toEqual({ valid: true });
+  });
+
+  it(`rejects custom deck label over ${MAX_CUSTOM_DECK_LABEL_LENGTH} characters (F-02)`, () => {
+    const r = validateDeckInput({
+      type: "custom",
+      label: "a".repeat(MAX_CUSTOM_DECK_LABEL_LENGTH + 1),
+      cards: ["1", "2"],
+    });
+    expect(r.valid).toBe(false);
+    if (!r.valid) expect(r.error.code).toBe("INVALID_DECK");
+  });
+
+  it("applies the label cap after trimming leading/trailing whitespace", () => {
+    // Padded length > cap but trimmed length == cap → accepted.
+    const padded = "  " + "a".repeat(MAX_CUSTOM_DECK_LABEL_LENGTH) + "  ";
+    const r = validateDeckInput({ type: "custom", label: padded, cards: ["1"] });
+    expect(r).toEqual({ valid: true });
+  });
 });
 
 describe("normalizeDeckInput", () => {
@@ -162,12 +192,70 @@ describe("validateRoomId", () => {
 });
 
 describe("validateSessionId", () => {
-  it("accepts non-empty strings", () => {
-    expect(validateSessionId("abc-123")).toEqual({ valid: true });
+  it("accepts valid UUID v4", () => {
+    expect(validateSessionId("550e8400-e29b-41d4-a716-446655440000")).toEqual({ valid: true });
+    expect(validateSessionId("6ba7b810-9dad-41d6-8BbB-010203040506")).toEqual({ valid: true });
   });
 
   it("rejects empty strings", () => {
     expect(validateSessionId("").valid).toBe(false);
+  });
+
+  it("rejects non-UUID strings", () => {
+    expect(validateSessionId("abc-123").valid).toBe(false);
+    expect(validateSessionId("not-a-uuid-at-all").valid).toBe(false);
+  });
+
+  it("rejects UUID v1 format", () => {
+    // UUID v1 has version nibble '1' instead of '4'
+    expect(validateSessionId("550e8400-e29b-11d4-a716-446655440000").valid).toBe(false);
+  });
+});
+
+describe("validateRoomTitle (F-02 future-use helper)", () => {
+  it("accepts undefined and null as 'no title set'", () => {
+    expect(validateRoomTitle(undefined)).toEqual({ valid: true });
+    expect(validateRoomTitle(null)).toEqual({ valid: true });
+  });
+
+  it("accepts a normal title", () => {
+    expect(validateRoomTitle("Sprint 42 planning")).toEqual({ valid: true });
+  });
+
+  it("accepts a title at exactly the cap", () => {
+    expect(validateRoomTitle("t".repeat(MAX_ROOM_TITLE_LENGTH))).toEqual({ valid: true });
+  });
+
+  it("accepts an empty string (means 'clear title')", () => {
+    expect(validateRoomTitle("")).toEqual({ valid: true });
+    expect(validateRoomTitle("   ")).toEqual({ valid: true });
+  });
+
+  it("rejects a non-string title", () => {
+    const r = validateRoomTitle(123);
+    expect(r.valid).toBe(false);
+  });
+
+  it(`rejects a title over ${MAX_ROOM_TITLE_LENGTH} characters`, () => {
+    const r = validateRoomTitle("t".repeat(MAX_ROOM_TITLE_LENGTH + 1));
+    expect(r.valid).toBe(false);
+  });
+
+  it("applies the cap after trimming outer whitespace", () => {
+    const padded = "  " + "t".repeat(MAX_ROOM_TITLE_LENGTH) + "  ";
+    expect(validateRoomTitle(padded)).toEqual({ valid: true });
+  });
+});
+
+describe("sanitizeRoomTitle", () => {
+  it("returns undefined for missing/blank input", () => {
+    expect(sanitizeRoomTitle(undefined)).toBeUndefined();
+    expect(sanitizeRoomTitle(null)).toBeUndefined();
+    expect(sanitizeRoomTitle("   ")).toBeUndefined();
+  });
+
+  it("trims outer whitespace but preserves interior spaces", () => {
+    expect(sanitizeRoomTitle("  Sprint  42  ")).toBe("Sprint  42");
   });
 });
 

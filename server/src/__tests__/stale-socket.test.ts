@@ -21,7 +21,7 @@ beforeEach(() => {
 function resolveAndCheck(
   socketId: string,
   roomId: string
-): { participantId: string } | { rejected: true; reason: "not_bound" | "stale_socket" } {
+): { sessionId: string } | { rejected: true; reason: "not_bound" | "stale_socket" } {
   const binding = sessions.resolve(socketId);
   if (!binding || binding.roomId !== roomId) {
     return { rejected: true, reason: "not_bound" };
@@ -31,7 +31,7 @@ function resolveAndCheck(
   const participant = room.participants.get(binding.sessionId);
   if (!participant) return { rejected: true, reason: "not_bound" };
   if (participant.socketId !== socketId) return { rejected: true, reason: "stale_socket" };
-  return { participantId: binding.sessionId };
+  return { sessionId: binding.sessionId };
 }
 
 describe("stale-socket command rejection", () => {
@@ -42,7 +42,7 @@ describe("stale-socket command rejection", () => {
     sessions.bind("sock-1", "s1", roomId);
 
     const result = resolveAndCheck("sock-1", roomId);
-    expect("participantId" in result).toBe(true);
+    expect("sessionId" in result).toBe(true);
   });
 
   it("rejects commands from old socket after session replacement", () => {
@@ -66,7 +66,7 @@ describe("stale-socket command rejection", () => {
 
     // sock-2 is active
     const activeResult = resolveAndCheck("sock-2", roomId);
-    expect("participantId" in activeResult).toBe(true);
+    expect("sessionId" in activeResult).toBe(true);
   });
 
   it("stale socket cannot cast vote", () => {
@@ -155,7 +155,7 @@ describe("stale-socket command rejection", () => {
     sessions.bind("sock-1", "s1", roomId);
 
     // Now sock-1 is active, sock-2 is stale
-    expect("participantId" in resolveAndCheck("sock-1", roomId)).toBe(true);
+    expect("sessionId" in resolveAndCheck("sock-1", roomId)).toBe(true);
     expect("rejected" in resolveAndCheck("sock-2", roomId)).toBe(true);
   });
 });

@@ -11,6 +11,15 @@ beforeEach(() => {
   service = new RoomService(store);
 });
 
+function getParticipantId(roomId: string, sessionId: string): string {
+  const participantId = store.get(roomId)?.participants.get(sessionId)?.id;
+  if (!participantId) {
+    throw new Error(`Participant for session ${sessionId} not found`);
+  }
+
+  return participantId;
+}
+
 describe("RoomService.createRoom", () => {
   it("creates a room and assigns moderator", () => {
     const result = service.createRoom("session-1", "sock-1", "Alice", "voter");
@@ -23,6 +32,8 @@ describe("RoomService.createRoom", () => {
     expect(room.roundNumber).toBe(1);
     expect(room.revealed).toBe(false);
     expect(store.get(room.id)).toBe(room);
+    expect(room.participants.get("session-1")?.id).toBe(participantId);
+    expect(participantId).not.toBe("session-1");
   });
 
   it("rejects invalid name", () => {
@@ -66,12 +77,15 @@ describe("RoomService.joinRoom", () => {
     if (!join.ok) return;
     expect(join.data.room.participants.size).toBe(2);
     expect(join.data.replacedSocketId).toBeNull();
+    expect(join.data.room.participants.get("s2")?.id).toBe(join.data.participantId);
+    expect(join.data.participantId).not.toBe("s2");
   });
 
   it("reconnects existing participant preserving vote", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
     const roomId = create.data.room.id;
+    const aliceParticipantId = create.data.participantId;
 
     // Cast a vote
     service.castVote(roomId, "s1", "5");
@@ -84,9 +98,10 @@ describe("RoomService.joinRoom", () => {
     expect(join.data.room.participants.size).toBe(1);
     expect(join.data.replacedSocketId).toBe("sock-1");
     // Vote preserved
-    expect(join.data.room.votes.get("s1")).toBe("5");
+    expect(join.data.room.votes.get(aliceParticipantId)).toBe("5");
     // Name updated
     expect(join.data.room.participants.get("s1")!.name).toBe("Alice Updated");
+    expect(join.data.participantId).toBe(aliceParticipantId);
   });
 
   it("rejects join to non-existent room", () => {
@@ -104,7 +119,7 @@ describe("RoomService.joinRoom", () => {
     const join = service.joinRoom(room.id, "s2", "sock-2", "Bob", "voter");
     expect(join.ok).toBe(true);
     if (!join.ok) return;
-    expect(join.data.room.moderatorId).toBe("s2");
+    expect(join.data.room.moderatorId).toBe(join.data.participantId);
   });
 
   it("rejects spectator when spectators disabled", () => {
@@ -153,12 +168,13 @@ describe("RoomService.leaveRoom", () => {
 
     service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
     service.castVote(roomId, "s2", "3");
+    const bobParticipantId = getParticipantId(roomId, "s2");
 
     const leave = service.leaveRoom(roomId, "s2");
     expect(leave.ok).toBe(true);
     if (!leave.ok) return;
     expect(leave.data.room.participants.has("s2")).toBe(false);
-    expect(leave.data.room.votes.has("s2")).toBe(false);
+    expect(leave.data.room.votes.has(bobParticipantId)).toBe(false);
   });
 
   it("reassigns moderator on leave", () => {
@@ -166,12 +182,13 @@ describe("RoomService.leaveRoom", () => {
     if (!create.ok) return;
     const roomId = create.data.room.id;
 
-    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    const join = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!join.ok) return;
 
     const leave = service.leaveRoom(roomId, "s1");
     expect(leave.ok).toBe(true);
     if (!leave.ok) return;
-    expect(leave.data.room.moderatorId).toBe("s2");
+    expect(leave.data.room.moderatorId).toBe(join.data.participantId);
   });
 });
 
@@ -195,8 +212,10 @@ describe("RoomService.disconnectParticipant", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
     const roomId = create.data.room.id;
-    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
-    service.joinRoom(roomId, "s3", "sock-3", "Carol", "voter");
+    const bobJoin = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!bobJoin.ok) return;
+    const carolJoin = service.joinRoom(roomId, "s3", "sock-3", "Carol", "voter");
+    if (!carolJoin.ok) return;
 
     // Alice is moderator, disconnects
     const result = service.disconnectParticipant(roomId, "s1");
@@ -204,13 +223,14 @@ describe("RoomService.disconnectParticipant", () => {
     if (!result.ok) return;
 
     // Moderator should transfer to Bob (next by join order)
-    expect(result.data.room.moderatorId).toBe("s2");
+    expect(result.data.room.moderatorId).toBe(bobJoin.data.participantId);
   });
 
   it("keeps moderator on disconnected participant if nobody else is connected", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
     const roomId = create.data.room.id;
+    const aliceParticipantId = create.data.participantId;
 
     // Only participant disconnects — no one to hand off to
     const result = service.disconnectParticipant(roomId, "s1");
@@ -218,7 +238,7 @@ describe("RoomService.disconnectParticipant", () => {
     if (!result.ok) return;
 
     // Stays with Alice (she'll get it back on reconnect)
-    expect(result.data.room.moderatorId).toBe("s1");
+    expect(result.data.room.moderatorId).toBe(aliceParticipantId);
   });
 
   it("new moderator can reveal after auto-transfer", () => {
@@ -248,47 +268,52 @@ describe("RoomService.disconnectParticipant", () => {
     if (!result.ok) return;
 
     // Alice stays moderator
-    expect(result.data.room.moderatorId).toBe("s1");
+    expect(result.data.room.moderatorId).toBe(create.data.participantId);
   });
 
   it("restores moderator on reconnect after auto-transfer", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
     const roomId = create.data.room.id;
-    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    const bobJoin = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!bobJoin.ok) return;
+    const aliceParticipantId = create.data.participantId;
 
     // Alice disconnects → Bob becomes moderator
     service.disconnectParticipant(roomId, "s1");
-    expect(store.get(roomId)!.moderatorId).toBe("s2");
+    expect(store.get(roomId)!.moderatorId).toBe(bobJoin.data.participantId);
 
     // Alice reconnects → gets moderator back
     const rejoin = service.joinRoom(roomId, "s1", "sock-1b", "Alice", "voter");
     expect(rejoin.ok).toBe(true);
     if (!rejoin.ok) return;
-    expect(rejoin.data.room.moderatorId).toBe("s1");
+    expect(rejoin.data.room.moderatorId).toBe(aliceParticipantId);
     expect(rejoin.data.room.previousModeratorId).toBeNull();
+    expect(rejoin.data.participantId).toBe(aliceParticipantId);
   });
 
   it("does not restore moderator if manual transfer happened while away", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
     const roomId = create.data.room.id;
-    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
-    service.joinRoom(roomId, "s3", "sock-3", "Carol", "voter");
+    const bobJoin = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!bobJoin.ok) return;
+    const carolJoin = service.joinRoom(roomId, "s3", "sock-3", "Carol", "voter");
+    if (!carolJoin.ok) return;
 
     // Alice disconnects → Bob becomes moderator
     service.disconnectParticipant(roomId, "s1");
-    expect(store.get(roomId)!.moderatorId).toBe("s2");
+    expect(store.get(roomId)!.moderatorId).toBe(bobJoin.data.participantId);
 
     // Bob manually transfers to Carol (clears previousModeratorId)
-    service.transferModerator(roomId, "s2", "s3");
-    expect(store.get(roomId)!.moderatorId).toBe("s3");
+    service.transferModerator(roomId, "s2", carolJoin.data.participantId);
+    expect(store.get(roomId)!.moderatorId).toBe(carolJoin.data.participantId);
 
     // Alice reconnects → does NOT get moderator back
     const rejoin = service.joinRoom(roomId, "s1", "sock-1b", "Alice", "voter");
     expect(rejoin.ok).toBe(true);
     if (!rejoin.ok) return;
-    expect(rejoin.data.room.moderatorId).toBe("s3");
+    expect(rejoin.data.room.moderatorId).toBe(carolJoin.data.participantId);
   });
 
   it("does not restore moderator if previous moderator left instead of reconnecting", () => {
@@ -305,7 +330,7 @@ describe("RoomService.disconnectParticipant", () => {
 
     // Bob stays moderator, previousModeratorId is cleared
     const room = store.get(roomId)!;
-    expect(room.moderatorId).toBe("s2");
+    expect(room.moderatorId).toBe(getParticipantId(roomId, "s2"));
     expect(room.previousModeratorId).toBeNull();
   });
 });
@@ -319,7 +344,7 @@ describe("RoomService.castVote", () => {
     const result = service.castVote(roomId, "s1", "5");
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.room.votes.get("s1")).toBe("5");
+    expect(result.data.room.votes.get(create.data.participantId)).toBe("5");
   });
 
   it("rejects vote not in deck", () => {
@@ -371,7 +396,7 @@ describe("RoomService.clearVote", () => {
     const result = service.clearVote(roomId, "s1");
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.room.votes.has("s1")).toBe(false);
+    expect(result.data.room.votes.has(create.data.participantId)).toBe(false);
   });
 
   it("rejects clear after reveal", () => {
@@ -460,22 +485,24 @@ describe("RoomService.transferModerator", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
     const roomId = create.data.room.id;
-    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    const join = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!join.ok) return;
 
-    const result = service.transferModerator(roomId, "s1", "s2");
+    const result = service.transferModerator(roomId, "s1", join.data.participantId);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.data.room.moderatorId).toBe("s2");
+    expect(result.data.room.moderatorId).toBe(join.data.participantId);
   });
 
   it("reflects the new moderator in serialized room state", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
     const roomId = create.data.room.id;
-    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    const join = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!join.ok) return;
 
-    const result = service.transferModerator(roomId, "s1", "s2");
+    const result = service.transferModerator(roomId, "s1", join.data.participantId);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
@@ -483,20 +510,23 @@ describe("RoomService.transferModerator", () => {
     const newModeratorState = serializeRoom(result.data.room, "s2");
 
     expect(
-      previousModeratorState.participants.find((participant) => participant.id === "s1")?.isModerator
+      previousModeratorState.participants.find((participant) => participant.id === create.data.participantId)
+        ?.isModerator
     ).toBe(false);
-    expect(newModeratorState.participants.find((participant) => participant.id === "s2")?.isModerator).toBe(
-      true
-    );
+    expect(
+      newModeratorState.participants.find((participant) => participant.id === join.data.participantId)
+        ?.isModerator
+    ).toBe(true);
   });
 
   it("rejects transfer from a non-moderator", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
     const roomId = create.data.room.id;
-    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    const join = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!join.ok) return;
 
-    const result = service.transferModerator(roomId, "s2", "s1");
+    const result = service.transferModerator(roomId, "s2", create.data.participantId);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("NOT_ALLOWED");
   });
@@ -505,7 +535,7 @@ describe("RoomService.transferModerator", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
 
-    const result = service.transferModerator(create.data.room.id, "s1", "s1");
+    const result = service.transferModerator(create.data.room.id, "s1", create.data.participantId);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("NOT_ALLOWED");
   });
@@ -523,23 +553,25 @@ describe("RoomService.transferModerator", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
     const roomId = create.data.room.id;
-    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    const join = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!join.ok) return;
     service.disconnectParticipant(roomId, "s2");
 
-    const result = service.transferModerator(roomId, "s1", "s2");
+    const result = service.transferModerator(roomId, "s1", join.data.participantId);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.data.room.moderatorId).toBe("s2");
+    expect(result.data.room.moderatorId).toBe(join.data.participantId);
   });
 
   it("moves moderator-only permissions immediately", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
     const roomId = create.data.room.id;
-    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    const join = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!join.ok) return;
 
-    const transfer = service.transferModerator(roomId, "s1", "s2");
+    const transfer = service.transferModerator(roomId, "s1", join.data.participantId);
     expect(transfer.ok).toBe(true);
     if (!transfer.ok) return;
 
@@ -587,7 +619,7 @@ describe("RoomService.changeRole", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.room.participants.get("s1")!.role).toBe("spectator");
-    expect(result.data.room.votes.has("s1")).toBe(false);
+    expect(result.data.room.votes.has(create.data.participantId)).toBe(false);
   });
 });
 
@@ -766,5 +798,181 @@ describe("RoomService timer controls", () => {
     if (!nonModerator.ok) {
       expect(nonModerator.error.code).toBe("NOT_ALLOWED");
     }
+  });
+
+  it("records a per-participant lastHonkAt on success (F-10 per-sender cooldown)", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    const before = store.get(roomId)?.participants.get("s1");
+    expect(before?.lastHonkAt).toBeUndefined();
+
+    const first = service.honkTimer(roomId, "s1");
+    expect(first.ok).toBe(true);
+
+    const after = store.get(roomId)?.participants.get("s1");
+    expect(typeof after?.lastHonkAt).toBe("number");
+  });
+
+  it("per-participant cooldown rejects a re-honk even if room-level cooldown is cleared", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    const first = service.honkTimer(roomId, "s1");
+    expect(first.ok).toBe(true);
+
+    // Simulate the room-level gate having expired (e.g. if that window were
+    // ever shortened or removed). The per-participant gate must still hold.
+    const room = store.get(roomId)!;
+    room.timer.honkAvailableAt = null;
+
+    const second = service.honkTimer(roomId, "s1");
+    expect(second.ok).toBe(false);
+    if (!second.ok) expect(second.error.code).toBe("NOT_ALLOWED");
+  });
+
+  it("one participant's cooldown does not block a different eligible honker", () => {
+    // Alice creates the room, Bob joins. Alice honks, then transfers host to
+    // Bob. Clear the room-level cooldown so only the per-participant gate is
+    // in play. Bob (never honked) must be allowed to honk.
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    const join = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    expect(join.ok).toBe(true);
+    if (!join.ok) return;
+    const bobId = join.data.participantId;
+
+    const aliceHonk = service.honkTimer(roomId, "s1");
+    expect(aliceHonk.ok).toBe(true);
+
+    const transfer = service.transferModerator(roomId, "s1", bobId);
+    expect(transfer.ok).toBe(true);
+
+    // Clear the room-level gate to isolate the per-participant logic.
+    const room = store.get(roomId)!;
+    room.timer.honkAvailableAt = null;
+
+    const bobHonk = service.honkTimer(roomId, "s2");
+    expect(bobHonk.ok).toBe(true);
+    if (!bobHonk.ok) return;
+
+    const bob = store.get(roomId)?.participants.get("s2");
+    expect(typeof bob?.lastHonkAt).toBe("number");
+  });
+});
+
+describe("RoomService.createRoom — resource caps", () => {
+  it("rejects creation above the per-session moderator cap", () => {
+    const sessionId = "session-spam";
+    // MAX_ROOMS_MODERATED_PER_SESSION defaults to 5; create that many.
+    for (let i = 0; i < 5; i++) {
+      const res = service.createRoom(sessionId, `sock-${i}`, "Alice", "voter");
+      expect(res.ok).toBe(true);
+    }
+    const overflow = service.createRoom(sessionId, "sock-overflow", "Alice", "voter");
+    expect(overflow.ok).toBe(false);
+    if (!overflow.ok) {
+      expect(overflow.error.code).toBe("TOO_MANY_ROOMS");
+    }
+  });
+
+  it("different sessions do not share the per-session moderator cap", () => {
+    // Fill session A up to the cap.
+    for (let i = 0; i < 5; i++) {
+      const res = service.createRoom("session-A", `sock-A-${i}`, "Alice", "voter");
+      expect(res.ok).toBe(true);
+    }
+    // Session B should still be able to create rooms.
+    const res = service.createRoom("session-B", "sock-B", "Bob", "voter");
+    expect(res.ok).toBe(true);
+  });
+
+  it("frees a slot when a session loses moderator status via transfer", () => {
+    const sessionId = "session-transfer";
+    for (let i = 0; i < 5; i++) {
+      const res = service.createRoom(sessionId, `sock-${i}`, "Alice", "voter");
+      expect(res.ok).toBe(true);
+    }
+    // Overflow attempt blocked.
+    const blocked = service.createRoom(sessionId, "sock-blocked", "Alice", "voter");
+    expect(blocked.ok).toBe(false);
+
+    // Bring a second participant in and transfer moderator in one of the rooms.
+    const rooms = store.list();
+    const targetRoom = rooms[0];
+    const join = service.joinRoom(targetRoom.id, "session-target", "sock-t", "Bob", "voter");
+    if (!join.ok) throw new Error("join failed");
+    const transfer = service.transferModerator(targetRoom.id, sessionId, join.data.participantId);
+    expect(transfer.ok).toBe(true);
+
+    // Now the spam session moderates only 4 rooms; a 6th create succeeds.
+    const afterTransfer = service.createRoom(sessionId, "sock-after", "Alice", "voter");
+    expect(afterTransfer.ok).toBe(true);
+  });
+});
+
+describe("RoomService — hasBeenActive / empty-room short TTL", () => {
+  it("starts false on newly-created rooms", () => {
+    const create = service.createRoom("s-solo", "sock-solo", "Alice", "voter");
+    if (!create.ok) throw new Error("create failed");
+    expect(create.data.room.hasBeenActive).toBe(false);
+  });
+
+  it("is flipped true when a second participant joins", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) throw new Error("create failed");
+    const join = service.joinRoom(create.data.room.id, "s2", "sock-2", "Bob", "voter");
+    if (!join.ok) throw new Error("join failed");
+    expect(store.get(create.data.room.id)?.hasBeenActive).toBe(true);
+  });
+
+  it("is flipped true when a vote is cast", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) throw new Error("create failed");
+    const vote = service.castVote(create.data.room.id, "s1", "3");
+    expect(vote.ok).toBe(true);
+    expect(store.get(create.data.room.id)?.hasBeenActive).toBe(true);
+  });
+
+  it("uses the shorter empty-room TTL when the last participant disconnects from a never-active room", async () => {
+    const create = service.createRoom("s-abandon", "sock-abandon", "Alice", "voter");
+    if (!create.ok) throw new Error("create failed");
+    const roomId = create.data.room.id;
+
+    const disconnect = service.disconnectParticipant(roomId, "s-abandon");
+    expect(disconnect.ok).toBe(true);
+
+    const room = store.get(roomId);
+    if (!room) throw new Error("room gone too early");
+    const { EMPTY_ROOM_TTL_MS, ROOM_TTL_MS } = await import("../config.js");
+    // expiresAt is now + EMPTY_ROOM_TTL_MS — i.e. well below the full ROOM_TTL_MS.
+    expect(room.expiresAt - Date.now()).toBeLessThanOrEqual(EMPTY_ROOM_TTL_MS + 50);
+    expect(room.expiresAt - Date.now()).toBeLessThan(ROOM_TTL_MS);
+  });
+
+  it("keeps the full ROOM_TTL_MS on disconnect when the room has had real activity", async () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) throw new Error("create failed");
+    const roomId = create.data.room.id;
+
+    // Real activity: another participant joins.
+    const join = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!join.ok) throw new Error("join failed");
+    // Both leave.
+    service.disconnectParticipant(roomId, "s1");
+    const lastDisconnect = service.disconnectParticipant(roomId, "s2");
+    expect(lastDisconnect.ok).toBe(true);
+
+    const room = store.get(roomId);
+    if (!room) throw new Error("room missing");
+    const { ROOM_TTL_MS, EMPTY_ROOM_TTL_MS } = await import("../config.js");
+    // Expires under ROOM_TTL_MS, not the empty-room TTL.
+    const remaining = room.expiresAt - Date.now();
+    expect(remaining).toBeGreaterThan(EMPTY_ROOM_TTL_MS);
+    expect(remaining).toBeLessThanOrEqual(ROOM_TTL_MS + 50);
   });
 });

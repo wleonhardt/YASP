@@ -10,6 +10,7 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     createdAt: Date.now(),
     lastActivityAt: Date.now(),
     expiresAt: Date.now() + 86400000,
+    hasBeenActive: false,
     revealed: false,
     roundNumber: 1,
     deck: DEFAULT_DECKS.fibonacci,

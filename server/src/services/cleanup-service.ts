@@ -34,13 +34,13 @@ export class CleanupService {
       let changed = false;
 
       // Remove stale disconnected participants
-      for (const p of room.participants.values()) {
+      for (const [sessionId, p] of room.participants.entries()) {
         if (!p.connected && t - p.lastSeenAt > DISCONNECTED_PARTICIPANT_GRACE_MS) {
           // Clear auto-restore if the previous moderator is being cleaned up
           if (room.previousModeratorId === p.id) {
             room.previousModeratorId = null;
           }
-          room.participants.delete(p.id);
+          room.participants.delete(sessionId);
           room.votes.delete(p.id);
           changed = true;
         }

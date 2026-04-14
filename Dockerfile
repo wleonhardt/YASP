@@ -27,6 +27,11 @@ RUN npm run build:server
 FROM node:20-alpine
 WORKDIR /app
 
+# Copy build artifacts and runtime deps. Files retain their default root:root
+# ownership with world-readable bits, which is fine because the `node` user
+# (uid 1000, baked into the official Node Alpine image) only needs read
+# access. The app never writes to /app at runtime — all writes go to /tmp
+# (see EC2 `--tmpfs /tmp` in cdk/lib/ec2-origin-bootstrap.ts).
 COPY --from=base /app/package.json .
 COPY --from=base /app/shared/package.json shared/
 COPY --from=base /app/server/package.json server/
@@ -40,5 +45,17 @@ ENV NODE_ENV=production
 ENV PORT=3001
 
 EXPOSE 3001
+
+# Drop root. The official node:20-alpine image pre-creates a `node` user
+# (uid 1000). We don't chown /app — world-read perms are sufficient for a
+# read-only runtime and avoid a large COW layer.
+USER node
+
+# Docker-level healthcheck. Uses Node's built-in http client so it does not
+# depend on busybox `wget` (still present today, but this makes the check
+# resilient to base-image minimization). Runs as the `node` user with no
+# filesystem writes — compatible with --read-only.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://127.0.0.1:'+process.env.PORT+'/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))" || exit 1
 
 CMD ["node", "server/dist/index.js"]

@@ -17,7 +17,7 @@ concurrency:
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
   ECR_REPO: ${{ vars.ECR_REPO || 'yasp' }}
-  INSTANCE_ID: ${{ vars.INSTANCE_ID || 'i-003291a1bb795a624' }}
+  INSTANCE_ID: ${{ vars.INSTANCE_ID }}
   DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_IMAGE || 'wleonhardt/yasp' }}
 
 jobs:
@@ -36,6 +36,13 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          # Tagged STS session shows up in CloudTrail as
+          # `gh-deploy-yasp-<run_id>` so a specific workflow run can be
+          # traced back from any AWS API call the role made. The IAM
+          # trust policy should restrict `token.actions.githubusercontent.com:sub`
+          # to this repo+branch+environment — role-session-name is a log
+          # aid, not an auth factor.
+          role-session-name: gh-deploy-yasp-${{ github.run_id }}
 
       - name: Log in to ECR
         id: ecr-login
@@ -74,24 +81,67 @@ jobs:
           DEPLOY_SCRIPT=$(cat <<'SCRIPT'
           set -euxo pipefail
           IMAGE="__IMAGE__"
-          sed -i "s|^IMAGE_IDENTIFIER=.*|IMAGE_IDENTIFIER=\"${IMAGE}\"|" /usr/local/bin/yasp-run.sh
-          grep IMAGE_IDENTIFIER /usr/local/bin/yasp-run.sh
+          RUN_SCRIPT=/usr/local/bin/yasp-run.sh
+
+          # PR G / F-17 rollback support. Capture the currently-deployed
+          # IMAGE_IDENTIFIER *before* we mutate the run script, so that a
+          # failing deploy can restore the previous, known-good image.
+          PREV_IMAGE="$(grep -E '^IMAGE_IDENTIFIER=' "$RUN_SCRIPT" | head -n1 | sed -E 's/^IMAGE_IDENTIFIER="?([^"]*)"?$/\1/')"
+          echo "Previous image: ${PREV_IMAGE:-<none>}"
+          echo "Attempting image: ${IMAGE}"
+
+          wait_for_health() {
+            local n=0
+            while [ $n -lt 12 ]; do
+              n=$((n+1))
+              sleep 5
+              if curl -sf http://127.0.0.1:3001/api/health; then
+                echo
+                echo "Health check passed on attempt $n"
+                return 0
+              fi
+              echo "Attempt $n: not ready"
+            done
+            return 1
+          }
+
+          sed -i "s|^IMAGE_IDENTIFIER=.*|IMAGE_IDENTIFIER=\"${IMAGE}\"|" "$RUN_SCRIPT"
+          grep IMAGE_IDENTIFIER "$RUN_SCRIPT"
           systemctl restart yasp
           echo "Waiting for container to start..."
-          n=0
-          while [ $n -lt 12 ]; do
-            n=$((n+1))
-            sleep 5
-            if curl -sf http://127.0.0.1:3001/api/health; then
-              echo
-              echo "Health check passed on attempt $n"
-              exit 0
-            fi
-            echo "Attempt $n: not ready"
-          done
-          echo "HEALTH CHECK FAILED after 60s"
+          if wait_for_health; then
+            exit 0
+          fi
+
+          echo "HEALTH CHECK FAILED after 60s for image ${IMAGE}"
           systemctl status yasp --no-pager 2>&1 || true
-          docker logs yasp --tail 30 2>&1 || true
+          docker logs yasp --tail 50 2>&1 || true
+
+          # Rollback: only if we have a previous image recorded AND it is
+          # different from the one we just failed on. If PREV_IMAGE is
+          # empty (first deploy) or identical (unlikely — redeploy of the
+          # same tag), there is nothing to roll back to; exit failing so
+          # the workflow surfaces the problem.
+          if [ -z "$PREV_IMAGE" ] || [ "$PREV_IMAGE" = "$IMAGE" ]; then
+            echo "No distinct previous image to roll back to (prev=${PREV_IMAGE:-<none>}, attempted=${IMAGE}). Giving up."
+            exit 1
+          fi
+
+          echo "ROLLBACK: restoring previous image ${PREV_IMAGE}"
+          sed -i "s|^IMAGE_IDENTIFIER=.*|IMAGE_IDENTIFIER=\"${PREV_IMAGE}\"|" "$RUN_SCRIPT"
+          grep IMAGE_IDENTIFIER "$RUN_SCRIPT"
+          systemctl restart yasp
+
+          if wait_for_health; then
+            echo "ROLLBACK SUCCEEDED to ${PREV_IMAGE}"
+            # Still exit non-zero — the *intended* deploy failed, and we
+            # want the workflow to show red so the operator investigates.
+            exit 1
+          fi
+
+          echo "ROLLBACK FAILED — previous image ${PREV_IMAGE} also unhealthy"
+          systemctl status yasp --no-pager 2>&1 || true
+          docker logs yasp --tail 50 2>&1 || true
           exit 1
           SCRIPT
           )

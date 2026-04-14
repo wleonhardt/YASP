@@ -24,6 +24,7 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     createdAt: 1000,
     lastActivityAt: 1000,
     expiresAt: 99999999,
+    hasBeenActive: false,
     revealed: false,
     roundNumber: 1,
     deck: DEFAULT_DECKS.fibonacci,
@@ -43,8 +44,8 @@ describe("serializeRoom", () => {
     const p2 = makeParticipant({ id: "p2", sessionId: "s2", name: "Bob", joinedAt: 2000 });
     const room = makeRoom({
       participants: new Map([
-        ["p1", p1],
-        ["p2", p2],
+        ["s1", p1],
+        ["s2", p2],
       ]),
     });
 
@@ -58,7 +59,7 @@ describe("serializeRoom", () => {
   it("hides votes before reveal", () => {
     const p1 = makeParticipant();
     const room = makeRoom({
-      participants: new Map([["p1", p1]]),
+      participants: new Map([["s1", p1]]),
       votes: new Map([["p1", "5"]]),
       revealed: false,
     });
@@ -72,7 +73,7 @@ describe("serializeRoom", () => {
   it("exposes votes and stats after reveal", () => {
     const p1 = makeParticipant();
     const room = makeRoom({
-      participants: new Map([["p1", p1]]),
+      participants: new Map([["s1", p1]]),
       votes: new Map([["p1", "5"]]),
       revealed: true,
     });
@@ -86,7 +87,7 @@ describe("serializeRoom", () => {
   it("serializes timer state with remaining seconds", () => {
     const p1 = makeParticipant();
     const room = makeRoom({
-      participants: new Map([["p1", p1]]),
+      participants: new Map([["s1", p1]]),
       timer: {
         ...createRoomTimerState(),
         durationSeconds: 60,
@@ -106,7 +107,7 @@ describe("serializeRoom", () => {
   it("does not leak socketId", () => {
     const p1 = makeParticipant({ socketId: "secret-socket" });
     const room = makeRoom({
-      participants: new Map([["p1", p1]]),
+      participants: new Map([["s1", p1]]),
     });
 
     const state = serializeRoom(room, "s1");
@@ -120,9 +121,9 @@ describe("serializeRoom", () => {
     const p3 = makeParticipant({ id: "p3", sessionId: "s3", name: "Bob", joinedAt: 500 });
     const room = makeRoom({
       participants: new Map([
-        ["p1", p1],
-        ["p2", p2],
-        ["p3", p3],
+        ["s1", p1],
+        ["s2", p2],
+        ["s3", p3],
       ]),
     });
 
@@ -136,8 +137,8 @@ describe("serializeRoom", () => {
     const room = makeRoom({
       moderatorId: "p1",
       participants: new Map([
-        ["p1", p1],
-        ["p2", p2],
+        ["s1", p1],
+        ["s2", p2],
       ]),
     });
 
@@ -149,12 +150,59 @@ describe("serializeRoom", () => {
   it("handles unknown self session", () => {
     const p1 = makeParticipant();
     const room = makeRoom({
-      participants: new Map([["p1", p1]]),
+      participants: new Map([["s1", p1]]),
     });
 
     const state = serializeRoom(room, "unknown-session");
     expect(state.me.participantId).toBeNull();
     expect(state.me.connected).toBe(false);
     expect(state.participants[0].isSelf).toBe(false);
+  });
+
+  it("serializes public participant ids instead of session ids", () => {
+    const p1 = makeParticipant({ id: "public-alice", sessionId: "private-alice" });
+    const p2 = makeParticipant({ id: "public-bob", sessionId: "private-bob", name: "Bob", joinedAt: 2000 });
+    const room = makeRoom({
+      participants: new Map([
+        ["private-alice", p1],
+        ["private-bob", p2],
+      ]),
+      votes: new Map([
+        ["public-alice", "5"],
+        ["public-bob", "8"],
+      ]),
+      revealed: true,
+    });
+
+    const state = serializeRoom(room, "private-alice");
+
+    expect(state.participants.map((participant) => participant.id)).toEqual(["public-alice", "public-bob"]);
+    expect(state.participants.map((participant) => participant.id)).not.toContain("private-bob");
+    expect(state.votes).toEqual({
+      "public-alice": "5",
+      "public-bob": "8",
+    });
+    expect(state.me.participantId).toBe("public-alice");
+    expect(state.me.sessionId).toBe("private-alice");
+    expect(state.participants.every((participant) => !("sessionId" in participant))).toBe(true);
+  });
+
+  it("only includes the caller's private sessionId in me", () => {
+    const p1 = makeParticipant({ id: "public-alice", sessionId: "private-alice" });
+    const p2 = makeParticipant({ id: "public-bob", sessionId: "private-bob", name: "Bob", joinedAt: 2000 });
+    const room = makeRoom({
+      participants: new Map([
+        ["private-alice", p1],
+        ["private-bob", p2],
+      ]),
+    });
+
+    const aliceState = serializeRoom(room, "private-alice");
+    const bobState = serializeRoom(room, "private-bob");
+
+    expect(aliceState.me.sessionId).toBe("private-alice");
+    expect(bobState.me.sessionId).toBe("private-bob");
+    expect(aliceState.participants.every((participant) => participant.id !== "private-bob")).toBe(true);
+    expect(bobState.participants.every((participant) => participant.id !== "private-alice")).toBe(true);
   });
 });

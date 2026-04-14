@@ -83,10 +83,30 @@ export function buildEc2OriginUserData(props: Ec2OriginBootstrapProps): ec2.User
     'docker pull "$IMAGE_IDENTIFIER"',
     'docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true',
     "",
+    // Runtime hardening flags (SECURITY_REMEDIATION_PLAN.md / F-16):
+    //   --read-only                 : rootfs is immutable; app never writes to it
+    //   --tmpfs /tmp                 : the only writable path, sized at 64 MiB
+    //   --cap-drop ALL               : drop every Linux capability; Node web
+    //                                   servers don't need any of them
+    //   --security-opt no-new-privileges : block setuid escalation post-exec
+    //   --pids-limit 256             : bound fork bombs from an RCE
+    //   --memory / --memory-swap     : equal values disable swap; caps total RSS
+    //   --cpus                       : prevent a crashed/abusive container from
+    //                                   hogging the EC2 instance
+    // --publish stays loopback-only; CloudWatch logs driver is unaffected by
+    // --read-only because log writes happen outside the container.
     "exec docker run \\",
     "  --rm \\",
     '  --name "$CONTAINER_NAME" \\',
     `  --publish 127.0.0.1:${props.containerPort}:${props.containerPort} \\`,
+    "  --read-only \\",
+    "  --tmpfs /tmp:rw,nosuid,nodev,size=64m \\",
+    "  --cap-drop ALL \\",
+    "  --security-opt no-new-privileges \\",
+    "  --pids-limit 256 \\",
+    "  --memory 512m \\",
+    "  --memory-swap 512m \\",
+    "  --cpus 1.0 \\",
     "  --env NODE_ENV=production \\",
     `  --env PORT=${props.containerPort} \\`,
     "  --log-driver awslogs \\",

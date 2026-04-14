@@ -15,12 +15,25 @@ import {
 import type { Room, Participant } from "../domain/types.js";
 import { RoomStore } from "./room-store.js";
 import { resolveDeck } from "../domain/deck.js";
-import { reassignModeratorIfNeeded, findNextModerator, hasConnectedParticipants } from "../domain/room.js";
+import {
+  reassignModeratorIfNeeded,
+  findNextModerator,
+  hasConnectedParticipants,
+  findParticipantBySessionId,
+  findParticipantByPublicId,
+} from "../domain/room.js";
 import { createRoomTimerState, getRemainingSeconds } from "../domain/timer.js";
 import * as permissions from "../domain/permissions.js";
-import { generateRoomId } from "../utils/id.js";
+import { generateParticipantId, generateRoomId } from "../utils/id.js";
 import { now } from "../utils/time.js";
-import { ROOM_TTL_MS } from "../config.js";
+import {
+  ROOM_TTL_MS,
+  EMPTY_ROOM_TTL_MS,
+  MAX_ROOM_PARTICIPANTS,
+  MAX_ACTIVE_ROOMS,
+  MAX_ROOMS_MODERATED_PER_SESSION,
+  PARTICIPANT_HONK_COOLDOWN_MS,
+} from "../config.js";
 import { logger } from "../utils/logger.js";
 import {
   validateName,
@@ -44,6 +57,29 @@ function touchRoom(room: Room): void {
   const t = now();
   room.lastActivityAt = t;
   room.expiresAt = t + ROOM_TTL_MS;
+  // Any call-site that reaches touchRoom is a real action (join, vote, reveal,
+  // reset, deck change, settings change, name/role change, timer op). Flip
+  // the activity flag so disconnect handling no longer applies the shorter
+  // empty-room TTL to this room.
+  room.hasBeenActive = true;
+}
+
+/**
+ * Count how many currently-stored rooms have this session as moderator.
+ * O(N rooms); called only on create_room, which is already rare relative
+ * to other socket traffic. Avoids keeping a separate index (and the
+ * invariant-maintenance burden) for a cap that only needs to hold against
+ * honest clients.
+ */
+function countRoomsModeratedBy(rooms: Iterable<Room>, sessionId: SessionId): number {
+  let count = 0;
+  for (const room of rooms) {
+    const participant = room.participants.get(sessionId);
+    if (participant && room.moderatorId === participant.id) {
+      count++;
+    }
+  }
+  return count;
 }
 
 function resetRoundState(room: Room): void {
@@ -82,9 +118,29 @@ export class RoomService {
       deckInput = normalizeDeckInput(deckInput);
     }
 
+    // Global cap: stop new allocations above MAX_ACTIVE_ROOMS. Existing rooms
+    // keep working; only new create_room calls are rejected.
+    const activeRooms = this.store.list();
+    if (activeRooms.length >= MAX_ACTIVE_ROOMS) {
+      logger.warn("Room creation rejected: global cap", { activeRooms: activeRooms.length });
+      return fail({ code: "SERVER_BUSY", message: "Server is at capacity, try again later" });
+    }
+
+    // Per-session cap: one sessionId can moderate up to
+    // MAX_ROOMS_MODERATED_PER_SESSION rooms at any moment. This is an honest-
+    // client sanity check; attackers rotating sessionIds are constrained by
+    // the per-IP connection and event caps.
+    if (countRoomsModeratedBy(activeRooms, sessionId) >= MAX_ROOMS_MODERATED_PER_SESSION) {
+      logger.warn("Room creation rejected: per-session moderator cap", { sessionId });
+      return fail({
+        code: "TOO_MANY_ROOMS",
+        message: "Too many active rooms for this session",
+      });
+    }
+
     const roomId = this.generateUniqueRoomId();
     const t = now();
-    const participantId = sessionId; // v1: participantId === sessionId
+    const participantId = generateParticipantId();
 
     const participant: Participant = {
       id: participantId,
@@ -102,6 +158,10 @@ export class RoomService {
       createdAt: t,
       lastActivityAt: t,
       expiresAt: t + ROOM_TTL_MS,
+      // Starts false. Flipped true by touchRoom on the first real activity
+      // (second participant join, vote, reveal, etc.). Rooms that stay false
+      // and lose their last connected participant get EMPTY_ROOM_TTL_MS.
+      hasBeenActive: false,
       revealed: false,
       roundNumber: 1,
       deck: resolveDeck(deckInput),
@@ -109,7 +169,7 @@ export class RoomService {
       timer: createRoomTimerState(),
       moderatorId: participantId,
       previousModeratorId: null,
-      participants: new Map([[participantId, participant]]),
+      participants: new Map([[sessionId, participant]]),
       votes: new Map(),
     };
 
@@ -138,11 +198,17 @@ export class RoomService {
       return fail({ code: "SPECTATORS_DISABLED", message: "Spectators are not allowed in this room" });
     }
 
-    const participantId = sessionId;
-    const existing = room.participants.get(participantId);
+    const existing = findParticipantBySessionId(room, sessionId);
+
+    // Enforce participant limit for new joins (reconnects are always allowed)
+    if (!existing && room.participants.size >= MAX_ROOM_PARTICIPANTS) {
+      return fail({ code: "ROOM_FULL", message: "Room is full" });
+    }
     let replacedSocketId: SocketId | null = null;
+    let participantId: string;
 
     if (existing) {
+      participantId = existing.id;
       const reconnectedAt = now();
       // Reconnect / tab takeover
       replacedSocketId = existing.socketId;
@@ -154,13 +220,14 @@ export class RoomService {
         existing.name = sanitizeName(displayName);
       }
       // Restore moderator status if this participant was auto-demoted on disconnect
-      if (room.previousModeratorId === participantId) {
-        room.moderatorId = participantId;
+      if (room.previousModeratorId === existing.id) {
+        room.moderatorId = existing.id;
         room.previousModeratorId = null;
-        logger.info("Moderator restored on reconnect", { roomId, participantId });
+        logger.info("Moderator restored on reconnect", { roomId, participantId: existing.id });
       }
       // Preserve prior vote for current round
     } else {
+      participantId = generateParticipantId();
       const joinedAt = now();
       // New participant
       const participant: Participant = {
@@ -173,7 +240,7 @@ export class RoomService {
         joinedAt,
         lastSeenAt: joinedAt,
       };
-      room.participants.set(participantId, participant);
+      room.participants.set(sessionId, participant);
     }
 
     // Assign moderator if none
@@ -186,24 +253,24 @@ export class RoomService {
     return success({ room, participantId, replacedSocketId });
   }
 
-  leaveRoom(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+  leaveRoom(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
 
-    const participant = room.participants.get(participantId);
+    const participant = findParticipantBySessionId(room, sessionId);
     if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
 
     // Remove participant and their vote
-    room.participants.delete(participantId);
-    room.votes.delete(participantId);
+    room.participants.delete(sessionId);
+    room.votes.delete(participant.id);
 
     // Clear auto-restore if the previous moderator is leaving
-    if (room.previousModeratorId === participantId) {
+    if (room.previousModeratorId === participant.id) {
       room.previousModeratorId = null;
     }
 
     // Reassign moderator if needed
-    if (room.moderatorId === participantId) {
+    if (room.moderatorId === participant.id) {
       room.moderatorId = null;
       reassignModeratorIfNeeded(room);
     }
@@ -212,11 +279,11 @@ export class RoomService {
     return success({ room });
   }
 
-  disconnectParticipant(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+  disconnectParticipant(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
 
-    const participant = room.participants.get(participantId);
+    const participant = findParticipantBySessionId(room, sessionId);
     if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
 
     const disconnectedAt = now();
@@ -227,33 +294,38 @@ export class RoomService {
     // If the moderator disconnected, hand off to the next connected participant
     // so the room isn't stuck without anyone who can reveal/reset.
     // Track the previous moderator so we can restore them on reconnect.
-    if (room.moderatorId === participantId && hasConnectedParticipants(room)) {
-      const next = findNextModerator(room, participantId);
+    if (room.moderatorId === participant.id && hasConnectedParticipants(room)) {
+      const next = findNextModerator(room, participant.id);
       if (next && next.connected) {
-        room.previousModeratorId = participantId;
+        room.previousModeratorId = participant.id;
         room.moderatorId = next.id;
         logger.info("Moderator disconnected, auto-transferred", {
           roomId,
-          from: participantId,
+          from: participant.id,
           to: next.id,
         });
       }
     }
 
-    // If no connected participants remain, reset expiry
+    // If no connected participants remain, reset expiry. Rooms that have
+    // never had real activity get the shorter EMPTY_ROOM_TTL_MS so
+    // create-and-abandon spam is reaped quickly. Rooms with real activity
+    // keep the full ROOM_TTL_MS so participants who briefly disconnect
+    // (tab reload, network blip, short break) can reconnect to their room.
     if (!hasConnectedParticipants(room)) {
-      room.expiresAt = disconnectedAt + ROOM_TTL_MS;
+      const ttl = room.hasBeenActive ? ROOM_TTL_MS : EMPTY_ROOM_TTL_MS;
+      room.expiresAt = disconnectedAt + ttl;
     }
 
-    logger.info("Participant disconnected", { roomId, participantId });
+    logger.info("Participant disconnected", { roomId, participantId: participant.id });
     return success({ room });
   }
 
-  castVote(roomId: RoomId, participantId: string, value: VoteValue): AckResult<{ room: Room }> {
+  castVote(roomId: RoomId, sessionId: string, value: VoteValue): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
 
-    const participant = room.participants.get(participantId);
+    const participant = findParticipantBySessionId(room, sessionId);
     if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
     if (!participant.connected) return fail({ code: "NOT_ALLOWED", message: "Participant is not connected" });
     if (participant.role !== "voter") return fail({ code: "NOT_ALLOWED", message: "Spectators cannot vote" });
@@ -262,29 +334,31 @@ export class RoomService {
     const voteCheck = validateVote(value, room.deck.cards);
     if (!voteCheck.valid) return fail(voteCheck.error);
 
-    room.votes.set(participantId, value);
+    room.votes.set(participant.id, value);
     touchRoom(room);
     return success({ room });
   }
 
-  clearVote(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+  clearVote(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
 
-    const participant = room.participants.get(participantId);
+    const participant = findParticipantBySessionId(room, sessionId);
     if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
     if (room.revealed) return fail({ code: "ALREADY_REVEALED", message: "Cannot clear vote after reveal" });
 
-    room.votes.delete(participantId);
+    room.votes.delete(participant.id);
     touchRoom(room);
     return success({ room });
   }
 
-  revealVotes(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+  revealVotes(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
     if (room.revealed) return fail({ code: "ALREADY_REVEALED", message: "Already revealed" });
-    if (!permissions.canReveal(room, participantId)) {
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canReveal(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Not allowed to reveal votes" });
     }
 
@@ -293,10 +367,12 @@ export class RoomService {
     return success({ room });
   }
 
-  resetRound(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+  resetRound(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
-    if (!permissions.canReset(room, participantId)) {
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canReset(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Not allowed to reset round" });
     }
 
@@ -305,10 +381,12 @@ export class RoomService {
     return success({ room });
   }
 
-  nextRound(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+  nextRound(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
-    if (!permissions.canNextRound(room, participantId)) {
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canNextRound(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Not allowed to advance round" });
     }
 
@@ -320,40 +398,38 @@ export class RoomService {
 
   transferModerator(
     roomId: RoomId,
-    participantId: string,
+    sessionId: string,
     targetParticipantId: string
   ): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
 
-    const participant = room.participants.get(participantId);
+    const participant = findParticipantBySessionId(room, sessionId);
     if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
-    if (!permissions.canTransferModerator(room, participantId)) {
+    if (!permissions.canTransferModerator(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Only the moderator can transfer host" });
     }
-    if (participantId === targetParticipantId) {
+    if (participant.id === targetParticipantId) {
       return fail({ code: "NOT_ALLOWED", message: "Choose another participant to transfer host" });
     }
 
-    const targetParticipant = room.participants.get(targetParticipantId);
+    const targetParticipant = findParticipantByPublicId(room, targetParticipantId);
     if (!targetParticipant) {
       return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
     }
 
-    room.moderatorId = targetParticipantId;
+    room.moderatorId = targetParticipant.id;
     room.previousModeratorId = null; // Manual transfer clears auto-restore
     touchRoom(room);
     return success({ room });
   }
 
-  setTimerDuration(
-    roomId: RoomId,
-    participantId: string,
-    durationSeconds: number
-  ): AckResult<{ room: Room }> {
+  setTimerDuration(roomId: RoomId, sessionId: string, durationSeconds: number): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
-    if (!permissions.isModerator(room, participantId)) {
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.isModerator(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Only the moderator can change the timer" });
     }
     if (!ROOM_TIMER_PRESETS.includes(durationSeconds as (typeof ROOM_TIMER_PRESETS)[number])) {
@@ -371,10 +447,12 @@ export class RoomService {
     return success({ room });
   }
 
-  startTimer(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+  startTimer(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
-    if (!permissions.isModerator(room, participantId)) {
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.isModerator(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Only the moderator can start the timer" });
     }
 
@@ -388,10 +466,12 @@ export class RoomService {
     return success({ room });
   }
 
-  pauseTimer(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+  pauseTimer(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
-    if (!permissions.isModerator(room, participantId)) {
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.isModerator(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Only the moderator can pause the timer" });
     }
 
@@ -401,10 +481,12 @@ export class RoomService {
     return success({ room });
   }
 
-  resetTimer(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+  resetTimer(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
-    if (!permissions.isModerator(room, participantId)) {
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.isModerator(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Only the moderator can reset the timer" });
     }
 
@@ -427,25 +509,37 @@ export class RoomService {
     return success({ room });
   }
 
-  honkTimer(roomId: RoomId, participantId: string): AckResult<{ room: Room }> {
+  honkTimer(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
-    if (!permissions.isModerator(room, participantId)) {
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.isModerator(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Only the moderator can honk the timer" });
     }
 
     const t = now();
+    // Room-level cooldown first — keeps the broadcast rate bounded regardless
+    // of who is honking.
     if (room.timer.honkAvailableAt !== null && t < room.timer.honkAvailableAt) {
       return fail({ code: "NOT_ALLOWED", message: "Please wait before sending another reminder" });
     }
+    // Per-participant cooldown (F-10). Defense-in-depth: today only the
+    // moderator can honk and the 5s room gate is strictly tighter, but this
+    // guarantees a single sender cannot exceed the per-participant rate even
+    // if the permission model ever widens or the room-level gate is relaxed.
+    if (participant.lastHonkAt !== undefined && t - participant.lastHonkAt < PARTICIPANT_HONK_COOLDOWN_MS) {
+      return fail({ code: "NOT_ALLOWED", message: "Please wait before sending another reminder" });
+    }
 
+    participant.lastHonkAt = t;
     room.timer.lastHonkAt = t;
     room.timer.honkAvailableAt = t + ROOM_TIMER_HONK_COOLDOWN_MS;
     touchRoom(room);
     return success({ room });
   }
 
-  changeName(roomId: RoomId, participantId: string, name: string): AckResult<{ room: Room }> {
+  changeName(roomId: RoomId, sessionId: string, name: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
     if (!permissions.canChangeName(room)) {
@@ -455,7 +549,7 @@ export class RoomService {
     const nameCheck = validateName(name);
     if (!nameCheck.valid) return fail(nameCheck.error);
 
-    const participant = room.participants.get(participantId);
+    const participant = findParticipantBySessionId(room, sessionId);
     if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
 
     participant.name = sanitizeName(name);
@@ -463,7 +557,7 @@ export class RoomService {
     return success({ room });
   }
 
-  changeRole(roomId: RoomId, participantId: string, role: ParticipantRole): AckResult<{ room: Room }> {
+  changeRole(roomId: RoomId, sessionId: string, role: ParticipantRole): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
     if (!permissions.canChangeRole(room)) {
@@ -477,24 +571,26 @@ export class RoomService {
       return fail({ code: "SPECTATORS_DISABLED", message: "Spectators are not allowed" });
     }
 
-    const participant = room.participants.get(participantId);
+    const participant = findParticipantBySessionId(room, sessionId);
     if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
 
     participant.role = role;
 
     // If switching to spectator, remove their vote
     if (role === "spectator") {
-      room.votes.delete(participantId);
+      room.votes.delete(participant.id);
     }
 
     touchRoom(room);
     return success({ room });
   }
 
-  changeDeck(roomId: RoomId, participantId: string, deckInput: DeckInput): AckResult<{ room: Room }> {
+  changeDeck(roomId: RoomId, sessionId: string, deckInput: DeckInput): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
-    if (!permissions.canChangeDeck(room, participantId)) {
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canChangeDeck(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Not allowed to change deck" });
     }
 
@@ -513,12 +609,14 @@ export class RoomService {
 
   updateSettings(
     roomId: RoomId,
-    participantId: string,
+    sessionId: string,
     settingsUpdate: Partial<RoomSettings>
   ): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
-    if (!permissions.canUpdateSettings(room, participantId)) {
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canUpdateSettings(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Only the moderator can update settings" });
     }
 
