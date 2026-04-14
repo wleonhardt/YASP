@@ -38,8 +38,11 @@ This stack is appropriate for a small internal tool, not a high-assurance securi
 - EC2 allows inbound only from the CloudFront origin-facing prefix list on port 80
 - WAF provides managed rule protection and rate limiting
 - Secrets passed as CloudFormation `NoEcho` parameters
+- The YASP container runs as a non-root user on a read-only rootfs with all Linux capabilities dropped, `no-new-privileges`, and bounded `--pids-limit` / `--memory` / `--cpus` (see [`lib/ec2-origin-bootstrap.ts`](./lib/ec2-origin-bootstrap.ts))
 
 **Tradeoffs:** The Basic Auth credential is visible in the CloudFront Function source in AWS. The origin secret is present in the synthesized template and on the instance. This is pragmatic deterrence — if the threat model grows, move to a real IdP.
+
+For the full security picture (threat model, audit findings, remaining backlog) see the top-level [`SECURITY_THREAT_MODEL.md`](../SECURITY_THREAT_MODEL.md), [`SECURITY_AUDIT_REPORT.md`](../SECURITY_AUDIT_REPORT.md), and [`SECURITY_REMEDIATION_PLAN.md`](../SECURITY_REMEDIATION_PLAN.md).
 
 ## Prerequisites
 
@@ -175,7 +178,22 @@ fields @timestamp, event, message, stack
 
 ### Deploy a new image
 
-Build, tag, push, then re-run `cdk deploy` with the new `-c imageTag=<version>`. Changing the image reference replaces the instance — this is intentional for reproducibility but disrupts active rooms.
+There are two supported paths, depending on whether you want a full stack redeploy or just an image swap.
+
+**Path A — GitHub Actions (preferred for routine deploys).** `.github/workflows/deploy-aws.yml` runs on every successful push to `main`: it pulls the image from Docker Hub, pushes to ECR, and uses SSM to rewrite `/usr/local/bin/yasp-run.sh` on the instance and restart the `yasp` systemd unit. The deploy script captures the previously-deployed `IMAGE_IDENTIFIER` before the swap; if the new image fails its `/api/health` check, it automatically restores the previous image and restarts. The workflow still exits non-zero after a rollback so the failure surfaces red.
+
+Required GitHub Actions variables (set under **Settings → Environments → `production` → Environment variables**):
+
+| Variable          | Example                     | Purpose |
+| ----------------- | --------------------------- | ------- |
+| `INSTANCE_ID`     | `i-0123456789abcdef0`       | Target EC2 instance for the SSM deploy |
+| `AWS_REGION`      | `us-east-1`                 | Region of the ECR repo + instance |
+| `ECR_REPO`        | `yasp`                      | ECR repository name |
+| `DOCKERHUB_IMAGE` | `wleonhardt/yasp`           | Public Docker Hub source image |
+
+The workflow also needs `secrets.AWS_DEPLOY_ROLE_ARN` pointing at an IAM role whose trust policy restricts GitHub OIDC `sub` to this repo + branch + the `production` environment.
+
+**Path B — full CDK redeploy.** Build, tag, push, then re-run `cdk deploy` with the new `-c imageTag=<version>`. Changing the image reference replaces the instance — this is intentional for reproducibility but disrupts active rooms. Use this when the userdata, security group, WAF rules, or other stack-level resources change; for plain image swaps prefer Path A.
 
 ### Rotate credentials
 
