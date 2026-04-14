@@ -20,8 +20,8 @@
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
-    "@types/node": "^20.14.10",
+    "@types/node": "^25.6.0",
     "tsx": "^4.16.2",
-    "vitest": "^1.6.0"
+    "vitest": "^4.1.4"
   }
 }
