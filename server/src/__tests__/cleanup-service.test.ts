@@ -10,7 +10,10 @@ let store: RoomStore;
 let roomService: RoomService;
 let timerService: TimerService;
 let emit: ReturnType<typeof vi.fn>;
-let io: { to: ReturnType<typeof vi.fn<unknown[], { emit: typeof emit }>> };
+// Structural shape of the io.to(...) mock. Avoid vi.fn generics here:
+// their signature differs between vitest v2 (<TArgs, TReturn>) and v3
+// (<TFn>), so a plain callable type stays compatible with both majors.
+let io: { to: (...args: unknown[]) => { emit: typeof emit } };
 let cleanupService: CleanupService;
 
 beforeEach(() => {
