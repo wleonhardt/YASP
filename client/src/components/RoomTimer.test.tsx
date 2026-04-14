@@ -243,7 +243,7 @@ describe("RoomTimer", () => {
   it("plays a local honk immediately after a successful honk action even when sound preference is off", async () => {
     const user = userEvent.setup();
     const props = handlers();
-    vi.spyOn(storage, "getStoredTimerSoundEnabled").mockReturnValue(false);
+    storage.setStoredTimerSoundEnabled(false);
 
     render(<RoomTimer state={makePublicRoomState()} {...props} />);
 
@@ -385,7 +385,7 @@ describe("RoomTimer", () => {
   it("keeps timer sounds off when the stored preference is off", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(0));
-    vi.spyOn(storage, "getStoredTimerSoundEnabled").mockReturnValue(false);
+    storage.setStoredTimerSoundEnabled(false);
 
     const props = handlers();
     const { rerender } = render(

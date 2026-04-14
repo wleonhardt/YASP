@@ -174,7 +174,7 @@ describe("ModeratorControls", () => {
   });
 
   it("shows sound off in the compact drawer summary when the stored preference is off", () => {
-    vi.spyOn(storage, "getStoredTimerSoundEnabled").mockReturnValue(false);
+    storage.setStoredTimerSoundEnabled(false);
 
     render(<ModeratorControls compact state={makeState()} {...handlers()} />);
 
