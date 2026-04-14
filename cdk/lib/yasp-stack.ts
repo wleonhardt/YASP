@@ -33,7 +33,7 @@ export interface YaspStackProps extends cdk.StackProps {
   imageDigest?: string;
   alarmTopicArn?: string;
   instanceType?: string;
-  domainName?: string;
+  domainNames?: string[];
   certificateArn?: string;
 }
 
@@ -113,9 +113,11 @@ export class YaspStack extends cdk.Stack {
       imageDigest,
       alarmTopicArn,
       instanceType = DEFAULT_INSTANCE_TYPE,
-      domainName,
+      domainNames,
       certificateArn,
     } = props;
+
+    const hasDomains = !!domainNames && domainNames.length > 0;
 
     let basicAuthUsername: string | undefined;
     let basicAuthPassword: string | undefined;
@@ -372,12 +374,12 @@ export class YaspStack extends cdk.Stack {
     });
 
     const certificate =
-      certificateArn && domainName
+      certificateArn && hasDomains
         ? acm.Certificate.fromCertificateArn(this, "DomainCertificate", certificateArn)
         : undefined;
 
     const distribution = new cloudfront.Distribution(this, "YaspCdn", {
-      ...(domainName ? { domainNames: [domainName] } : {}),
+      ...(hasDomains ? { domainNames } : {}),
       ...(certificate ? { certificate } : {}),
       defaultBehavior: {
         origin: new origins.HttpOrigin(instance.instancePublicDnsName, {

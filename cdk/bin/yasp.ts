@@ -19,8 +19,16 @@ const imageDigest = app.node.tryGetContext("imageDigest") as string | undefined;
 // Optional SNS topic ARN for alarm notifications.
 const alarmTopicArn = app.node.tryGetContext("alarmTopicArn") as string | undefined;
 
-// Optional custom domain.
-const domainName = app.node.tryGetContext("domainName") as string | undefined;
+// Optional custom domain(s). Accepts a single host or comma-separated list,
+// e.g. `-c domainName=app.yasp.team,www.yasp.team`. Every name must be covered
+// by the ACM certificate referenced by certificateArn (SANs or wildcard).
+const domainNameContext = app.node.tryGetContext("domainName") as string | undefined;
+const domainNames = domainNameContext
+  ? domainNameContext
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  : undefined;
 const certificateArn = app.node.tryGetContext("certificateArn") as string | undefined;
 
 new YaspStack(app, "YaspStack", {
@@ -33,7 +41,7 @@ new YaspStack(app, "YaspStack", {
   imageDigest,
   alarmTopicArn,
   instanceType,
-  domainName,
+  domainNames,
   certificateArn,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
