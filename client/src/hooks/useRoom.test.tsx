@@ -10,7 +10,11 @@ type AckCallback<T> = (result: AckResult<T>) => void;
 function createSocketMock(): Socket {
   const listeners = new Map<string, Set<Listener>>();
 
-  const socket = {
+  const socket: {
+    on: unknown;
+    off: unknown;
+    emit: unknown;
+  } = {
     on: vi.fn((event: string, listener: Listener) => {
       const current = listeners.get(event) ?? new Set<Listener>();
       current.add(listener);

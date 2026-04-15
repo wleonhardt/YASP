@@ -1,4 +1,5 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import type { Ref } from "react";
 import { useTranslation } from "react-i18next";
 import type { PermissionPolicy, PublicRoomState, RoomSettings } from "@yasp/shared";
 import { isMeModerator } from "../lib/room";
@@ -15,7 +16,7 @@ type PolicySettingProps = {
   value: PermissionPolicy;
   onChange: (value: PermissionPolicy) => void;
   disabled?: boolean;
-  inputRef?: React.RefObject<HTMLSelectElement | null>;
+  inputRef?: Ref<HTMLSelectElement>;
 };
 
 type ToggleSettingProps = {
@@ -114,12 +115,10 @@ export function RoomSettingsPanel({ state, onUpdateSettings, disabled = false }:
   const policyLabel = (policy: PermissionPolicy) =>
     policy === "anyone" ? t("room.policyLabel.anyone") : t("room.policyLabel.moderatorOnly");
 
-  const summary = useMemo(() => {
-    const spectatorsState = state.settings.allowSpectators ? t("landing.settingOn") : t("landing.settingOff");
-    return `${t("room.revealVotes")}: ${policyLabel(state.settings.revealPolicy)} • ${t(
-      "room.allowSpectators"
-    )}: ${spectatorsState}`;
-  }, [state.settings.allowSpectators, state.settings.revealPolicy, t]);
+  const spectatorsState = state.settings.allowSpectators ? t("landing.settingOn") : t("landing.settingOff");
+  const summary = `${t("room.revealVotes")}: ${policyLabel(state.settings.revealPolicy)} • ${t(
+    "room.allowSpectators"
+  )}: ${spectatorsState}`;
 
   useEffect(() => {
     if (open) {
