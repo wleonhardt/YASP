@@ -309,6 +309,89 @@ describe("ModeratorControls", () => {
     expect(props.onUpdateSettings).toHaveBeenNthCalledWith(2, { allowSpectators: false });
   });
 
+  it("sends the expected payload for every exposed room setting control", async () => {
+    const user = userEvent.setup();
+    const props = handlers();
+
+    render(<ModeratorControls compact={false} state={makeState()} {...props} />);
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+    const scope = within(panel);
+
+    await user.click(scope.getByRole("button", { name: /room settings/i }));
+    await user.selectOptions(scope.getByRole("combobox", { name: /reveal votes/i }), "anyone");
+    await user.selectOptions(scope.getByRole("combobox", { name: /reset round/i }), "anyone");
+    await user.selectOptions(scope.getByRole("combobox", { name: /deck changes/i }), "anyone");
+    await user.click(scope.getByRole("checkbox", { name: /allow name changes/i }));
+    await user.click(scope.getByRole("checkbox", { name: /allow role switching/i }));
+    await user.click(scope.getByRole("checkbox", { name: /allow spectators/i }));
+
+    expect(props.onUpdateSettings).toHaveBeenNthCalledWith(1, { revealPolicy: "anyone" });
+    expect(props.onUpdateSettings).toHaveBeenNthCalledWith(2, { resetPolicy: "anyone" });
+    expect(props.onUpdateSettings).toHaveBeenNthCalledWith(3, { deckChangePolicy: "anyone" });
+    expect(props.onUpdateSettings).toHaveBeenNthCalledWith(4, { allowNameChange: false });
+    expect(props.onUpdateSettings).toHaveBeenNthCalledWith(5, { allowSelfRoleSwitch: false });
+    expect(props.onUpdateSettings).toHaveBeenNthCalledWith(6, { allowSpectators: false });
+  });
+
+  it("reflects the latest room snapshot values when settings change", async () => {
+    const user = userEvent.setup();
+    const props = handlers();
+    const { rerender } = render(<ModeratorControls compact={false} state={makeState()} {...props} />);
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+    const scope = within(panel);
+
+    await user.click(scope.getByRole("button", { name: /room settings/i }));
+
+    expect(scope.getByRole("combobox", { name: /reveal votes/i })).toHaveValue("moderator_only");
+    expect(scope.getByRole("combobox", { name: /reset round/i })).toHaveValue("moderator_only");
+    expect(scope.getByRole("combobox", { name: /deck changes/i })).toHaveValue("moderator_only");
+    expect(scope.getByRole("checkbox", { name: /allow name changes/i })).toBeChecked();
+    expect(scope.getByRole("checkbox", { name: /allow role switching/i })).toBeChecked();
+    expect(scope.getByRole("checkbox", { name: /allow spectators/i })).toBeChecked();
+
+    rerender(
+      <ModeratorControls
+        compact={false}
+        state={makeState({
+          settings: {
+            revealPolicy: "anyone",
+            resetPolicy: "anyone",
+            deckChangePolicy: "anyone",
+            allowNameChange: false,
+            allowSelfRoleSwitch: false,
+            allowSpectators: false,
+            autoReveal: false,
+            autoRevealDelayMs: 1500,
+          },
+        })}
+        {...props}
+      />
+    );
+
+    expect(scope.getByRole("combobox", { name: /reveal votes/i })).toHaveValue("anyone");
+    expect(scope.getByRole("combobox", { name: /reset round/i })).toHaveValue("anyone");
+    expect(scope.getByRole("combobox", { name: /deck changes/i })).toHaveValue("anyone");
+    expect(scope.getByRole("checkbox", { name: /allow name changes/i })).not.toBeChecked();
+    expect(scope.getByRole("checkbox", { name: /allow role switching/i })).not.toBeChecked();
+    expect(scope.getByRole("checkbox", { name: /allow spectators/i })).not.toBeChecked();
+  });
+
+  it("does not expose auto reveal controls in the v1 settings panel", async () => {
+    const user = userEvent.setup();
+
+    render(<ModeratorControls compact={false} state={makeState()} {...handlers()} />);
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+    const scope = within(panel);
+
+    await user.click(scope.getByRole("button", { name: /room settings/i }));
+
+    expect(scope.queryByText(/auto reveal/i)).not.toBeInTheDocument();
+    expect(scope.queryByText(/auto reveal delay/i)).not.toBeInTheDocument();
+  });
+
   it("opens and closes room settings from the keyboard", async () => {
     const user = userEvent.setup();
 
@@ -327,5 +410,40 @@ describe("ModeratorControls", () => {
 
     expect(screen.queryByRole("combobox", { name: /reveal votes/i })).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
+  });
+
+  it("supports keyboard tab navigation through the settings controls", async () => {
+    const user = userEvent.setup();
+
+    render(<ModeratorControls compact={false} state={makeState()} {...handlers()} />);
+
+    const trigger = screen.getByRole("button", { name: /room settings/i });
+    trigger.focus();
+
+    await user.keyboard("{Enter}");
+
+    const revealPolicy = screen.getByRole("combobox", { name: /reveal votes/i });
+    const resetPolicy = screen.getByRole("combobox", { name: /reset round/i });
+    const deckChangePolicy = screen.getByRole("combobox", { name: /deck changes/i });
+    const allowNameChange = screen.getByRole("checkbox", { name: /allow name changes/i });
+    const allowRoleSwitch = screen.getByRole("checkbox", { name: /allow role switching/i });
+    const allowSpectators = screen.getByRole("checkbox", { name: /allow spectators/i });
+
+    expect(revealPolicy).toHaveFocus();
+
+    await user.tab();
+    expect(resetPolicy).toHaveFocus();
+
+    await user.tab();
+    expect(deckChangePolicy).toHaveFocus();
+
+    await user.tab();
+    expect(allowNameChange).toHaveFocus();
+
+    await user.tab();
+    expect(allowRoleSwitch).toHaveFocus();
+
+    await user.tab();
+    expect(allowSpectators).toHaveFocus();
   });
 });

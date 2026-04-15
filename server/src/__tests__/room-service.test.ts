@@ -679,6 +679,42 @@ describe("RoomService.updateSettings", () => {
     expect(result.data.room.revealed).toBe(false);
   });
 
+  it("serializes the current settings for reconnecting and newly joined clients", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    const updated = service.updateSettings(roomId, "s1", {
+      revealPolicy: "anyone",
+      resetPolicy: "anyone",
+      deckChangePolicy: "anyone",
+      allowNameChange: false,
+      allowSelfRoleSwitch: false,
+      allowSpectators: false,
+    });
+    expect(updated.ok).toBe(true);
+    if (!updated.ok) return;
+
+    service.disconnectParticipant(roomId, "s1");
+    const reconnect = service.joinRoom(roomId, "s1", "sock-2", "Alice", "voter");
+    expect(reconnect.ok).toBe(true);
+    if (!reconnect.ok) return;
+
+    const reconnectedState = serializeRoom(reconnect.data.room, "s1");
+    expect(reconnectedState.settings).toEqual({
+      ...reconnect.data.room.settings,
+    });
+
+    const join = service.joinRoom(roomId, "s2", "sock-3", "Bob", "voter");
+    expect(join.ok).toBe(true);
+    if (!join.ok) return;
+
+    const joinedState = serializeRoom(join.data.room, "s2");
+    expect(joinedState.settings).toEqual({
+      ...join.data.room.settings,
+    });
+  });
+
   it("rejects from non-moderator", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;

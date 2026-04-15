@@ -2104,6 +2104,18 @@ select.input {
   gap: var(--space-3);
 }
 
+.controls-panel__settings-group .section-label,
+.controls-panel__settings-field .field__label,
+.controls-panel__settings-help,
+.controls-panel__setting-toggle-grid .deck-modal__toggle-copy strong,
+.controls-panel__setting-toggle-grid .deck-modal__toggle-copy small {
+  overflow-wrap: anywhere;
+}
+
+.controls-panel__setting-toggle-grid .deck-modal__toggle-copy {
+  min-width: 0;
+}
+
 .controls-panel__settings-help {
   margin-top: 0.4rem;
   color: var(--color-text-secondary);
