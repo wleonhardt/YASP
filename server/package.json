@@ -16,7 +16,7 @@
     "@fastify/helmet": "^13.0.2",
     "@fastify/static": "^9.1.0",
     "@yasp/shared": "*",
-    "fastify": "^5.8.4",
+    "fastify": "^5.8.5",
     "ioredis": "^5.8.2",
     "socket.io": "^4.7.5"
   },
