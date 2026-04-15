@@ -49,7 +49,14 @@ function DisclosureChevron({ open }: { open: boolean }) {
   );
 }
 
-function PolicySetting({ label, description, value, onChange, disabled = false, inputRef }: PolicySettingProps) {
+function PolicySetting({
+  label,
+  description,
+  value,
+  onChange,
+  disabled = false,
+  inputRef,
+}: PolicySettingProps) {
   const { t } = useTranslation();
   const inputId = useId();
   const helpId = useId();
@@ -83,7 +90,9 @@ function ToggleSetting({ label, description, checked, onChange, disabled = false
 
   return (
     <label
-      className={["deck-modal__toggle", disabled ? "deck-modal__toggle--disabled" : ""].filter(Boolean).join(" ")}
+      className={["deck-modal__toggle", disabled ? "deck-modal__toggle--disabled" : ""]
+        .filter(Boolean)
+        .join(" ")}
       htmlFor={inputId}
     >
       <input
@@ -154,7 +163,9 @@ export function RoomSettingsPanel({ state, onUpdateSettings, disabled = false }:
     return null;
   }
 
-  const handlePolicyUpdate = (key: keyof Pick<RoomSettings, "revealPolicy" | "resetPolicy" | "deckChangePolicy">) => {
+  const handlePolicyUpdate = (
+    key: keyof Pick<RoomSettings, "revealPolicy" | "resetPolicy" | "deckChangePolicy">
+  ) => {
     return (value: PermissionPolicy) => {
       void onUpdateSettings({ [key]: value } as Partial<RoomSettings>);
     };

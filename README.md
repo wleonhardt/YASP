@@ -17,6 +17,7 @@ Most planning poker tools require sign-ups, store your data, and charge per seat
 - **Stats** — average, median, mode, spread, consensus detection, distribution chart
 - **Roles** — vote as a participant or observe as a spectator
 - **Moderator controls** — reveal, reset, next round, transfer host
+- **Room settings** — moderator-only panel for reveal/reset/deck-change permissions plus participant options like spectators, name changes, and self role switching
 - **Auto-transfer** — moderator role passes automatically on disconnect and restores on reconnect
 - **Dark / light theme** — toggle with localStorage persistence
 - **Accessibility foundations** — semantic landmarks, keyboard-operable controls, live announcements, reduced-motion support, forced-colors fallbacks
@@ -209,7 +210,7 @@ If you plan to add accounts, persistence, integrations, or stronger identity cla
 - [x] Custom deck creation from the UI
 - [x] WCAG 2.2 audit and core accessibility remediation pass
 - [x] Timer for voting rounds
-- [ ] Room settings panel (reveal policy, name change policy)
+- [x] Room settings panel (reveal/reset/deck policies, spectator/name/role options)
 - [ ] Manual assistive-technology validation (VoiceOver, TalkBack, zoom/reflow, speech input)
 - [ ] Horizontal scaling with Redis adapter (opt-in)
 
