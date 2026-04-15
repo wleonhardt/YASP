@@ -76,28 +76,57 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
         run: |
+          # Pull the floating `:main` tag rather than the per-commit
+          # short-SHA tag. Rationale: when multiple pushes to `main`
+          # land in quick succession, the `workflow_run` concurrency
+          # group (`cancel-in-progress: true`) cancels older CI /
+          # Docker Publish runs, but Deploy still fires once the
+          # surviving Docker Publish completes. GitHub records the
+          # Deploy event's `workflow_run.head_sha` as the latest main
+          # HEAD *at Deploy schedule time*, which may be a newer commit
+          # than the one Docker Publish actually built. Pulling by
+          # `:main` sidesteps that race — we always deploy whatever
+          # Docker Publish most recently pushed.
+          #
+          # For the ECR side we resolve the pulled image's
+          # content-addressable digest and derive a short, immutable
+          # tag from it. That gives each deploy a unique ECR ref for
+          # audit / rollback that matches the exact bytes we deployed,
+          # independent of whichever git SHA Deploy happened to see.
           SHORT_SHA="${HEAD_SHA::8}"
-          DOCKERHUB_IMAGE="${DOCKERHUB_IMAGE}:${SHORT_SHA}"
-          ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPO}:${SHORT_SHA}"
+          DOCKERHUB_IMAGE_MAIN="${DOCKERHUB_IMAGE}:main"
+
+          docker pull "${DOCKERHUB_IMAGE_MAIN}"
+
+          # `RepoDigests` is populated only for images pulled from a
+          # registry (not locally built), so this is safe after the
+          # pull above.
+          DIGEST="$(docker inspect --format='{{index .RepoDigests 0}}' "${DOCKERHUB_IMAGE_MAIN}" | awk -F'@sha256:' '{print $2}')"
+          if [ -z "$DIGEST" ]; then
+            echo "::error::Failed to resolve digest for ${DOCKERHUB_IMAGE_MAIN}"
+            exit 1
+          fi
+          DIGEST_TAG="sha256-${DIGEST:0:12}"
+
+          ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPO}:${DIGEST_TAG}"
           ECR_MAIN="${ECR_REGISTRY}/${ECR_REPO}:main"
 
-          docker pull "${DOCKERHUB_IMAGE}"
-          docker tag "${DOCKERHUB_IMAGE}" "${ECR_IMAGE}"
-          docker tag "${DOCKERHUB_IMAGE}" "${ECR_MAIN}"
+          docker tag "${DOCKERHUB_IMAGE_MAIN}" "${ECR_IMAGE}"
+          docker tag "${DOCKERHUB_IMAGE_MAIN}" "${ECR_MAIN}"
           docker push "${ECR_IMAGE}"
           docker push "${ECR_MAIN}"
 
           echo "image=${ECR_IMAGE}" >> "$GITHUB_OUTPUT"
           echo "### Pushed to ECR" >> "$GITHUB_STEP_SUMMARY"
-          echo "- \`${ECR_IMAGE}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- workflow_run head_sha: \`${SHORT_SHA}\` (for reference; may lag last built image during rapid-merge windows)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Deployed image: \`${ECR_IMAGE}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- \`${ECR_MAIN}\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Deploy to EC2 via SSM
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ECR_IMAGE: ${{ steps.image.outputs.image }}
         run: |
-          SHORT_SHA="${HEAD_SHA::8}"
-          ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPO}:${SHORT_SHA}"
 
           # Build SSM parameters as JSON via jq to avoid all escaping issues.
           # The deploy script: updates the image tag, restarts systemd, polls health.
