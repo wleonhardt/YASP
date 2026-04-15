@@ -8,6 +8,7 @@ import {
   type SerializedRoom,
 } from "./async-room-store.js";
 import { now } from "../utils/time.js";
+import { CLEANUP_INTERVAL_MS } from "../config.js";
 
 /**
  * Redis key namespace for active rooms. One JSON-encoded room per key.
@@ -25,7 +26,7 @@ export const REDIS_ROOM_KEY_PREFIX = "yasp:room:";
  * the expiry and broadcast a final `room_closed` to any still-connected
  * clients before the key is reaped by Redis itself.
  */
-const ROOM_KEY_TTL_GRACE_MS = 60_000;
+const ROOM_KEY_TTL_GRACE_MS = CLEANUP_INTERVAL_MS + 5_000;
 
 /**
  * Minimum key TTL. Guards against pathological cases where a just-saved room

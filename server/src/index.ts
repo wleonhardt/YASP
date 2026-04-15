@@ -1,27 +1,11 @@
 import { createApp } from "./app.js";
-import { createSocketServer } from "./socket.js";
-import { InMemoryRoomStore, type RoomStore } from "./services/room-store.js";
-import { RoomService } from "./services/room-service.js";
-import { InMemorySessionBindingStore, type SessionBindingStore } from "./services/session-service.js";
-import { InMemoryRoomTimerScheduler, type RoomTimerScheduler } from "./services/timer-service.js";
-import { CleanupService } from "./services/cleanup-service.js";
-import {
-  InMemoryActiveRoomSessionResolver,
-  type ActiveRoomSessionResolver,
-} from "./services/active-room-session-resolver.js";
-import { SocketRoomStatePublisher, type RoomStatePublisher } from "./services/room-state-publisher.js";
-import { registerSocketHandlers } from "./transport/socket-handlers.js";
 import { PORT, HOST, STATE_BACKEND_CONFIG } from "./config.js";
-import { createAsyncStateBackend, type AsyncStateBackend } from "./services/state-backend.js";
+import { createServerRuntime, type ServerRuntime } from "./runtime.js";
 import { logger } from "./utils/logger.js";
 
 type FatalProcessEvent = "uncaughtException" | "unhandledRejection";
 
-let cleanupServiceRef: CleanupService | null = null;
-let timerServiceRef: RoomTimerScheduler | null = null;
-let ioRef: ReturnType<typeof createSocketServer> | null = null;
-let appRef: Awaited<ReturnType<typeof createApp>> | null = null;
-let stateBackendRef: AsyncStateBackend | null = null;
+let runtimeRef: ServerRuntime | null = null;
 let shuttingDown = false;
 
 function describeUnknownError(value: unknown): {
@@ -87,33 +71,17 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
   shuttingDown = true;
   logger.info("Shutting down", { reason, exitCode });
 
-  cleanupServiceRef?.stop();
-  timerServiceRef?.cancelAll();
-  ioRef?.close();
-
-  if (stateBackendRef) {
+  if (runtimeRef) {
     try {
-      await stateBackendRef.close();
+      await runtimeRef.close();
     } catch (error) {
-      logger.error("Failed to close state backend cleanly", {
+      logger.error("Failed to close server runtime cleanly", {
         reason,
         exitCode,
         error: error instanceof Error ? error.message : String(error),
       });
     }
-    stateBackendRef = null;
-  }
-
-  if (appRef) {
-    try {
-      await appRef.close();
-    } catch (error) {
-      logger.error("Failed to close app cleanly", {
-        reason,
-        exitCode,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
+    runtimeRef = null;
   }
 
   process.exit(exitCode);
@@ -147,56 +115,10 @@ process.on("unhandledRejection", (reason) => {
 });
 
 async function main() {
-  // Phase 2 horizontal-scaling: construct (and validate) the configured
-  // backend up front. For `memory` this is cheap and always succeeds. For
-  // `redis` this connects to Redis and PINGs it so misconfiguration fails at
-  // startup instead of on first room. The prototypes are not yet wired to
-  // RoomService — see ADR 0002 — so we refuse to start in redis mode with a
-  // clear error once the Redis health-check has proven config validity.
   logger.info("Selecting state backend", { backend: STATE_BACKEND_CONFIG.kind });
-  const stateBackend = await createAsyncStateBackend(STATE_BACKEND_CONFIG);
-  stateBackendRef = stateBackend;
-
-  if (stateBackend.kind === "redis") {
-    throw new Error(
-      "YASP_STATE_BACKEND=redis is a Phase 2 prototype. Redis connectivity was " +
-        "verified, but RoomService is not yet wired onto the async store " +
-        "interface (see plans/decisions/0002-redis-backed-state-prototypes.md). " +
-        "Restart with YASP_STATE_BACKEND=memory (the default)."
-    );
-  }
-
-  const app = await createApp();
-  appRef = app;
-  const httpServer = app.server;
-
-  const io = createSocketServer(httpServer);
-  ioRef = io;
-  const store: RoomStore = new InMemoryRoomStore();
-  const roomService = new RoomService(store);
-  const sessionBindingStore: SessionBindingStore = new InMemorySessionBindingStore();
-  const activeSessionResolver: ActiveRoomSessionResolver = new InMemoryActiveRoomSessionResolver(
-    sessionBindingStore,
-    store
-  );
-  const timerService: RoomTimerScheduler = new InMemoryRoomTimerScheduler();
-  const roomStatePublisher: RoomStatePublisher = new SocketRoomStatePublisher(io, store);
-  timerServiceRef = timerService;
-  const cleanupService = new CleanupService(store, timerService, roomStatePublisher);
-  cleanupServiceRef = cleanupService;
-
-  registerSocketHandlers(
-    io,
-    roomService,
-    sessionBindingStore,
-    activeSessionResolver,
-    timerService,
-    roomStatePublisher,
-    store
-  );
-  cleanupService.start();
-
-  await app.listen({ port: PORT, host: HOST });
+  const runtime = await createServerRuntime(STATE_BACKEND_CONFIG);
+  runtimeRef = runtime;
+  await runtime.listen({ port: PORT, host: HOST });
   logger.info("Server started", { port: PORT, host: HOST });
 
   process.on("SIGTERM", () => {

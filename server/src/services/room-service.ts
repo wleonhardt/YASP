@@ -87,6 +87,17 @@ function resetRoundState(room: Room): void {
   room.revealed = false;
 }
 
+export function allConnectedVotersVoted(room: Room): boolean {
+  let hasVoter = false;
+  for (const participant of room.participants.values()) {
+    if (participant.connected && participant.role === "voter") {
+      if (!room.votes.has(participant.id)) return false;
+      hasVoter = true;
+    }
+  }
+  return hasVoter;
+}
+
 function stopRoomTimer(room: Room): void {
   room.timer.running = false;
   room.timer.endsAt = null;
@@ -377,6 +388,20 @@ export class RoomService {
     return success({ room });
   }
 
+  autoRevealIfReady(roomId: RoomId): AckResult<{ room: Room; changed: boolean }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (room.revealed || !room.settings.autoReveal || !allConnectedVotersVoted(room)) {
+      return success({ room, changed: false });
+    }
+
+    // Mirror the pre-Phase-3 socket callback behavior: auto-reveal flips the
+    // reveal bit without extending last-activity / expiry.
+    room.revealed = true;
+    this.saveRoom(room);
+    return success({ room, changed: true });
+  }
+
   resetRound(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
     const room = this.store.get(roomId);
     if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
@@ -652,14 +677,7 @@ export class RoomService {
   }
 
   allConnectedVotersVoted(room: Room): boolean {
-    let hasVoter = false;
-    for (const p of room.participants.values()) {
-      if (p.connected && p.role === "voter") {
-        if (!room.votes.has(p.id)) return false;
-        hasVoter = true;
-      }
-    }
-    return hasVoter;
+    return allConnectedVotersVoted(room);
   }
 
   private generateUniqueRoomId(): string {

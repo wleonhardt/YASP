@@ -19,12 +19,8 @@ import type {
   PongEvent,
 } from "@yasp/shared";
 import type { Room } from "../domain/types.js";
-import { RoomService } from "../services/room-service.js";
-import type { SessionBindingStore } from "../services/session-service.js";
 import type { RoomTimerScheduler } from "../services/timer-service.js";
-import type { RoomStore } from "../services/room-store.js";
-import type { ActiveRoomSessionResolver } from "../services/active-room-session-resolver.js";
-import type { RoomStatePublisher } from "../services/room-state-publisher.js";
+import type { ActiveRoomSessionResolution } from "../services/active-room-session-resolver.js";
 import { serializeRoom } from "./serializers.js";
 import { validateSessionId, validateRoomId } from "./validators.js";
 import { applySocketRateLimit } from "./rate-limiter.js";
@@ -35,18 +31,109 @@ import { now } from "../utils/time.js";
 import { logger } from "../utils/logger.js";
 
 type RoomActionAfterEffect = "autoReveal" | "cancelAutoReveal" | "syncRoomTimer" | "cancelRoomTimer" | "none";
+type Awaitable<T> = T | Promise<T>;
+
+type RoomServicePort = {
+  createRoom(
+    sessionId: string,
+    socketId: string,
+    displayName: string,
+    requestedRole: "voter" | "spectator",
+    deck?: CreateRoomInput["deck"]
+  ): Awaitable<AckResult<{ room: Room; participantId: string }>>;
+  joinRoom(
+    roomId: RoomId,
+    sessionId: string,
+    socketId: string,
+    displayName: string,
+    requestedRole: "voter" | "spectator"
+  ): Awaitable<AckResult<{ room: Room; participantId: string; replacedSocketId: string | null }>>;
+  leaveRoom(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  disconnectParticipant(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  castVote(roomId: RoomId, sessionId: string, value: CastVoteInput["value"]): Awaitable<AckResult<{ room: Room }>>;
+  clearVote(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  revealVotes(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  autoRevealIfReady(roomId: RoomId): Awaitable<AckResult<{ room: Room; changed: boolean }>>;
+  resetRound(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  nextRound(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  transferModerator(
+    roomId: RoomId,
+    sessionId: string,
+    targetParticipantId: string
+  ): Awaitable<AckResult<{ room: Room }>>;
+  setTimerDuration(
+    roomId: RoomId,
+    sessionId: string,
+    durationSeconds: number
+  ): Awaitable<AckResult<{ room: Room }>>;
+  startTimer(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  pauseTimer(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  resetTimer(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  completeTimer(roomId: RoomId): Awaitable<AckResult<{ room: Room }>>;
+  honkTimer(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  changeName(roomId: RoomId, sessionId: string, name: string): Awaitable<AckResult<{ room: Room }>>;
+  changeRole(
+    roomId: RoomId,
+    sessionId: string,
+    role: ChangeRoleInput["role"]
+  ): Awaitable<AckResult<{ room: Room }>>;
+  changeDeck(
+    roomId: RoomId,
+    sessionId: string,
+    deck: ChangeDeckInput["deck"]
+  ): Awaitable<AckResult<{ room: Room }>>;
+  updateSettings(
+    roomId: RoomId,
+    sessionId: string,
+    settings: UpdateSettingsInput["settings"]
+  ): Awaitable<AckResult<{ room: Room }>>;
+  allConnectedVotersVoted(room: Room): boolean;
+};
+
+type SessionBindingStorePort = {
+  bind(socketId: string, sessionId: string, roomId: RoomId): Awaitable<void>;
+  unbind(socketId: string): Awaitable<void>;
+  resolve(socketId: string): Awaitable<{ sessionId: string; roomId: RoomId } | undefined>;
+};
+
+type ActiveRoomSessionResolverPort = {
+  resolve(socketId: string, roomId: RoomId): Awaitable<ActiveRoomSessionResolution>;
+};
+
+type RoomStatePublisherPort = {
+  broadcastRoomState(roomId: RoomId): Awaitable<void>;
+  notifySessionReplaced(socketId: string): Awaitable<void>;
+};
+
+type RoomReaderPort = {
+  get(roomId: RoomId): Awaitable<Room | undefined>;
+};
 
 function ackFail(code: ErrorCode, message: string): AckResult<never> {
   return { ok: false, error: { code, message } };
 }
 
-function evaluateAutoReveal(
+function logSocketTaskFailure(socketId: string, event: string, error: unknown): void {
+  logger.error("Socket handler task failed", {
+    socketId,
+    event,
+    error: error instanceof Error ? error.message : String(error),
+  });
+}
+
+function runSocketTask(socketId: string, event: string, task: () => Promise<void>): void {
+  void task().catch((error) => {
+    logSocketTaskFailure(socketId, event, error);
+  });
+}
+
+async function evaluateAutoReveal(
   room: Room,
-  roomService: RoomService,
+  roomService: RoomServicePort,
   timerScheduler: RoomTimerScheduler,
-  roomStatePublisher: RoomStatePublisher,
-  store: RoomStore
-): void {
+  roomStatePublisher: RoomStatePublisherPort,
+  socketId: string
+): Promise<void> {
   if (!room.settings.autoReveal || room.revealed) {
     timerScheduler.cancelAutoReveal(room.id);
     return;
@@ -54,52 +141,52 @@ function evaluateAutoReveal(
 
   if (roomService.allConnectedVotersVoted(room)) {
     timerScheduler.scheduleAutoReveal(room.id, room.settings.autoRevealDelayMs, () => {
-      const current = store.get(room.id);
-      if (!current || current.revealed) return;
-      if (!roomService.allConnectedVotersVoted(current)) return;
-      current.revealed = true;
-      store.save(current);
-      roomStatePublisher.broadcastRoomState(room.id);
+      runSocketTask(socketId, "auto_reveal_timer", async () => {
+        const result = await roomService.autoRevealIfReady(room.id);
+        if (!result.ok || !result.data.changed) return;
+        await roomStatePublisher.broadcastRoomState(room.id);
+      });
     });
   } else {
     timerScheduler.cancelAutoReveal(room.id);
   }
 }
 
-function syncRoomTimer(
+async function syncRoomTimer(
   roomId: RoomId,
-  roomService: RoomService,
+  roomService: RoomServicePort,
   timerScheduler: RoomTimerScheduler,
-  roomStatePublisher: RoomStatePublisher,
-  store: RoomStore
-): void {
+  roomStatePublisher: RoomStatePublisherPort,
+  store: RoomReaderPort,
+  socketId: string
+): Promise<void> {
   timerScheduler.cancelRoomTimer(roomId);
 
-  const room = store.get(roomId);
+  const room = await store.get(roomId);
   if (!room || !room.timer.running || room.timer.endsAt === null) {
     return;
   }
 
   const delayMs = Math.max(0, room.timer.endsAt - now());
   timerScheduler.scheduleRoomTimer(roomId, delayMs, () => {
-    const result = roomService.completeTimer(roomId);
-    if (!result.ok) {
-      return;
-    }
+    runSocketTask(socketId, "room_timer", async () => {
+      const result = await roomService.completeTimer(roomId);
+      if (!result.ok) return;
 
-    timerScheduler.cancelAutoReveal(roomId);
-    roomStatePublisher.broadcastRoomState(roomId);
+      timerScheduler.cancelAutoReveal(roomId);
+      await roomStatePublisher.broadcastRoomState(roomId);
+    });
   });
 }
 
 export function registerSocketHandlers(
   io: SocketServer,
-  roomService: RoomService,
-  sessionBindingStore: SessionBindingStore,
-  activeSessionResolver: ActiveRoomSessionResolver,
+  roomService: RoomServicePort,
+  sessionBindingStore: SessionBindingStorePort,
+  activeSessionResolver: ActiveRoomSessionResolverPort,
   timerScheduler: RoomTimerScheduler,
-  roomStatePublisher: RoomStatePublisher,
-  store: RoomStore
+  roomStatePublisher: RoomStatePublisherPort,
+  store: RoomReaderPort
 ): void {
   // Per-IP concurrent connection cap. Runs as Socket.IO connect middleware
   // so rejected upgrades never enter the main connection handler and never
@@ -132,12 +219,13 @@ export function registerSocketHandlers(
       releaseConnection(clientIp);
     });
 
-    const refreshRoomState = (roomId: RoomId, room: Room | null = store.get(roomId) ?? null) => {
-      roomStatePublisher.broadcastRoomState(roomId);
-      if (room) {
-        evaluateAutoReveal(room, roomService, timerScheduler, roomStatePublisher, store);
+    const refreshRoomState = async (roomId: RoomId, room?: Room | null) => {
+      const currentRoom = room ?? ((await store.get(roomId)) ?? null);
+      await roomStatePublisher.broadcastRoomState(roomId);
+      if (currentRoom) {
+        await evaluateAutoReveal(currentRoom, roomService, timerScheduler, roomStatePublisher, socket.id);
       }
-      syncRoomTimer(roomId, roomService, timerScheduler, roomStatePublisher, store);
+      await syncRoomTimer(roomId, roomService, timerScheduler, roomStatePublisher, store, socket.id);
     };
 
     // Helper: resolve caller, run service method, ack+broadcast on success.
@@ -147,119 +235,144 @@ export function registerSocketHandlers(
     // logic or socket event names.
     function roomAction<I extends { roomId: RoomId } & Record<string, unknown>>(
       event: string,
-      serviceFn: (roomId: RoomId, sessionId: string, input: I) => AckResult<{ room: Room }>,
+      serviceFn: (
+        roomId: RoomId,
+        sessionId: string,
+        input: I
+      ) => Awaitable<AckResult<{ room: Room }>>,
       afterEffect: RoomActionAfterEffect = "none"
     ) {
       socket.on(event, (input: I, ack?: (res: AckResult) => void) => {
-        const resolution = activeSessionResolver.resolve(socket.id, input.roomId);
+        runSocketTask(socket.id, event, async () => {
+          const resolution = await activeSessionResolver.resolve(socket.id, input.roomId);
+          if (!resolution.ok) {
+            ack?.(ackFail(resolution.code, resolution.message));
+            return;
+          }
+
+          const result = await serviceFn(input.roomId, resolution.sessionId, input);
+          if (!result.ok) {
+            ack?.(result);
+            return;
+          }
+
+          ack?.({ ok: true, data: undefined });
+          if (afterEffect === "cancelAutoReveal") timerScheduler.cancelAutoReveal(input.roomId);
+          if (afterEffect === "cancelRoomTimer") timerScheduler.cancelRoomTimer(input.roomId);
+          await roomStatePublisher.broadcastRoomState(input.roomId);
+          if (afterEffect === "autoReveal") {
+            await evaluateAutoReveal(
+              result.data.room,
+              roomService,
+              timerScheduler,
+              roomStatePublisher,
+              socket.id
+            );
+          }
+          if (afterEffect === "syncRoomTimer") {
+            await syncRoomTimer(
+              input.roomId,
+              roomService,
+              timerScheduler,
+              roomStatePublisher,
+              store,
+              socket.id
+            );
+          }
+        });
+      });
+    }
+
+    socket.on("create_room", (input: CreateRoomInput, ack?: (res: AckResult<CreateRoomOutput>) => void) => {
+      runSocketTask(socket.id, "create_room", async () => {
+        const sessionCheck = validateSessionId(input.sessionId);
+        if (!sessionCheck.valid) {
+          ack?.({ ok: false, error: sessionCheck.error });
+          return;
+        }
+
+        const result = await roomService.createRoom(
+          input.sessionId,
+          socket.id,
+          input.displayName,
+          input.requestedRole,
+          input.deck
+        );
+        if (!result.ok) {
+          ack?.(result as AckResult<CreateRoomOutput>);
+          return;
+        }
+
+        const { room } = result.data;
+        await sessionBindingStore.bind(socket.id, input.sessionId, room.id);
+        await socket.join(room.id);
+
+        const state = serializeRoom(room, input.sessionId);
+        ack?.({ ok: true, data: { roomId: room.id, state } });
+        socket.emit("room_state", state);
+      });
+    });
+
+    socket.on("join_room", (input: JoinRoomInput, ack?: (res: AckResult<JoinRoomOutput>) => void) => {
+      runSocketTask(socket.id, "join_room", async () => {
+        const sessionCheck = validateSessionId(input.sessionId);
+        if (!sessionCheck.valid) {
+          ack?.({ ok: false, error: sessionCheck.error });
+          return;
+        }
+
+        const roomIdCheck = validateRoomId(input.roomId);
+        if (!roomIdCheck.valid) {
+          ack?.({ ok: false, error: roomIdCheck.error });
+          return;
+        }
+
+        const result = await roomService.joinRoom(
+          input.roomId,
+          input.sessionId,
+          socket.id,
+          input.displayName,
+          input.requestedRole
+        );
+        if (!result.ok) {
+          ack?.(result as AckResult<JoinRoomOutput>);
+          return;
+        }
+
+        const { room, replacedSocketId } = result.data;
+        if (replacedSocketId && replacedSocketId !== socket.id) {
+          await roomStatePublisher.notifySessionReplaced(replacedSocketId);
+        }
+
+        await sessionBindingStore.bind(socket.id, input.sessionId, room.id);
+        await socket.join(room.id);
+
+        const state = serializeRoom(room, input.sessionId);
+        ack?.({ ok: true, data: { state } });
+        await refreshRoomState(room.id, room);
+      });
+    });
+
+    socket.on("leave_room", (input: LeaveRoomInput, ack?: (res: AckResult) => void) => {
+      runSocketTask(socket.id, "leave_room", async () => {
+        const resolution = await activeSessionResolver.resolve(socket.id, input.roomId);
         if (!resolution.ok) {
           ack?.(ackFail(resolution.code, resolution.message));
           return;
         }
 
-        const result = serviceFn(input.roomId, resolution.sessionId, input);
+        const result = await roomService.leaveRoom(input.roomId, resolution.sessionId);
         if (!result.ok) {
           ack?.(result);
           return;
         }
 
+        await sessionBindingStore.unbind(socket.id);
+        await socket.leave(input.roomId);
         ack?.({ ok: true, data: undefined });
-        if (afterEffect === "cancelAutoReveal") timerScheduler.cancelAutoReveal(input.roomId);
-        if (afterEffect === "cancelRoomTimer") timerScheduler.cancelRoomTimer(input.roomId);
-        roomStatePublisher.broadcastRoomState(input.roomId);
-        if (afterEffect === "autoReveal") {
-          evaluateAutoReveal(result.data.room, roomService, timerScheduler, roomStatePublisher, store);
-        }
-        if (afterEffect === "syncRoomTimer") {
-          syncRoomTimer(input.roomId, roomService, timerScheduler, roomStatePublisher, store);
-        }
+
+        await refreshRoomState(input.roomId, result.data.room);
       });
-    }
-
-    socket.on("create_room", (input: CreateRoomInput, ack?: (res: AckResult<CreateRoomOutput>) => void) => {
-      const sessionCheck = validateSessionId(input.sessionId);
-      if (!sessionCheck.valid) {
-        ack?.({ ok: false, error: sessionCheck.error });
-        return;
-      }
-
-      const result = roomService.createRoom(
-        input.sessionId,
-        socket.id,
-        input.displayName,
-        input.requestedRole,
-        input.deck
-      );
-      if (!result.ok) {
-        ack?.(result as AckResult<CreateRoomOutput>);
-        return;
-      }
-
-      const { room } = result.data;
-      sessionBindingStore.bind(socket.id, input.sessionId, room.id);
-      socket.join(room.id);
-
-      const state = serializeRoom(room, input.sessionId);
-      ack?.({ ok: true, data: { roomId: room.id, state } });
-      socket.emit("room_state", state);
-    });
-
-    socket.on("join_room", (input: JoinRoomInput, ack?: (res: AckResult<JoinRoomOutput>) => void) => {
-      const sessionCheck = validateSessionId(input.sessionId);
-      if (!sessionCheck.valid) {
-        ack?.({ ok: false, error: sessionCheck.error });
-        return;
-      }
-
-      const roomIdCheck = validateRoomId(input.roomId);
-      if (!roomIdCheck.valid) {
-        ack?.({ ok: false, error: roomIdCheck.error });
-        return;
-      }
-
-      const result = roomService.joinRoom(
-        input.roomId,
-        input.sessionId,
-        socket.id,
-        input.displayName,
-        input.requestedRole
-      );
-      if (!result.ok) {
-        ack?.(result as AckResult<JoinRoomOutput>);
-        return;
-      }
-
-      const { room, replacedSocketId } = result.data;
-      if (replacedSocketId && replacedSocketId !== socket.id) {
-        roomStatePublisher.notifySessionReplaced(replacedSocketId);
-      }
-
-      sessionBindingStore.bind(socket.id, input.sessionId, room.id);
-      socket.join(room.id);
-
-      const state = serializeRoom(room, input.sessionId);
-      ack?.({ ok: true, data: { state } });
-      refreshRoomState(room.id, room);
-    });
-
-    socket.on("leave_room", (input: LeaveRoomInput, ack?: (res: AckResult) => void) => {
-      const resolution = activeSessionResolver.resolve(socket.id, input.roomId);
-      if (!resolution.ok) {
-        ack?.(ackFail(resolution.code, resolution.message));
-        return;
-      }
-
-      const result = roomService.leaveRoom(input.roomId, resolution.sessionId);
-      if (!result.ok) {
-        ack?.(result);
-        return;
-      }
-
-      sessionBindingStore.unbind(socket.id);
-      socket.leave(input.roomId);
-      ack?.({ ok: true, data: undefined });
-
-      refreshRoomState(input.roomId, result.data.room);
     });
 
     roomAction(
@@ -307,23 +420,25 @@ export function registerSocketHandlers(
     });
 
     socket.on("disconnect", () => {
-      const binding = sessionBindingStore.resolve(socket.id);
-      if (!binding) return;
+      runSocketTask(socket.id, "disconnect", async () => {
+        const binding = await sessionBindingStore.resolve(socket.id);
+        if (!binding) return;
 
-      const { sessionId, roomId } = binding;
-      const room = store.get(roomId);
+        const { sessionId, roomId } = binding;
+        const room = await store.get(roomId);
 
-      if (room) {
-        const participant = room.participants.get(sessionId);
-        if (participant && participant.socketId === socket.id) {
-          const result = roomService.disconnectParticipant(roomId, sessionId);
-          if (result.ok) {
-            refreshRoomState(roomId, result.data.room);
+        if (room) {
+          const participant = room.participants.get(sessionId);
+          if (participant && participant.socketId === socket.id) {
+            const result = await roomService.disconnectParticipant(roomId, sessionId);
+            if (result.ok) {
+              await refreshRoomState(roomId, result.data.room);
+            }
           }
         }
-      }
 
-      sessionBindingStore.unbind(socket.id);
+        await sessionBindingStore.unbind(socket.id);
+      });
     });
   });
 }
