@@ -88,9 +88,7 @@ export const TRUSTED_PROXY_HOP_COUNT = resolveTrustedProxyHops();
 // ---------------------------------------------------------------------------
 export type StateBackend = "memory" | "redis";
 
-export type StateBackendConfig =
-  | { kind: "memory" }
-  | { kind: "redis"; redisUrl: string };
+export type StateBackendConfig = { kind: "memory" } | { kind: "redis"; redisUrl: string };
 
 function resolveStateBackendConfig(): StateBackendConfig {
   const raw = (process.env.YASP_STATE_BACKEND ?? "memory").trim().toLowerCase();
@@ -98,15 +96,11 @@ function resolveStateBackendConfig(): StateBackendConfig {
   if (raw === "redis") {
     const redisUrl = process.env.REDIS_URL?.trim();
     if (!redisUrl) {
-      throw new Error(
-        "YASP_STATE_BACKEND=redis requires REDIS_URL to be set (e.g. redis://host:6379/0)."
-      );
+      throw new Error("YASP_STATE_BACKEND=redis requires REDIS_URL to be set (e.g. redis://host:6379/0).");
     }
     return { kind: "redis", redisUrl };
   }
-  throw new Error(
-    `Unknown YASP_STATE_BACKEND value: ${JSON.stringify(raw)}. Supported: memory, redis.`
-  );
+  throw new Error(`Unknown YASP_STATE_BACKEND value: ${JSON.stringify(raw)}. Supported: memory, redis.`);
 }
 
 /**

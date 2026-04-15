@@ -14,6 +14,8 @@ import { getLiveRedisTestUrl, hasLiveRedisTestUrl, resetLiveRedisDb } from "./re
 
 const EVENT_TIMEOUT_MS = 5_000;
 const RUNTIME_REDIS_DB_OFFSET = 2;
+const ALICE_SESSION_ID = "550e8400-e29b-41d4-a716-446655440000";
+const BOB_SESSION_ID = "6ba7b810-9dad-41d6-8bbb-010203040506";
 
 function getRedisRuntime(runtime: ServerRuntime): Extract<ServerRuntime, { kind: "redis" }> {
   if (runtime.kind !== "redis") {
@@ -59,10 +61,7 @@ function emitAck<T>(socket: Socket, event: string, payload: unknown): Promise<Ac
   });
 }
 
-async function waitForCondition(
-  check: () => Promise<boolean>,
-  label: string
-): Promise<void> {
+async function waitForCondition(check: () => Promise<boolean>, label: string): Promise<void> {
   const deadline = Date.now() + EVENT_TIMEOUT_MS;
   while (Date.now() < deadline) {
     if (await check()) return;
@@ -120,9 +119,13 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
 
   it("supports create, join, disconnect, and reconnect with session continuity", async () => {
     const alice = await connectClient();
-    const aliceCreatedStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "alice create room_state");
+    const aliceCreatedStatePromise = waitForEvent<PublicRoomState>(
+      alice,
+      "room_state",
+      "alice create room_state"
+    );
     const createAck = await emitAck<CreateRoomOutput>(alice, "create_room", {
-      sessionId: "alice-session",
+      sessionId: ALICE_SESSION_ID,
       displayName: "Alice",
       requestedRole: "voter",
     });
@@ -140,7 +143,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     const bobJoinStatePromise = waitForEvent<PublicRoomState>(bob, "room_state", "bob join room_state");
     const joinAck = await emitAck<JoinRoomOutput>(bob, "join_room", {
       roomId,
-      sessionId: "bob-session",
+      sessionId: BOB_SESSION_ID,
       displayName: "Bob",
       requestedRole: "voter",
     });
@@ -166,10 +169,12 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     bob.disconnect();
     const aliceAfterDisconnect = await aliceDisconnectStatePromise;
 
-    expect(aliceAfterDisconnect.participants.find((participant) => participant.name === "Bob")?.connected).toBe(false);
+    expect(
+      aliceAfterDisconnect.participants.find((participant) => participant.name === "Bob")?.connected
+    ).toBe(false);
     await waitForCondition(async () => {
       const room = await runtime?.roomStore.get(roomId);
-      return room?.participants.get("bob-session")?.connected === false;
+      return room?.participants.get(BOB_SESSION_ID)?.connected === false;
     }, "bob disconnect persistence");
 
     const bobReconnected = await connectClient();
@@ -185,7 +190,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     );
     const reconnectAck = await emitAck<JoinRoomOutput>(bobReconnected, "join_room", {
       roomId,
-      sessionId: "bob-session",
+      sessionId: BOB_SESSION_ID,
       displayName: "Bob Reconnected",
       requestedRole: "voter",
     });
@@ -200,9 +205,9 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
 
     expect(reconnectAck.data.state.me.participantId).toBe(bobParticipantId);
     expect(bobReconnectState.me.participantId).toBe(bobParticipantId);
-    expect(aliceAfterReconnect.participants.find((participant) => participant.id === bobParticipantId)?.connected).toBe(
-      true
-    );
+    expect(
+      aliceAfterReconnect.participants.find((participant) => participant.id === bobParticipantId)?.connected
+    ).toBe(true);
   });
 
   it("preserves latest-tab-wins and rejects stale-socket actions", async () => {
@@ -213,7 +218,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
       "original create room_state"
     );
     const createAck = await emitAck<CreateRoomOutput>(originalSocket, "create_room", {
-      sessionId: "alice-session",
+      sessionId: ALICE_SESSION_ID,
       displayName: "Alice",
       requestedRole: "voter",
     });
@@ -237,7 +242,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     );
     const joinAck = await emitAck<JoinRoomOutput>(replacementSocket, "join_room", {
       roomId,
-      sessionId: "alice-session",
+      sessionId: ALICE_SESSION_ID,
       displayName: "Alice",
       requestedRole: "voter",
     });
@@ -283,7 +288,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     const alice = await connectClient();
     const createdStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "alice create room_state");
     const createAck = await emitAck<CreateRoomOutput>(alice, "create_room", {
-      sessionId: "alice-session",
+      sessionId: ALICE_SESSION_ID,
       displayName: "Alice",
       requestedRole: "voter",
     });
@@ -298,7 +303,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     const bobJoinStatePromise = waitForEvent<PublicRoomState>(bob, "room_state", "bob join room_state");
     const joinAck = await emitAck<JoinRoomOutput>(bob, "join_room", {
       roomId,
-      sessionId: "bob-session",
+      sessionId: BOB_SESSION_ID,
       displayName: "Bob",
       requestedRole: "voter",
     });
@@ -311,7 +316,9 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     const aliceVoteAck = await emitAck(alice, "cast_vote", { roomId, value: "5" });
     expect(aliceVoteAck.ok).toBe(true);
     if (!aliceVoteAck.ok) return;
-    expect((await aliceVoteStatePromise).participants.find((participant) => participant.isSelf)?.hasVoted).toBe(true);
+    expect(
+      (await aliceVoteStatePromise).participants.find((participant) => participant.isSelf)?.hasVoted
+    ).toBe(true);
 
     const bobVoteStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "bob cast room_state");
     const bobVoteAck = await emitAck(bob, "cast_vote", { roomId, value: "8" });
@@ -341,7 +348,11 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     expect(resetState.roundNumber).toBe(1);
     expect(resetState.votes).toBeNull();
 
-    const secondAliceVoteStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "second alice cast");
+    const secondAliceVoteStatePromise = waitForEvent<PublicRoomState>(
+      alice,
+      "room_state",
+      "second alice cast"
+    );
     const secondAliceVoteAck = await emitAck(alice, "cast_vote", { roomId, value: "13" });
     expect(secondAliceVoteAck.ok).toBe(true);
     if (!secondAliceVoteAck.ok) return;
@@ -373,7 +384,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     const alice = await connectClient();
     const createdStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "alice create room_state");
     const createAck = await emitAck<CreateRoomOutput>(alice, "create_room", {
-      sessionId: "alice-session",
+      sessionId: ALICE_SESSION_ID,
       displayName: "Alice",
       requestedRole: "voter",
     });
@@ -388,7 +399,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     const bobJoinStatePromise = waitForEvent<PublicRoomState>(bob, "room_state", "bob join room_state");
     const joinAck = await emitAck<JoinRoomOutput>(bob, "join_room", {
       roomId,
-      sessionId: "bob-session",
+      sessionId: BOB_SESSION_ID,
       displayName: "Bob",
       requestedRole: "voter",
     });
@@ -409,9 +420,9 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     expect(transferAck.ok).toBe(true);
     if (!transferAck.ok) return;
     const transferredState = await transferStatePromise;
-    expect(transferredState.participants.find((participant) => participant.id === bobParticipantId)?.isModerator).toBe(
-      true
-    );
+    expect(
+      transferredState.participants.find((participant) => participant.id === bobParticipantId)?.isModerator
+    ).toBe(true);
 
     const oldModeratorReveal = await emitAck(alice, "reveal_votes", { roomId });
     expect(oldModeratorReveal.ok).toBe(false);
@@ -429,7 +440,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     const alice = await connectClient();
     const createdStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "alice create room_state");
     const createAck = await emitAck<CreateRoomOutput>(alice, "create_room", {
-      sessionId: "alice-session",
+      sessionId: ALICE_SESSION_ID,
       displayName: "Alice",
       requestedRole: "voter",
     });
@@ -439,7 +450,11 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     await createdStatePromise;
     const { roomId } = createAck.data;
 
-    const updateStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "settings update room_state");
+    const updateStatePromise = waitForEvent<PublicRoomState>(
+      alice,
+      "room_state",
+      "settings update room_state"
+    );
     const updateAck = await emitAck(alice, "update_settings", {
       roomId,
       settings: {
@@ -465,7 +480,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     alice.disconnect();
     await waitForCondition(async () => {
       const room = await runtime?.roomStore.get(roomId);
-      return room?.participants.get("alice-session")?.connected === false;
+      return room?.participants.get(ALICE_SESSION_ID)?.connected === false;
     }, "alice disconnect persistence");
 
     const aliceReconnected = await connectClient();
@@ -476,7 +491,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     );
     const reconnectAck = await emitAck<JoinRoomOutput>(aliceReconnected, "join_room", {
       roomId,
-      sessionId: "alice-session",
+      sessionId: ALICE_SESSION_ID,
       displayName: "Alice",
       requestedRole: "voter",
     });
@@ -494,7 +509,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     const alice = await connectClient();
     const createdStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "alice create room_state");
     const createAck = await emitAck<CreateRoomOutput>(alice, "create_room", {
-      sessionId: "alice-session",
+      sessionId: ALICE_SESSION_ID,
       displayName: "Alice",
       requestedRole: "voter",
     });
@@ -509,7 +524,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     const bobJoinStatePromise = waitForEvent<PublicRoomState>(bob, "room_state", "bob join room_state");
     const joinAck = await emitAck<JoinRoomOutput>(bob, "join_room", {
       roomId,
-      sessionId: "bob-session",
+      sessionId: BOB_SESSION_ID,
       displayName: "Bob",
       requestedRole: "voter",
     });
@@ -536,7 +551,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     expect(roomBeforeCleanup).toBeDefined();
     if (!roomBeforeCleanup) return;
 
-    const bobParticipant = roomBeforeCleanup.participants.get("bob-session");
+    const bobParticipant = roomBeforeCleanup.participants.get(BOB_SESSION_ID);
     expect(bobParticipant).toBeDefined();
     if (!bobParticipant) return;
 
@@ -545,20 +560,20 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     await runtime?.runCleanupOnce();
 
     const roomAfterParticipantCleanup = await runtime?.roomStore.get(roomId);
-    expect(roomAfterParticipantCleanup?.participants.has("bob-session")).toBe(false);
+    expect(roomAfterParticipantCleanup?.participants.has(BOB_SESSION_ID)).toBe(false);
     expect(roomAfterParticipantCleanup?.votes.has(bobParticipant.id)).toBe(false);
 
     alice.disconnect();
     await waitForCondition(async () => {
       const room = await runtime?.roomStore.get(roomId);
-      return room?.participants.get("alice-session")?.connected === false;
+      return room?.participants.get(ALICE_SESSION_ID)?.connected === false;
     }, "alice disconnect persistence");
 
     const expiredRoom = await runtime?.roomStore.get(roomId);
     expect(expiredRoom).toBeDefined();
     if (!expiredRoom) return;
 
-    const aliceParticipant = expiredRoom.participants.get("alice-session");
+    const aliceParticipant = expiredRoom.participants.get(ALICE_SESSION_ID);
     expect(aliceParticipant).toBeDefined();
     if (!aliceParticipant) return;
 

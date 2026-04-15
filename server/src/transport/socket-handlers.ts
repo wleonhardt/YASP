@@ -50,7 +50,11 @@ type RoomServicePort = {
   ): Awaitable<AckResult<{ room: Room; participantId: string; replacedSocketId: string | null }>>;
   leaveRoom(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
   disconnectParticipant(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
-  castVote(roomId: RoomId, sessionId: string, value: CastVoteInput["value"]): Awaitable<AckResult<{ room: Room }>>;
+  castVote(
+    roomId: RoomId,
+    sessionId: string,
+    value: CastVoteInput["value"]
+  ): Awaitable<AckResult<{ room: Room }>>;
   clearVote(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
   revealVotes(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
   autoRevealIfReady(roomId: RoomId): Awaitable<AckResult<{ room: Room; changed: boolean }>>;
@@ -220,7 +224,7 @@ export function registerSocketHandlers(
     });
 
     const refreshRoomState = async (roomId: RoomId, room?: Room | null) => {
-      const currentRoom = room ?? ((await store.get(roomId)) ?? null);
+      const currentRoom = room ?? (await store.get(roomId)) ?? null;
       await roomStatePublisher.broadcastRoomState(roomId);
       if (currentRoom) {
         await evaluateAutoReveal(currentRoom, roomService, timerScheduler, roomStatePublisher, socket.id);
@@ -235,11 +239,7 @@ export function registerSocketHandlers(
     // logic or socket event names.
     function roomAction<I extends { roomId: RoomId } & Record<string, unknown>>(
       event: string,
-      serviceFn: (
-        roomId: RoomId,
-        sessionId: string,
-        input: I
-      ) => Awaitable<AckResult<{ room: Room }>>,
+      serviceFn: (roomId: RoomId, sessionId: string, input: I) => Awaitable<AckResult<{ room: Room }>>,
       afterEffect: RoomActionAfterEffect = "none"
     ) {
       socket.on(event, (input: I, ack?: (res: AckResult) => void) => {

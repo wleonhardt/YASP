@@ -70,10 +70,7 @@ export class RedisRoomStore implements AsyncRoomStore {
   async save(room: Room): Promise<void> {
     const key = keyFor(room.id);
     const payload = JSON.stringify(serializeRoom(room));
-    const ttlMs = Math.max(
-      MIN_ROOM_KEY_TTL_MS,
-      room.expiresAt - now() + ROOM_KEY_TTL_GRACE_MS
-    );
+    const ttlMs = Math.max(MIN_ROOM_KEY_TTL_MS, room.expiresAt - now() + ROOM_KEY_TTL_GRACE_MS);
     await this.redis.set(key, payload, "PX", ttlMs);
   }
 

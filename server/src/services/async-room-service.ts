@@ -97,18 +97,11 @@ export class AsyncRoomService {
     return this.withRoom(roomId, (service) => service.leaveRoom(roomId, sessionId));
   }
 
-  disconnectParticipant(
-    roomId: RoomId,
-    sessionId: SessionId
-  ): Promise<AckResult<{ room: Room }>> {
+  disconnectParticipant(roomId: RoomId, sessionId: SessionId): Promise<AckResult<{ room: Room }>> {
     return this.withRoom(roomId, (service) => service.disconnectParticipant(roomId, sessionId));
   }
 
-  castVote(
-    roomId: RoomId,
-    sessionId: SessionId,
-    value: VoteValue
-  ): Promise<AckResult<{ room: Room }>> {
+  castVote(roomId: RoomId, sessionId: SessionId, value: VoteValue): Promise<AckResult<{ room: Room }>> {
     return this.withRoom(roomId, (service) => service.castVote(roomId, sessionId, value));
   }
 
@@ -120,9 +113,7 @@ export class AsyncRoomService {
     return this.withRoom(roomId, (service) => service.revealVotes(roomId, sessionId));
   }
 
-  autoRevealIfReady(
-    roomId: RoomId
-  ): Promise<AckResult<{ room: Room; changed: boolean }>> {
+  autoRevealIfReady(roomId: RoomId): Promise<AckResult<{ room: Room; changed: boolean }>> {
     return this.withRoom(roomId, (service) => service.autoRevealIfReady(roomId));
   }
 
@@ -149,9 +140,7 @@ export class AsyncRoomService {
     sessionId: SessionId,
     durationSeconds: number
   ): Promise<AckResult<{ room: Room }>> {
-    return this.withRoom(roomId, (service) =>
-      service.setTimerDuration(roomId, sessionId, durationSeconds)
-    );
+    return this.withRoom(roomId, (service) => service.setTimerDuration(roomId, sessionId, durationSeconds));
   }
 
   startTimer(roomId: RoomId, sessionId: SessionId): Promise<AckResult<{ room: Room }>> {
@@ -174,11 +163,7 @@ export class AsyncRoomService {
     return this.withRoom(roomId, (service) => service.honkTimer(roomId, sessionId));
   }
 
-  changeName(
-    roomId: RoomId,
-    sessionId: SessionId,
-    name: string
-  ): Promise<AckResult<{ room: Room }>> {
+  changeName(roomId: RoomId, sessionId: SessionId, name: string): Promise<AckResult<{ room: Room }>> {
     return this.withRoom(roomId, (service) => service.changeName(roomId, sessionId, name));
   }
 
@@ -190,11 +175,7 @@ export class AsyncRoomService {
     return this.withRoom(roomId, (service) => service.changeRole(roomId, sessionId, role));
   }
 
-  changeDeck(
-    roomId: RoomId,
-    sessionId: SessionId,
-    deckInput: DeckInput
-  ): Promise<AckResult<{ room: Room }>> {
+  changeDeck(roomId: RoomId, sessionId: SessionId, deckInput: DeckInput): Promise<AckResult<{ room: Room }>> {
     return this.withRoom(roomId, (service) => service.changeDeck(roomId, sessionId, deckInput));
   }
 
@@ -203,9 +184,7 @@ export class AsyncRoomService {
     sessionId: SessionId,
     settingsUpdate: Partial<RoomSettings>
   ): Promise<AckResult<{ room: Room }>> {
-    return this.withRoom(roomId, (service) =>
-      service.updateSettings(roomId, sessionId, settingsUpdate)
-    );
+    return this.withRoom(roomId, (service) => service.updateSettings(roomId, sessionId, settingsUpdate));
   }
 
   allConnectedVotersVoted(room: Room): boolean {

@@ -29,9 +29,7 @@ export interface AsyncStateBackend {
  * check, and wires the Redis-backed stores. A failed PING throws so startup
  * fails loudly before the runtime begins serving requests.
  */
-export async function createAsyncStateBackend(
-  config: StateBackendConfig
-): Promise<AsyncStateBackend> {
+export async function createAsyncStateBackend(config: StateBackendConfig): Promise<AsyncStateBackend> {
   if (config.kind === "memory") {
     return {
       kind: "memory",

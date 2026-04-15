@@ -1,9 +1,6 @@
 import type { Redis } from "ioredis";
 import type { RoomId, SessionId, SocketId } from "@yasp/shared";
-import type {
-  AsyncSessionBindingStore,
-  SessionBinding,
-} from "./async-session-binding-store.js";
+import type { AsyncSessionBindingStore, SessionBinding } from "./async-session-binding-store.js";
 
 /**
  * Redis key namespace for active socket → session-binding entries. One
@@ -47,10 +44,7 @@ export class RedisSessionBindingStore implements AsyncSessionBindingStore {
     if (!raw) return undefined;
     try {
       const parsed = JSON.parse(raw) as SessionBinding;
-      if (
-        typeof parsed?.sessionId !== "string" ||
-        typeof parsed?.roomId !== "string"
-      ) {
+      if (typeof parsed?.sessionId !== "string" || typeof parsed?.roomId !== "string") {
         return undefined;
       }
       return parsed;
