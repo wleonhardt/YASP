@@ -2,18 +2,26 @@
 
 ## Queue
 
-- Decide how future multi-instance Redis mode will coordinate concurrent room
-  writes across instances without introducing durable persistence semantics.
-- Decide how future multi-instance Redis mode will assign ownership for timer
-  completion and room / stale-participant cleanup.
-- Add Socket.IO Redis adapter work only after the write-coordination and
-  cleanup-ownership model is accepted.
-- Decide whether the AWS/CDK deployment path should remain intentionally
-  memory-only or gain first-class support for the optional Redis-backed active
-  state profile.
+- No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
+  needs justify it:
+  - rolling deploys without losing active rooms
+  - meaningful concurrent traffic beyond one app instance
+  - hosting targets that require multiple app instances
+  - higher availability requirements than the current single-instance posture
+- If Phase 4 is reprioritized later, start with cross-instance write
+  coordination and timer/cleanup ownership before any Socket.IO Redis adapter
+  or Redis-backed deployment profile work.
 
 ## Done
 
+- 2026-04-15: Accepted ADR 0004 to keep the supported/default AWS/CDK
+  deployment path intentionally memory-only, defer first-class Redis infra
+  wiring until Redis mode is honestly more than a single-instance runtime
+  profile, and treat true multi-instance Redis support as later infrastructure
+  work instead of a near-term product priority.
+- 2026-04-15: Recorded the CI/security advisory-lane promotion policy:
+  `npm audit` is the first blocker candidate, `lint:strict` is second, `knip`
+  is third, and OSSF Scorecard stays advisory.
 - 2026-04-15: Refreshed the repository documentation so README, AGENTS,
   security, accessibility, scaling, deployment, and localization guidance all
   describe the current Fastify + Socket.IO product, the default memory runtime,

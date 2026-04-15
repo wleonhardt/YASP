@@ -2,21 +2,26 @@
 
 ## Open
 
-- 2026-04-14: In future multi-instance Redis mode, should room updates use
-  optimistic compare-and-set semantics or a single coordinator pattern to
-  avoid lost writes across instances? Phase 3 serializes writes only inside a
-  single process via `AsyncOperationQueue`; cross-instance coordination is
-  still undecided.
-- 2026-04-14: In future multi-instance Redis mode, which process should own
-  timer completion and cleanup so only one instance applies auto-reveal, room
-  expiry, and stale-participant removal?
-- 2026-04-15: Should the AWS/CDK deployment path remain intentionally
-  memory-only, or should it grow first-class `YASP_STATE_BACKEND=redis` /
-  `REDIS_URL` support for the TTL-bound Redis active-state profile? The current
-  userdata/systemd bootstrap deploys the default memory profile only.
+- No active open questions right now. The current scaling and deployment
+  posture is recorded in ADR 0004, and the remaining multi-instance Redis work
+  is intentionally deferred until operator requirements justify Phase 4.
 
 ## Resolved
 
+- 2026-04-15: The AWS/CDK deployment path remains intentionally memory-only.
+  The stack does not gain first-class Redis wiring yet because Redis mode is
+  still only a single-instance Redis-backed runtime profile. If Redis deploy
+  support is added later, it will be a separate advanced deployment profile,
+  not the default path (ADR 0004).
+- 2026-04-15: True multi-instance Redis support remains a valid long-term
+  infrastructure goal, but it is not a near-term core product priority. The
+  remaining design questions around cross-instance write coordination and
+  timer/cleanup ownership are deferred until operator requirements justify
+  Phase 4 work (ADR 0004).
+- 2026-04-15: Advisory CI/security lanes remain intentionally advisory until
+  they stay low-noise long enough to promote. The current promotion order is
+  `npm audit` first, `lint:strict` second, `knip` third, while OSSF Scorecard
+  stays advisory by design.
 - 2026-04-15: Redis key TTL grace now tracks the cleanup cadence instead of a
   fixed 60s buffer. `RedisRoomStore` sets room-key TTL to
   `room.expiresAt - now + CLEANUP_INTERVAL_MS + 5s`, which keeps the active

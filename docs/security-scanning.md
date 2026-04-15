@@ -36,8 +36,30 @@ met.
 In practice:
 
 - the repo already has layered security coverage in CI
-- not every security lane is a merge blocker yet
-- the promotion path for each advisory lane is recorded in the workflow itself
+- not every security lane is a merge blocker yet by design
+
+## Planned promotion order for advisory lanes
+
+Advisory checks should only become blocking after they stay low-noise long
+enough to be dependable merge gates.
+
+For the newer repo-managed advisory lanes, the promotion order is:
+
+1. `npm audit --omit=dev --audit-level=high`
+2. `npm run lint:strict`
+3. `npm run knip`
+
+OSSF Scorecard stays advisory. It is useful posture evidence, but it is not a
+good merge blocker for day-to-day PRs.
+
+Dependency Review and Trivy remain advisory for now too, but they are governed
+by their own prerequisites:
+
+- Dependency Review first needs GitHub Dependency Graph enabled and stable
+- Trivy first needs the current `HIGH` / `CRITICAL` baseline burned down
+
+Those two lanes should not be treated as part of the immediate blocker rollout
+order above.
 
 ## Scheduled sweeps
 

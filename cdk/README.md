@@ -34,6 +34,15 @@ first-class `YASP_STATE_BACKEND=redis` / `REDIS_URL` support into the
 userdata/systemd bootstrap, and it should not be described as a multi-instance
 or Redis-backed deployment path yet.
 
+That is intentional. YASP keeps the AWS path memory-only by default because it
+is the simplest supportable operator profile today. Adding Redis infrastructure
+now would increase cost, moving parts, and failure modes while implying a
+scaling maturity the product does not yet claim.
+
+If Redis deployment support is added later, it should land as a separate
+advanced deployment profile after the remaining multi-instance coordination
+work is complete enough to support it honestly.
+
 ## Security Model
 
 This stack is appropriate for a small internal tool, not a high-assurance security boundary.
@@ -228,7 +237,8 @@ CloudFront logs go to an S3 bucket with public access blocked, encryption, SSL-o
 
 - Single instance — no HA, no rolling deploys, no horizontal scale
 - Instance replacement disrupts active in-memory rooms
-- First-class Redis-backed deployment wiring is not implemented in this stack
+- First-class Redis-backed deployment wiring is intentionally deferred in this
+  stack; the default AWS profile stays memory-only by design
 - CloudFront → EC2 is HTTP (not HTTPS) to keep the stack simple
 - CloudFront has a 60-second origin read timeout; idle WebSockets may be dropped at that interval (Socket.IO reconnects automatically)
 - CloudFront WAF adds a real monthly baseline cost

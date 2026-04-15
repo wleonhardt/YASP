@@ -174,7 +174,10 @@ single-instance and is documented in
 
 The current CDK stack deploys the default single-instance memory profile. It
 does not yet wire first-class Redis configuration into the userdata/service
-bootstrap.
+bootstrap. That is intentional: the AWS path stays memory-only by default
+until Redis mode is honestly more than a single-instance runtime profile. Any
+future Redis deploy support would be a separate advanced profile, not the
+default path.
 
 ## Testing, CI, and quality gates
 
@@ -197,6 +200,10 @@ clean or the relevant GitHub features are fully enabled:
 - strict lint
 - Knip
 - OSSF Scorecard
+
+The planned blocker-promotion order for the repo-managed advisory lanes is:
+`npm audit` first, `lint:strict` second, `knip` third. OSSF Scorecard stays
+advisory.
 
 The source of truth for the current CI/security split is
 [docs/security-scanning.md](./docs/security-scanning.md).

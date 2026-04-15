@@ -25,6 +25,10 @@ optional Redis-backed mode actually do, and what does it still not do?
 Redis mode is supported as a way to move active ephemeral state out of process.
 It is not yet the same thing as true multi-instance horizontal scaling.
 
+The supported/default AWS deployment path remains memory-only by design. YASP
+does not currently present Redis mode as the default operator story or as a
+ready-made scale-out deployment profile.
+
 ## What Redis mode supports today
 
 After ADR 0003 / Phase 3, Redis mode supports the real room workflow for a
@@ -86,6 +90,37 @@ serving:
 Today, multiple app instances pointed at the same Redis would still be outside
 the supported deployment model.
 
+## Priority and deployment stance
+
+True multi-instance Redis support is still valid future infrastructure work,
+but it is not a near-term core product priority.
+
+Why:
+
+- it provides operator/infrastructure value, not direct end-user feature value
+- it should not outrank product simplicity, UX, accessibility, or runtime
+  stability
+- wiring Redis into default deployment docs too early would imply scaling
+  maturity YASP does not yet have
+
+That is why:
+
+- the default runtime remains `memory`
+- the AWS/CDK path remains memory-only by design
+- first-class Redis deployment support is intentionally deferred
+
+If Redis deployment support is added later, it should arrive as a separate
+advanced deployment profile after the missing Phase 4 work is complete enough
+to support it honestly.
+
+Phase 4 becomes worth prioritizing only when operator requirements justify it,
+such as:
+
+- rolling deploys without losing active rooms
+- meaningful concurrent traffic beyond one instance
+- hosting targets that require multiple app instances
+- higher availability requirements
+
 ## Relevant ADRs
 
 - [ADR 0001](../plans/decisions/0001-ephemeral-horizontal-scaling-seams.md) —
@@ -94,6 +129,9 @@ the supported deployment model.
   added Redis-backed state prototypes
 - [ADR 0003](../plans/decisions/0003-redis-runtime-wiring-single-instance-profile.md) —
   made the Redis-backed runtime operational in a single-instance profile
+- [ADR 0004](../plans/decisions/0004-keep-default-deployments-memory-only-until-redis-scale-out-is-real.md) —
+  keeps default deployments memory-only and defers multi-instance Redis work
+  until operator requirements justify it
 
 ## Validation coverage
 
