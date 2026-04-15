@@ -17,10 +17,12 @@
     "@fastify/static": "^9.1.0",
     "@yasp/shared": "*",
     "fastify": "^5.8.4",
+    "ioredis": "^5.8.2",
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
+    "ioredis-mock": "^8.9.0",
     "tsx": "^4.16.2",
     "vitest": "^4.1.4"
   }

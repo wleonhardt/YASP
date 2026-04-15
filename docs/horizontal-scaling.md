@@ -79,3 +79,46 @@ This phase does not add:
 - Redis key schema
 - Multi-instance deployment changes
 - CDK or infrastructure changes
+
+## Phase 2 Prototypes
+
+Phase 2 adds the Redis-backed store prototypes behind an opt-in configuration
+switch while keeping local in-memory mode the default. See
+`plans/decisions/0002-redis-backed-state-prototypes.md` for the scope and
+explicit non-wiring note.
+
+- Config switch: `YASP_STATE_BACKEND=memory|redis` (default `memory`)
+- Required only when `backend=redis`: `REDIS_URL`
+- Redis dependency: `ioredis` (dynamic-imported — not loaded in memory mode)
+- New async interfaces: `AsyncRoomStore`, `AsyncSessionBindingStore`
+- New implementations:
+  - `AsyncInMemoryRoomStore` / `AsyncInMemorySessionBindingStore` — test-only
+    adapters over the existing sync stores
+  - `RedisRoomStore` / `RedisSessionBindingStore` — Redis-backed prototypes
+
+### Redis Key Model (Phase 2)
+
+- `yasp:room:{roomId}` — JSON-encoded active room. Maps serialize as arrays of
+  tuples. Key TTL is set on every `save` to
+  `max(5s, room.expiresAt - now + 60s)`.
+- `yasp:session:{socketId}` — JSON-encoded `{sessionId, roomId}` binding for a
+  single socket. Hard TTL of 24h as a crash-safety net.
+
+There are no `yasp:room:history:*`, `yasp:archive:*`, or any other durable
+keys. Redis is used as ephemeral distributed memory only.
+
+### Phase 2 Non-Wiring
+
+The composition root selects the backend at startup, but RoomService is still
+synchronous and is still wired to `InMemoryRoomStore` / `InMemorySessionBindingStore`.
+Starting the process with `YASP_STATE_BACKEND=redis` validates connectivity
+(connect + PING) and then fails startup with a clear message pointing here.
+Re-wiring RoomService onto the async interfaces is Phase 3.
+
+### Still Out Of Scope (Phase 2)
+
+- Socket.IO Redis adapter
+- Distributed timer ownership
+- Multi-instance concurrent write coordination (CAS vs coordinator)
+- Multi-instance deployment changes
+- CDK or infrastructure changes

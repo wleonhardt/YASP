@@ -11,7 +11,8 @@ import {
 } from "./services/active-room-session-resolver.js";
 import { SocketRoomStatePublisher, type RoomStatePublisher } from "./services/room-state-publisher.js";
 import { registerSocketHandlers } from "./transport/socket-handlers.js";
-import { PORT, HOST } from "./config.js";
+import { PORT, HOST, STATE_BACKEND_CONFIG } from "./config.js";
+import { createAsyncStateBackend, type AsyncStateBackend } from "./services/state-backend.js";
 import { logger } from "./utils/logger.js";
 
 type FatalProcessEvent = "uncaughtException" | "unhandledRejection";
@@ -20,6 +21,7 @@ let cleanupServiceRef: CleanupService | null = null;
 let timerServiceRef: RoomTimerScheduler | null = null;
 let ioRef: ReturnType<typeof createSocketServer> | null = null;
 let appRef: Awaited<ReturnType<typeof createApp>> | null = null;
+let stateBackendRef: AsyncStateBackend | null = null;
 let shuttingDown = false;
 
 function describeUnknownError(value: unknown): {
@@ -89,6 +91,19 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
   timerServiceRef?.cancelAll();
   ioRef?.close();
 
+  if (stateBackendRef) {
+    try {
+      await stateBackendRef.close();
+    } catch (error) {
+      logger.error("Failed to close state backend cleanly", {
+        reason,
+        exitCode,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    stateBackendRef = null;
+  }
+
   if (appRef) {
     try {
       await appRef.close();
@@ -132,6 +147,25 @@ process.on("unhandledRejection", (reason) => {
 });
 
 async function main() {
+  // Phase 2 horizontal-scaling: construct (and validate) the configured
+  // backend up front. For `memory` this is cheap and always succeeds. For
+  // `redis` this connects to Redis and PINGs it so misconfiguration fails at
+  // startup instead of on first room. The prototypes are not yet wired to
+  // RoomService — see ADR 0002 — so we refuse to start in redis mode with a
+  // clear error once the Redis health-check has proven config validity.
+  logger.info("Selecting state backend", { backend: STATE_BACKEND_CONFIG.kind });
+  const stateBackend = await createAsyncStateBackend(STATE_BACKEND_CONFIG);
+  stateBackendRef = stateBackend;
+
+  if (stateBackend.kind === "redis") {
+    throw new Error(
+      "YASP_STATE_BACKEND=redis is a Phase 2 prototype. Redis connectivity was " +
+        "verified, but RoomService is not yet wired onto the async store " +
+        "interface (see plans/decisions/0002-redis-backed-state-prototypes.md). " +
+        "Restart with YASP_STATE_BACKEND=memory (the default)."
+    );
+  }
+
   const app = await createApp();
   appRef = app;
   const httpServer = app.server;

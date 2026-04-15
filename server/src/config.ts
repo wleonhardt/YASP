@@ -76,6 +76,44 @@ function resolveTrustedProxyHops(): number {
 }
 export const TRUSTED_PROXY_HOP_COUNT = resolveTrustedProxyHops();
 
+// ---------------------------------------------------------------------------
+// Optional horizontal-scaling backend (Phase 2 prototype).
+//
+// Default stays `memory` — in-process Map-backed stores, identical to the
+// behavior before Phase 2. Setting `YASP_STATE_BACKEND=redis` instantiates
+// the Redis-backed prototypes (RedisRoomStore / RedisSessionBindingStore) and
+// requires `REDIS_URL` to be set. Redis mode is ephemeral shared active-room
+// state only — no history, no archive, no accounts. See ADR 0002.
+// ---------------------------------------------------------------------------
+export type StateBackend = "memory" | "redis";
+
+export type StateBackendConfig =
+  | { kind: "memory" }
+  | { kind: "redis"; redisUrl: string };
+
+function resolveStateBackendConfig(): StateBackendConfig {
+  const raw = (process.env.YASP_STATE_BACKEND ?? "memory").trim().toLowerCase();
+  if (raw === "" || raw === "memory") return { kind: "memory" };
+  if (raw === "redis") {
+    const redisUrl = process.env.REDIS_URL?.trim();
+    if (!redisUrl) {
+      throw new Error(
+        "YASP_STATE_BACKEND=redis requires REDIS_URL to be set (e.g. redis://host:6379/0)."
+      );
+    }
+    return { kind: "redis", redisUrl };
+  }
+  throw new Error(
+    `Unknown YASP_STATE_BACKEND value: ${JSON.stringify(raw)}. Supported: memory, redis.`
+  );
+}
+
+/**
+ * Resolved state-backend configuration. Read once at startup. Changing
+ * `YASP_STATE_BACKEND` / `REDIS_URL` requires a process restart.
+ */
+export const STATE_BACKEND_CONFIG: StateBackendConfig = resolveStateBackendConfig();
+
 // Per-participant minimum interval between two successive honks from the same
 // participant in a room. The existing room-level cooldown
 // (`ROOM_TIMER_HONK_COOLDOWN_MS` = 5s) already bounds honk traffic per room,
