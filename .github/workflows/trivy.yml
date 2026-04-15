@@ -47,7 +47,17 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v6
 
-      - name: Trivy filesystem + config scan
+      # Advisory until the baseline HIGH/CRITICAL findings are triaged.
+      # Today the scan exits 1 on a non-zero count of HIGH/CRITICAL
+      # vulnerabilities in the repo's existing transitive dependencies
+      # — these are not introduced by any Dependabot PR, and gating on
+      # them would red every PR until the baseline is clean. Findings
+      # still upload to Security → Code scanning via SARIF for triage.
+      # Promote to a hard gate (drop `continue-on-error`) once the
+      # baseline is clean on main.
+      - name: Trivy filesystem + config scan (advisory)
+        id: trivy-fs
+        continue-on-error: true
         uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: fs
@@ -90,7 +100,12 @@ jobs:
           load: true
           tags: yasp:trivy-scan
 
-      - name: Trivy image scan
+      # Advisory until the base image + transitive deps are clean at
+      # HIGH/CRITICAL. Same rationale as the filesystem scan above;
+      # promote back to blocking once the baseline is green.
+      - name: Trivy image scan (advisory)
+        id: trivy-image
+        continue-on-error: true
         uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: image

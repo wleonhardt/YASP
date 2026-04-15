@@ -15,8 +15,8 @@ listed severity fails the job and blocks merge.
 | Validate (build, test, lint, format, i18n) | `ci.yml` → `validate` | any failure |
 | Dependency review | `dependency-review.yml` | new dep at `high` or `critical` GHSA severity *(advisory until **Dependency graph** is enabled under Settings → Code security and analysis)* |
 | CodeQL (JS/TS, `security-extended`) | `codeql.yml` | any security finding |
-| Trivy filesystem + IaC + secret scan | `trivy.yml` → `repo-scan` | `HIGH` or `CRITICAL`, fixed versions only |
-| Trivy container image scan | `trivy.yml` → `image-scan` | `HIGH` or `CRITICAL`, fixed versions only |
+| Trivy filesystem + IaC + secret scan | `trivy.yml` → `repo-scan` | `HIGH` or `CRITICAL`, fixed versions only *(advisory until baseline HIGH/CRITICAL are burned down)* |
+| Trivy container image scan | `trivy.yml` → `image-scan` | `HIGH` or `CRITICAL`, fixed versions only *(advisory until baseline HIGH/CRITICAL are burned down)* |
 | Docker build + health check | `ci.yml` → `docker-validation` | any failure |
 | Accessibility smoke | `ci.yml` → `a11y-smoke` | any failure |
 | CDK synth (when `cdk/` changed) | `ci.yml` → `cdk-synth` | any failure |
