@@ -47,8 +47,12 @@ function handlers() {
   };
 }
 
+function mockTimerSound(enabled: boolean) {
+  vi.spyOn(storage, "getStoredTimerSoundEnabled").mockReturnValue(enabled);
+}
+
 beforeEach(() => {
-  storage.setStoredTimerSoundEnabled(true);
+  mockTimerSound(true);
 });
 
 describe("ModeratorControls", () => {
@@ -179,7 +183,7 @@ describe("ModeratorControls", () => {
   });
 
   it("shows sound off in the compact drawer summary when the stored preference is off", () => {
-    storage.setStoredTimerSoundEnabled(false);
+    mockTimerSound(false);
 
     render(<ModeratorControls compact state={makeState()} {...handlers()} />);
 

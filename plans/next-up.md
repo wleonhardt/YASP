@@ -11,6 +11,9 @@
 
 ## Done
 
+- 2026-04-15: Stabilized `ModeratorControls` client coverage by mocking the
+  timer-sound storage read directly instead of relying on suite-global
+  `localStorage`, which was racing under Vitest's parallel client workers.
 - 2026-04-14: Phase 1 optional horizontal-scaling prep introduced explicit room/session/timer/publisher seams while keeping local in-memory behavior unchanged and documenting Redis as ephemeral shared state only.
 - 2026-04-14: Phase 2 optional horizontal-scaling added Redis-backed `RoomStore` and `SessionBindingStore` prototypes behind `YASP_STATE_BACKEND=redis`, async store interfaces, composition-root backend selection with PING-based health check, and a shared contract suite running both in-memory and Redis (via `ioredis-mock`) implementations. Memory mode remains the default; RoomService async-wiring is deferred to Phase 3 (see ADR 0002).
 - 2026-04-15: Phase 3 rewired the real server runtime so memory mode keeps the
