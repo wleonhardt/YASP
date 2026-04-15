@@ -13,7 +13,7 @@ listed severity fails the job and blocks merge.
 | Check | Workflow | Gate |
 |---|---|---|
 | Validate (build, test, lint, format, i18n) | `ci.yml` → `validate` | any failure |
-| Dependency review | `dependency-review.yml` | new dep at `high` or `critical` GHSA severity |
+| Dependency review | `dependency-review.yml` | new dep at `high` or `critical` GHSA severity *(advisory until **Dependency graph** is enabled under Settings → Code security and analysis)* |
 | CodeQL (JS/TS, `security-extended`) | `codeql.yml` | any security finding |
 | Trivy filesystem + IaC + secret scan | `trivy.yml` → `repo-scan` | `HIGH` or `CRITICAL`, fixed versions only |
 | Trivy container image scan | `trivy.yml` → `image-scan` | `HIGH` or `CRITICAL`, fixed versions only |

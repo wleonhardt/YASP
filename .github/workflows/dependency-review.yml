@@ -26,11 +26,20 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v6
 
-      - name: Run dependency review
+      # Advisory until the repo has the Dependency graph feature
+      # enabled under Settings → Code security and analysis. Without
+      # dep-graph the action aborts with "Dependency review is not
+      # supported on this repository", which would red every PR for a
+      # reason unrelated to actual advisories. Flip this to a hard
+      # gate (drop `continue-on-error`) as soon as dep-graph is on.
+      - name: Run dependency review (advisory until dep-graph enabled)
+        id: dep-review
+        continue-on-error: true
         uses: actions/dependency-review-action@v4
         with:
-          # Hard gate: newly introduced high/critical advisories block
-          # the PR. Moderate/low show in the summary but do not fail.
+          # Hard gate once promoted: newly introduced high/critical
+          # advisories block the PR. Moderate/low show in the summary
+          # but do not fail.
           fail-on-severity: high
           # Surface the full report in the PR check summary so reviewers
           # see every advisory touched by the change, not just the ones
