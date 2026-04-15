@@ -32,9 +32,62 @@ export type RoundReport = {
   };
 };
 
+export type RoundReportPlainTextSummary = {
+  heading: string;
+  meta?: string;
+  deck: string;
+  stats: Array<{
+    label: string;
+    value: string;
+  }>;
+  votesHeading: string;
+  votes: string[];
+};
+
 function isNumericVote(value: VoteValue): boolean {
   const parsed = Number(value);
   return Number.isFinite(parsed) && String(parsed) === value;
+}
+
+export function formatRoundReportTime(timestamp: number, locale: string): string {
+  const date = new Date(timestamp);
+  if (!Number.isFinite(date.getTime())) {
+    return "";
+  }
+
+  try {
+    return new Intl.DateTimeFormat(locale, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
+  } catch {
+    return date.toTimeString().slice(0, 5);
+  }
+}
+
+export function toPlainTextSummary(summary: RoundReportPlainTextSummary): string {
+  const lines = [
+    summary.heading,
+    summary.meta,
+    summary.deck,
+    ...summary.stats.map(({ label, value }) => `${label}: ${value}`),
+    `${summary.votesHeading}: ${summary.votes.join("; ")}`,
+  ].filter((line): line is string => Boolean(line));
+
+  return lines.join("\n");
+}
+
+export async function writeTextToClipboard(
+  text: string,
+  clipboard: Pick<Clipboard, "writeText"> | null | undefined = typeof navigator !== "undefined"
+    ? navigator.clipboard
+    : undefined
+): Promise<void> {
+  if (!clipboard?.writeText) {
+    throw new Error("Clipboard unavailable");
+  }
+
+  await clipboard.writeText(text);
 }
 
 /**

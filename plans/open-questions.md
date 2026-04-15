@@ -8,6 +8,12 @@
 
 ## Resolved
 
+- 2026-04-15: The revealed-round footer entry points now keep role separation
+  without crowding the Results panel on narrow layouts. Moderators retain the
+  report entry point and gain a clipboard-only "Copy summary" helper, while
+  participants still get only the view-only "Round summary". The feature
+  remains client-only, current-round-only, session-only, and explicitly avoids
+  new exports, persistence, or history/archive browsing.
 - 2026-04-15: Revealed-round detail access is now split by role without adding
   new permissions complexity. Moderators keep the report/export tooling, while
   non-moderators can open a view-only "Round summary" for the current revealed

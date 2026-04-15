@@ -1,7 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { PublicRoomState } from "@yasp/shared";
 import { makePublicRoomState } from "../test/roomState";
-import { buildRoundReport, formatExportFilename, toCsv, toJson } from "./roundReport";
+import {
+  buildRoundReport,
+  formatExportFilename,
+  toCsv,
+  toJson,
+  toPlainTextSummary,
+  writeTextToClipboard,
+} from "./roundReport";
 
 function revealedState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   return makePublicRoomState({
@@ -154,5 +161,43 @@ describe("formatExportFilename", () => {
     const report = buildRoundReport(revealedState(), Date.UTC(2026, 3, 15, 14, 30))!;
     expect(formatExportFilename(report, "csv")).toMatch(/^yasp-round-ROOM01-r3-.*\.csv$/);
     expect(formatExportFilename(report, "json")).toMatch(/^yasp-round-ROOM01-r3-.*\.json$/);
+  });
+});
+
+describe("toPlainTextSummary", () => {
+  it("formats a compact plain-text summary for clipboard use", () => {
+    const summary = toPlainTextSummary({
+      heading: "Round summary",
+      meta: "Round 3 • Revealed 2:30 PM",
+      deck: "Deck: Fibonacci",
+      stats: [
+        { label: "Average", value: "4" },
+        { label: "Median", value: "4" },
+        { label: "Most common", value: "Tie" },
+        { label: "Consensus", value: "Tie" },
+      ],
+      votesHeading: "Votes",
+      votes: ["Alice: 3", "Bob: 5"],
+    });
+
+    expect(summary).toContain("Round summary");
+    expect(summary).toContain("Average: 4");
+    expect(summary).toContain("Votes: Alice: 3; Bob: 5");
+  });
+});
+
+describe("writeTextToClipboard", () => {
+  it("writes text using the provided clipboard implementation", async () => {
+    const clipboard = {
+      writeText: vi.fn().mockResolvedValue(undefined),
+    };
+
+    await writeTextToClipboard("Round summary", clipboard);
+
+    expect(clipboard.writeText).toHaveBeenCalledWith("Round summary");
+  });
+
+  it("throws when clipboard access is unavailable", async () => {
+    await expect(writeTextToClipboard("Round summary", undefined)).rejects.toThrow(/clipboard unavailable/i);
   });
 });

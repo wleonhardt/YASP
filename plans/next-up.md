@@ -14,6 +14,12 @@
 
 ## Done
 
+- 2026-04-15: Polished the revealed-round Results footer so the moderator
+  report entry point and participant summary entry point stay calm, balanced,
+  and mobile-safe across narrow widths. Moderators also now get a
+  session-only/current-round-only "Copy summary" action that copies a concise
+  plain-text snapshot to the clipboard without adding exports, persistence,
+  backend changes, or history/archive behavior.
 - 2026-04-15: Extended the revealed-round detail modal so non-moderators can
   open a view-only "Round summary" after reveal using the same current-round
   client snapshot as the moderator report. Export actions remain

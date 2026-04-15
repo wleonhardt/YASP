@@ -7,6 +7,7 @@ import { getMedian, getNumericVotes, getSpread, isMeModerator } from "../lib/roo
 type Props = {
   state: PublicRoomState;
   onOpenRoundReport?: () => void;
+  onCopyRoundSummary?: () => void | Promise<void>;
   roundReportButtonRef?: Ref<HTMLButtonElement>;
 };
 
@@ -18,7 +19,7 @@ function formatOptionalStat(value: number | null, fallback: string): string {
   return value.toFixed(1).replace(/\.0$/, "");
 }
 
-export function ResultsPanel({ state, onOpenRoundReport, roundReportButtonRef }: Props) {
+export function ResultsPanel({ state, onCopyRoundSummary, onOpenRoundReport, roundReportButtonRef }: Props) {
   const { t } = useTranslation();
   const headingId = useId();
   const keyStatsId = useId();
@@ -56,9 +57,12 @@ export function ResultsPanel({ state, onOpenRoundReport, roundReportButtonRef }:
   const medianValue = formatOptionalStat(median, notAvailableLabel);
   const mostCommonValue = stats.mostCommon !== null ? <DeckToken token={stats.mostCommon} /> : t("room.tie");
   const spreadValue = formatOptionalStat(spread, notAvailableLabel);
-  const reportMode = isMeModerator(state) ? "moderator" : "participant";
+  const isModerator = isMeModerator(state);
+  const reportMode = isModerator ? "moderator" : "participant";
   const reportButtonLabel =
     reportMode === "moderator" ? t("room.roundReport.openButton") : t("room.roundReport.openSummaryButton");
+  const copySummaryHandler = isModerator ? onCopyRoundSummary : undefined;
+  const showCopySummary = typeof copySummaryHandler === "function";
 
   return (
     <section className="app-panel results-panel" aria-labelledby={headingId}>
@@ -90,16 +94,29 @@ export function ResultsPanel({ state, onOpenRoundReport, roundReportButtonRef }:
         distributionLabel={distributionLabel}
         highestCount={highestCount}
       />
-      {onOpenRoundReport && (
+      {(showCopySummary || onOpenRoundReport) && (
         <div className="results-panel__footer">
-          <button
-            ref={roundReportButtonRef}
-            type="button"
-            className="button button--secondary"
-            onClick={onOpenRoundReport}
-          >
-            {reportButtonLabel}
-          </button>
+          <div className="results-panel__footer-actions">
+            {showCopySummary && (
+              <button
+                type="button"
+                className="button button--ghost"
+                onClick={() => void copySummaryHandler()}
+              >
+                {t("room.roundReport.copySummary")}
+              </button>
+            )}
+            {onOpenRoundReport && (
+              <button
+                ref={roundReportButtonRef}
+                type="button"
+                className="button button--secondary"
+                onClick={onOpenRoundReport}
+              >
+                {reportButtonLabel}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </section>

@@ -19,6 +19,12 @@ import { getNextRovingValue } from "../lib/rovingFocus";
 import { useRoom } from "../hooks/useRoom";
 import { useSession } from "../hooks/useSession";
 import { useSocket } from "../hooks/useSocket";
+import {
+  buildRoundReport,
+  formatRoundReportTime,
+  toPlainTextSummary,
+  writeTextToClipboard,
+} from "../lib/roundReport";
 import { getConnectedVoterCounts, getSelf, isMeModerator } from "../lib/room";
 import { getRoomShortcutAction } from "../lib/roomShortcuts";
 import { getStoredDisplayName, getStoredRole, setStoredDisplayName, setStoredRole } from "../lib/storage";
@@ -27,8 +33,16 @@ type RoomUnavailableReason = "ROOM_NOT_FOUND" | "ROOM_EXPIRED";
 const JOIN_ROLE_OPTIONS = ["voter", "spectator"] as const satisfies readonly ParticipantRole[];
 const COMPACT_ROUND_LAYOUT_QUERY = "(max-width: 640px)";
 
+function formatOptionalSummaryNumber(value: number | null, fallback: string): string {
+  if (value === null) {
+    return fallback;
+  }
+
+  return value.toFixed(1).replace(/\.0$/, "");
+}
+
 export function RoomPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -199,6 +213,61 @@ export function RoomPage() {
     setToast({ intent, message });
     toastTimeout.current = window.setTimeout(() => setToast(null), 5000);
   }, []);
+
+  const handleCopyRoundSummary = useCallback(async () => {
+    if (!roomState || revealedAt === null || !isMeModerator(roomState)) {
+      return;
+    }
+
+    const report = buildRoundReport(roomState, revealedAt);
+    if (!report) {
+      return;
+    }
+
+    const notAvailable = t("room.notAvailable");
+    const revealedAtLabel = formatRoundReportTime(report.revealedAt, i18n.language);
+    const consensusValue = report.stats.consensus
+      ? t("room.consensusReached")
+      : report.stats.mostCommon === null
+        ? t("room.tie")
+        : t("room.noConsensus");
+
+    const summaryText = toPlainTextSummary({
+      heading: t("room.roundReport.summaryTitle"),
+      meta: t("room.roundReport.meta", {
+        round: report.roundNumber,
+        time: revealedAtLabel,
+      }),
+      deck: t("room.roundReport.deck", { deck: report.deckLabel }),
+      stats: [
+        {
+          label: t("room.average"),
+          value: formatOptionalSummaryNumber(report.stats.numericAverage, notAvailable),
+        },
+        {
+          label: t("room.median"),
+          value: formatOptionalSummaryNumber(report.stats.median, notAvailable),
+        },
+        {
+          label: t("room.mostCommon"),
+          value: report.stats.mostCommon ?? t("room.tie"),
+        },
+        {
+          label: t("room.consensus"),
+          value: consensusValue,
+        },
+      ],
+      votesHeading: t("room.roundReport.votes"),
+      votes: report.voters.map((voter) => `${voter.name}: ${voter.vote ?? t("room.participant.notVoted")}`),
+    });
+
+    try {
+      await writeTextToClipboard(summaryText);
+      showToast("success", t("room.copied"));
+    } catch {
+      showToast("error", t("room.copyFailed"));
+    }
+  }, [i18n.language, revealedAt, roomState, showToast, t]);
 
   useEffect(() => {
     return () => {
@@ -725,6 +794,7 @@ export function RoomPage() {
             {state.revealed ? (
               <ResultsPanel
                 state={state}
+                onCopyRoundSummary={isMeModerator(state) ? handleCopyRoundSummary : undefined}
                 onOpenRoundReport={() => setRoundReportOpen(true)}
                 roundReportButtonRef={roundReportButtonRef}
               />

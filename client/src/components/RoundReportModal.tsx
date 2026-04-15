@@ -5,6 +5,7 @@ import { DeckToken } from "./DeckToken";
 import {
   buildRoundReport,
   downloadBlob,
+  formatRoundReportTime,
   formatExportFilename,
   toCsv,
   toJson,
@@ -47,21 +48,6 @@ function resolveReturnFocusTarget(
   }
 
   return null;
-}
-
-function formatRevealedAt(timestamp: number, locale: string): string {
-  const date = new Date(timestamp);
-  if (!Number.isFinite(date.getTime())) {
-    return "";
-  }
-  try {
-    return new Intl.DateTimeFormat(locale, {
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(date);
-  } catch {
-    return date.toTimeString().slice(0, 5);
-  }
 }
 
 function formatNumber(value: number | null, fallback: string): string {
@@ -198,7 +184,7 @@ export function RoundReportModal({ open, state, revealedAt, mode, onClose, retur
   const mostCommonValue = report.stats.mostCommon ?? t("room.tie");
   const mostCommonMeta = report.stats.consensus ? t("room.consensus") : t("room.plurality");
   const consensusValue = report.stats.consensus ? t("room.consensusReached") : t("room.noConsensus");
-  const revealedAtLabel = formatRevealedAt(report.revealedAt, i18n.language);
+  const revealedAtLabel = formatRoundReportTime(report.revealedAt, i18n.language);
   const distributionMax = report.stats.distribution[0]?.count ?? 1;
   const hasNonNumericVotes = report.voters.some((voter) => voter.vote !== null && !voter.voteIsNumeric);
   const modalTitle = isModeratorMode ? t("room.roundReport.title") : t("room.roundReport.summaryTitle");

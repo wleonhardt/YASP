@@ -115,6 +115,26 @@ describe("ResultsPanel round detail entry point", () => {
     expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
+  it("renders the moderator copy action without showing it to participants", () => {
+    const { rerender } = render(
+      <ResultsPanel state={makeRevealedState()} onCopyRoundSummary={vi.fn()} onOpenRoundReport={vi.fn()} />
+    );
+
+    expect(screen.getByRole("button", { name: /copy summary/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /view round report/i })).toBeInTheDocument();
+
+    rerender(
+      <ResultsPanel
+        state={makeRevealedState({ selfModerator: false })}
+        onCopyRoundSummary={vi.fn()}
+        onOpenRoundReport={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: /copy summary/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /view round summary/i })).toBeInTheDocument();
+  });
+
   it("renders the participant trigger label after reveal", async () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
@@ -131,6 +151,7 @@ describe("ResultsPanel round detail entry point", () => {
 
     expect(screen.queryByRole("button", { name: /view round report/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /view round summary/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /copy summary/i })).not.toBeInTheDocument();
   });
 
   it("does not render either trigger before reveal", () => {
@@ -138,6 +159,42 @@ describe("ResultsPanel round detail entry point", () => {
 
     expect(screen.queryByRole("button", { name: /view round report/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /view round summary/i })).not.toBeInTheDocument();
+  });
+
+  it("lets the moderator copy action drive clipboard writes", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const originalClipboard = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+
+    try {
+      Object.defineProperty(navigator, "clipboard", {
+        configurable: true,
+        value: {
+          writeText,
+        },
+      });
+
+      render(
+        <ResultsPanel
+          state={makeRevealedState()}
+          onCopyRoundSummary={() => navigator.clipboard.writeText("Round summary")}
+          onOpenRoundReport={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /copy summary/i }));
+
+      expect(writeText).toHaveBeenCalledWith("Round summary");
+    } finally {
+      if (originalClipboard) {
+        Object.defineProperty(navigator, "clipboard", originalClipboard);
+      } else {
+        const clipboardHolder = navigator as unknown as {
+          clipboard?: Clipboard;
+        };
+        delete clipboardHolder.clipboard;
+      }
+    }
   });
 });
 
