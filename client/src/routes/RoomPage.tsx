@@ -8,6 +8,7 @@ import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ModeratorControls } from "../components/ModeratorControls";
 import { ParticipantsBoard } from "../components/ParticipantsBoard";
 import { ResultsPanel } from "../components/ResultsPanel";
+import { RoundReportModal } from "../components/RoundReportModal";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Toast, type ToastState } from "../components/Toast";
 import { TopBar } from "../components/TopBar";
@@ -59,6 +60,9 @@ export function RoomPage() {
   const [joinRole, setJoinRole] = useState<ParticipantRole>("voter");
   const [toast, setToast] = useState<ToastState | null>(null);
   const [roomUnavailable, setRoomUnavailable] = useState<RoomUnavailableReason | null>(null);
+  const [roundReportOpen, setRoundReportOpen] = useState(false);
+  const [revealedAt, setRevealedAt] = useState<number | null>(null);
+  const roundReportButtonRef = useRef<HTMLButtonElement | null>(null);
   const [compactRoundLayout, setCompactRoundLayout] = useState(() =>
     typeof window !== "undefined" && typeof window.matchMedia === "function"
       ? window.matchMedia(COMPACT_ROUND_LAYOUT_QUERY).matches
@@ -159,6 +163,25 @@ export function RoomPage() {
     prevModeratorRef.current = moderator?.id ?? null;
     prevTimerCompletedRef.current = roomState.timer.completedAt;
   }, [announce, roomState, t]);
+
+  // Capture a client-side `revealedAt` when the room transitions into
+  // the revealed phase. The server does not expose this on
+  // PublicRoomState — the modal is moderator-only and ephemeral, so a
+  // local stamp is fine.
+  useEffect(() => {
+    if (!roomState) {
+      setRevealedAt(null);
+      setRoundReportOpen(false);
+      return;
+    }
+
+    if (roomState.revealed && revealedAt === null) {
+      setRevealedAt(Date.now());
+    } else if (!roomState.revealed && revealedAt !== null) {
+      setRevealedAt(null);
+      setRoundReportOpen(false);
+    }
+  }, [revealedAt, roomState]);
 
   const navState = location.state as { role?: ParticipantRole } | null;
 
@@ -700,7 +723,11 @@ export function RoomPage() {
 
           <aside className="room-layout__aside">
             {state.revealed ? (
-              <ResultsPanel state={state} />
+              <ResultsPanel
+                state={state}
+                onOpenRoundReport={() => setRoundReportOpen(true)}
+                roundReportButtonRef={roundReportButtonRef}
+              />
             ) : (
               <VoteDeck
                 state={state}
@@ -713,6 +740,16 @@ export function RoomPage() {
           </aside>
         </div>
       </main>
+
+      {roundReportOpen && revealedAt !== null && state.revealed && (
+        <RoundReportModal
+          open
+          state={state}
+          revealedAt={revealedAt}
+          onClose={() => setRoundReportOpen(false)}
+          returnFocusRef={roundReportButtonRef}
+        />
+      )}
 
       <Toast toast={toast} />
       <div className="sr-only" aria-live="polite" aria-atomic="true">

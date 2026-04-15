@@ -277,6 +277,22 @@
       "running": "Running",
       "paused": "Paused",
       "complete": "Time's up"
+    },
+    "roundReport": {
+      "title": "Round report",
+      "openButton": "View round report",
+      "close": "Close round report",
+      "meta": "Round {{round}} • Revealed {{time}}",
+      "deck": "Deck: {{deck}}",
+      "totalVotes": "{{count}} votes counted",
+      "votes": "Votes",
+      "participantColumn": "Participant",
+      "roleColumn": "Role",
+      "voteColumn": "Vote",
+      "exportCsv": "Export CSV",
+      "exportJson": "Export JSON",
+      "print": "Print",
+      "ephemeralNote": "This report is temporary and exists only in this session unless you export it."
     }
   },
   "documentTitle": {

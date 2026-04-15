@@ -277,6 +277,22 @@
       "running": "En marcha",
       "paused": "En pausa",
       "complete": "Se acabó el tiempo"
+    },
+    "roundReport": {
+      "title": "Informe de la ronda",
+      "openButton": "Ver informe de la ronda",
+      "close": "Cerrar informe de la ronda",
+      "meta": "Ronda {{round}} • Revelado {{time}}",
+      "deck": "Mazo: {{deck}}",
+      "totalVotes": "{{count}} votos contabilizados",
+      "votes": "Votos",
+      "participantColumn": "Participante",
+      "roleColumn": "Rol",
+      "voteColumn": "Voto",
+      "exportCsv": "Exportar CSV",
+      "exportJson": "Exportar JSON",
+      "print": "Imprimir",
+      "ephemeralNote": "Este informe es temporal y solo existe en esta sesión a menos que lo exportes."
     }
   },
   "documentTitle": {

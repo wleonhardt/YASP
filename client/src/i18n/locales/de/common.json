@@ -277,6 +277,22 @@
       "running": "Läuft",
       "paused": "Pausiert",
       "complete": "Zeit abgelaufen"
+    },
+    "roundReport": {
+      "title": "Rundenbericht",
+      "openButton": "Rundenbericht anzeigen",
+      "close": "Rundenbericht schließen",
+      "meta": "Runde {{round}} • Aufgedeckt um {{time}}",
+      "deck": "Kartendeck: {{deck}}",
+      "totalVotes": "{{count}} Stimmen gezählt",
+      "votes": "Stimmen",
+      "participantColumn": "Teilnehmer",
+      "roleColumn": "Rolle",
+      "voteColumn": "Stimme",
+      "exportCsv": "Als CSV exportieren",
+      "exportJson": "Als JSON exportieren",
+      "print": "Drucken",
+      "ephemeralNote": "Dieser Bericht ist temporär und existiert nur in dieser Sitzung, sofern du ihn nicht exportierst."
     }
   },
   "documentTitle": {

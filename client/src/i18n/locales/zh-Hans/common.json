@@ -277,6 +277,22 @@
       "running": "进行中",
       "paused": "已暂停",
       "complete": "时间到"
+    },
+    "roundReport": {
+      "title": "本轮报告",
+      "openButton": "查看本轮报告",
+      "close": "关闭本轮报告",
+      "meta": "第 {{round}} 轮 • 公开于 {{time}}",
+      "deck": "牌组：{{deck}}",
+      "totalVotes": "已统计 {{count}} 张投票",
+      "votes": "投票",
+      "participantColumn": "参与者",
+      "roleColumn": "角色",
+      "voteColumn": "投票",
+      "exportCsv": "导出 CSV",
+      "exportJson": "导出 JSON",
+      "print": "打印",
+      "ephemeralNote": "此报告是临时的，除非导出，否则仅在此会话中存在。"
     }
   },
   "documentTitle": {

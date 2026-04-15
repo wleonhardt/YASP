@@ -277,6 +277,22 @@
       "running": "진행 중",
       "paused": "일시정지",
       "complete": "시간 종료"
+    },
+    "roundReport": {
+      "title": "라운드 리포트",
+      "openButton": "라운드 리포트 보기",
+      "close": "라운드 리포트 닫기",
+      "meta": "라운드 {{round}} • 공개 {{time}}",
+      "deck": "덱: {{deck}}",
+      "totalVotes": "집계된 투표 {{count}}건",
+      "votes": "투표",
+      "participantColumn": "참가자",
+      "roleColumn": "역할",
+      "voteColumn": "투표",
+      "exportCsv": "CSV 내보내기",
+      "exportJson": "JSON 내보내기",
+      "print": "인쇄",
+      "ephemeralNote": "이 리포트는 일시적이며, 내보내지 않는 한 이 세션에서만 존재합니다."
     }
   },
   "documentTitle": {

@@ -1,11 +1,13 @@
-import { useId, type ReactNode } from "react";
+import { useId, type ReactNode, type Ref } from "react";
 import { useTranslation } from "react-i18next";
 import type { PublicRoomState } from "@yasp/shared";
 import { DeckToken } from "./DeckToken";
-import { getMedian, getNumericVotes, getSpread } from "../lib/room";
+import { getMedian, getNumericVotes, getSpread, isMeModerator } from "../lib/room";
 
 type Props = {
   state: PublicRoomState;
+  onOpenRoundReport?: () => void;
+  roundReportButtonRef?: Ref<HTMLButtonElement>;
 };
 
 function formatOptionalStat(value: number | null, fallback: string): string {
@@ -16,7 +18,7 @@ function formatOptionalStat(value: number | null, fallback: string): string {
   return value.toFixed(1).replace(/\.0$/, "");
 }
 
-export function ResultsPanel({ state }: Props) {
+export function ResultsPanel({ state, onOpenRoundReport, roundReportButtonRef }: Props) {
   const { t } = useTranslation();
   const headingId = useId();
   const keyStatsId = useId();
@@ -85,6 +87,18 @@ export function ResultsPanel({ state }: Props) {
         distributionLabel={distributionLabel}
         highestCount={highestCount}
       />
+      {onOpenRoundReport && isMeModerator(state) && (
+        <div className="results-panel__footer">
+          <button
+            ref={roundReportButtonRef}
+            type="button"
+            className="button button--secondary"
+            onClick={onOpenRoundReport}
+          >
+            {t("room.roundReport.openButton")}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

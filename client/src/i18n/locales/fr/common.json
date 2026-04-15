@@ -277,6 +277,22 @@
       "running": "En cours",
       "paused": "En pause",
       "complete": "Temps écoulé"
+    },
+    "roundReport": {
+      "title": "Rapport du tour",
+      "openButton": "Voir le rapport du tour",
+      "close": "Fermer le rapport du tour",
+      "meta": "Tour {{round}} • Révélé à {{time}}",
+      "deck": "Jeu : {{deck}}",
+      "totalVotes": "{{count}} votes comptabilisés",
+      "votes": "Votes",
+      "participantColumn": "Participant",
+      "roleColumn": "Rôle",
+      "voteColumn": "Vote",
+      "exportCsv": "Exporter en CSV",
+      "exportJson": "Exporter en JSON",
+      "print": "Imprimer",
+      "ephemeralNote": "Ce rapport est temporaire et n'existe que dans cette session, sauf si vous l'exportez."
     }
   },
   "documentTitle": {

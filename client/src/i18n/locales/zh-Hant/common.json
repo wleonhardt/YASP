@@ -277,6 +277,22 @@
       "running": "進行中",
       "paused": "已暫停",
       "complete": "時間到"
+    },
+    "roundReport": {
+      "title": "本輪報告",
+      "openButton": "檢視本輪報告",
+      "close": "關閉本輪報告",
+      "meta": "第 {{round}} 輪 • 公開於 {{time}}",
+      "deck": "牌組：{{deck}}",
+      "totalVotes": "已統計 {{count}} 張投票",
+      "votes": "投票",
+      "participantColumn": "參與者",
+      "roleColumn": "角色",
+      "voteColumn": "投票",
+      "exportCsv": "匯出 CSV",
+      "exportJson": "匯出 JSON",
+      "print": "列印",
+      "ephemeralNote": "此報告是暫時的，除非匯出，否則僅存在於此工作階段中。"
     }
   },
   "documentTitle": {

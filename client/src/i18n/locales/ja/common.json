@@ -277,6 +277,22 @@
       "running": "進行中",
       "paused": "一時停止",
       "complete": "時間です"
+    },
+    "roundReport": {
+      "title": "ラウンドレポート",
+      "openButton": "ラウンドレポートを表示",
+      "close": "ラウンドレポートを閉じる",
+      "meta": "ラウンド {{round}} • 公開時刻 {{time}}",
+      "deck": "デッキ: {{deck}}",
+      "totalVotes": "集計票数: {{count}}",
+      "votes": "投票",
+      "participantColumn": "参加者",
+      "roleColumn": "役割",
+      "voteColumn": "投票",
+      "exportCsv": "CSV をエクスポート",
+      "exportJson": "JSON をエクスポート",
+      "print": "印刷",
+      "ephemeralNote": "このレポートは一時的なもので、エクスポートしない限り、このセッション内にのみ存在します。"
     }
   },
   "documentTitle": {
