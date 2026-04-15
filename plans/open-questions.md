@@ -8,6 +8,11 @@
 
 ## Resolved
 
+- 2026-04-15: Dependabot auto-merge remains intentionally conservative. YASP
+  only enables GitHub auto-merge for low-risk single-dependency Dependabot PRs
+  after normal required checks pass. Major updates, runtime/deployment
+  packages, Docker changes, `cdk/`, deployment workflows, and grouped
+  dependency updates remain manual review.
 - 2026-04-15: The AWS/CDK deployment path remains intentionally memory-only.
   The stack does not gain first-class Redis wiring yet because Redis mode is
   still only a single-instance Redis-backed runtime profile. If Redis deploy

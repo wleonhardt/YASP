@@ -14,6 +14,12 @@
 
 ## Done
 
+- 2026-04-15: Added a conservative Dependabot auto-merge workflow that only
+  enables GitHub auto-merge for single-dependency low-risk bot PRs
+  (GitHub Actions patch/minor, npm devDependency patch/minor, and qualifying
+  non-major security updates). Major bumps, runtime/deployment-sensitive
+  packages, Docker changes, `cdk/`, deployment workflows, and grouped updates
+  stay manual.
 - 2026-04-15: Accepted ADR 0004 to keep the supported/default AWS/CDK
   deployment path intentionally memory-only, defer first-class Redis infra
   wiring until Redis mode is honestly more than a single-instance runtime
