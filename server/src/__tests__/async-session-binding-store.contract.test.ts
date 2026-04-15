@@ -2,7 +2,8 @@
  * Shared contract tests for every {@link AsyncSessionBindingStore}
  * implementation. Runs against the in-memory adapter and the Redis prototype
  * (backed by `ioredis-mock`) so both implementations must satisfy the same
- * bind/unbind/resolve semantics without diverging.
+ * bind/unbind/resolve semantics without diverging. When `REDIS_TEST_URL` is
+ * set, the same contract also runs against a live Redis daemon.
  */
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import {
@@ -10,6 +11,7 @@ import {
   type AsyncSessionBindingStore,
 } from "../services/async-session-binding-store.js";
 import { RedisSessionBindingStore } from "../services/redis-session-binding-store.js";
+import { createLiveRedisHarness, hasLiveRedisTestUrl } from "./redis-test-utils.js";
 
 type StoreFactory = () => Promise<{
   store: AsyncSessionBindingStore;
@@ -106,3 +108,13 @@ runContract("RedisSessionBindingStore (ioredis-mock)", async () => {
     },
   };
 });
+
+if (hasLiveRedisTestUrl()) {
+  runContract("RedisSessionBindingStore (live Redis)", async () => {
+    const harness = await createLiveRedisHarness(1);
+    return {
+      store: new RedisSessionBindingStore(harness.redis),
+      teardown: harness.teardown,
+    };
+  });
+}

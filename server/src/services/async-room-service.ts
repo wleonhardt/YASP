@@ -13,6 +13,7 @@ import { InMemoryRoomStore } from "./room-store.js";
 import { RoomService } from "./room-service.js";
 import type { AsyncRoomStore } from "./async-room-store.js";
 import { AsyncOperationQueue } from "./async-operation-queue.js";
+import { allConnectedVotersVoted } from "./room-service.js";
 
 type RoomScopedResult = { room: Room };
 
@@ -208,6 +209,6 @@ export class AsyncRoomService {
   }
 
   allConnectedVotersVoted(room: Room): boolean {
-    return new RoomService(new InMemoryRoomStore()).allConnectedVotersVoted(room);
+    return allConnectedVotersVoted(room);
   }
 }

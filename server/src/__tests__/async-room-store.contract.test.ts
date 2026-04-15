@@ -1,16 +1,17 @@
 /**
  * Shared contract tests for every {@link AsyncRoomStore} implementation.
  *
- * The same suite runs twice:
+ * The same suite always runs twice and optionally runs a third time:
  *
  *   1. `AsyncInMemoryRoomStore` — always runs, always wired in every CI pipe.
  *   2. `RedisRoomStore` (via `ioredis-mock`) — exercises the JSON
  *      serialization + PX TTL + SCAN listing paths against a real in-process
- *      Redis server emulation. Runs unconditionally; no external service
- *      required.
+ *      Redis server emulation. Runs unconditionally; no external service required.
+ *   3. `RedisRoomStore` (via a live Redis daemon) — enabled only when
+ *      `REDIS_TEST_URL` is set, so CI can exercise the real wire protocol
+ *      without forcing every local developer to run Redis all the time.
  *
- * See `docs/REDIS_INTEGRATION_TESTING.md` for the plan on running this suite
- * against a live Redis cluster in CI, which is not yet practical.
+ * See `docs/redis-integration-testing.md` for the CI contract and local flow.
  */
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { DEFAULT_DECKS, DEFAULT_ROOM_SETTINGS } from "@yasp/shared";
@@ -23,6 +24,7 @@ import {
   type AsyncRoomStore,
 } from "../services/async-room-store.js";
 import { RedisRoomStore } from "../services/redis-room-store.js";
+import { createLiveRedisHarness, hasLiveRedisTestUrl } from "./redis-test-utils.js";
 
 function makeParticipant(overrides: Partial<Participant> = {}): Participant {
   return {
@@ -197,6 +199,16 @@ runContract("RedisRoomStore (ioredis-mock)", async () => {
     },
   };
 });
+
+if (hasLiveRedisTestUrl()) {
+  runContract("RedisRoomStore (live Redis)", async () => {
+    const harness = await createLiveRedisHarness(0);
+    return {
+      store: new RedisRoomStore(harness.redis),
+      teardown: harness.teardown,
+    };
+  });
+}
 
 // -- Pure serialize/deserialize round-trip -----------------------------------
 

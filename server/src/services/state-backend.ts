@@ -6,11 +6,10 @@ import { AsyncInMemorySessionBindingStore } from "./async-session-binding-store.
 import { logger } from "../utils/logger.js";
 
 /**
- * Bundle of async stores returned by the state-backend factory. Phase 2
- * prototypes — the composition root currently instantiates the legacy
- * synchronous in-memory stores for `memory` mode to preserve behavior.
- * `redis` mode constructs and returns the Redis prototypes here but does NOT
- * yet re-plumb RoomService onto the async interface — see ADR 0002.
+ * Bundle of async stores returned by the state-backend factory. The
+ * composition root keeps backend selection here so domain logic does not need
+ * to branch on memory vs redis. Memory mode still uses the existing sync
+ * runtime; redis mode wires these async stores through the Phase 3 adapters.
  */
 export interface AsyncStateBackend {
   readonly kind: "memory" | "redis";
@@ -24,10 +23,11 @@ export interface AsyncStateBackend {
 }
 
 /**
- * Construct the Phase 2 async stores from a resolved config. For `memory`
- * this is a cheap, always-synchronous wrap. For `redis` this dynamically
- * imports `ioredis`, opens a connection, runs a PING health check, and wires
- * the Redis prototypes. A failed PING throws — startup should fail loudly.
+ * Construct the async stores from a resolved config. For `memory` this is a
+ * cheap, always-synchronous wrap used by tests and adapters. For `redis` this
+ * dynamically imports `ioredis`, opens a connection, runs a PING health
+ * check, and wires the Redis-backed stores. A failed PING throws so startup
+ * fails loudly before the runtime begins serving requests.
  */
 export async function createAsyncStateBackend(
   config: StateBackendConfig

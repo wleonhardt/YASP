@@ -77,13 +77,14 @@ function resolveTrustedProxyHops(): number {
 export const TRUSTED_PROXY_HOP_COUNT = resolveTrustedProxyHops();
 
 // ---------------------------------------------------------------------------
-// Optional horizontal-scaling backend (Phase 2 prototype).
+// Optional horizontal-scaling backend.
 //
 // Default stays `memory` — in-process Map-backed stores, identical to the
-// behavior before Phase 2. Setting `YASP_STATE_BACKEND=redis` instantiates
-// the Redis-backed prototypes (RedisRoomStore / RedisSessionBindingStore) and
-// requires `REDIS_URL` to be set. Redis mode is ephemeral shared active-room
-// state only — no history, no archive, no accounts. See ADR 0002.
+// original single-process behavior. Setting `YASP_STATE_BACKEND=redis`
+// switches the composition root onto the async Redis-backed state path for
+// active room + session state only. Redis mode remains ephemeral: no history,
+// no archives, no accounts, no durable vote storage. See ADR 0002 and ADR
+// 0003 for the current scope and the explicit single-instance limitation.
 // ---------------------------------------------------------------------------
 export type StateBackend = "memory" | "redis";
 

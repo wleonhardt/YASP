@@ -1,4 +1,3 @@
-import { createApp } from "./app.js";
 import { PORT, HOST, STATE_BACKEND_CONFIG } from "./config.js";
 import { createServerRuntime, type ServerRuntime } from "./runtime.js";
 import { logger } from "./utils/logger.js";
