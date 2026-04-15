@@ -1,10 +1,15 @@
 import { createApp } from "./app.js";
 import { createSocketServer } from "./socket.js";
-import { RoomStore } from "./services/room-store.js";
+import { InMemoryRoomStore, type RoomStore } from "./services/room-store.js";
 import { RoomService } from "./services/room-service.js";
-import { SessionService } from "./services/session-service.js";
-import { TimerService } from "./services/timer-service.js";
+import { InMemorySessionBindingStore, type SessionBindingStore } from "./services/session-service.js";
+import { InMemoryRoomTimerScheduler, type RoomTimerScheduler } from "./services/timer-service.js";
 import { CleanupService } from "./services/cleanup-service.js";
+import {
+  InMemoryActiveRoomSessionResolver,
+  type ActiveRoomSessionResolver,
+} from "./services/active-room-session-resolver.js";
+import { SocketRoomStatePublisher, type RoomStatePublisher } from "./services/room-state-publisher.js";
 import { registerSocketHandlers } from "./transport/socket-handlers.js";
 import { PORT, HOST } from "./config.js";
 import { logger } from "./utils/logger.js";
@@ -12,7 +17,7 @@ import { logger } from "./utils/logger.js";
 type FatalProcessEvent = "uncaughtException" | "unhandledRejection";
 
 let cleanupServiceRef: CleanupService | null = null;
-let timerServiceRef: TimerService | null = null;
+let timerServiceRef: RoomTimerScheduler | null = null;
 let ioRef: ReturnType<typeof createSocketServer> | null = null;
 let appRef: Awaited<ReturnType<typeof createApp>> | null = null;
 let shuttingDown = false;
@@ -133,15 +138,28 @@ async function main() {
 
   const io = createSocketServer(httpServer);
   ioRef = io;
-  const store = new RoomStore();
+  const store: RoomStore = new InMemoryRoomStore();
   const roomService = new RoomService(store);
-  const sessionService = new SessionService();
-  const timerService = new TimerService();
+  const sessionBindingStore: SessionBindingStore = new InMemorySessionBindingStore();
+  const activeSessionResolver: ActiveRoomSessionResolver = new InMemoryActiveRoomSessionResolver(
+    sessionBindingStore,
+    store
+  );
+  const timerService: RoomTimerScheduler = new InMemoryRoomTimerScheduler();
+  const roomStatePublisher: RoomStatePublisher = new SocketRoomStatePublisher(io, store);
   timerServiceRef = timerService;
-  const cleanupService = new CleanupService(store, timerService, io);
+  const cleanupService = new CleanupService(store, timerService, roomStatePublisher);
   cleanupServiceRef = cleanupService;
 
-  registerSocketHandlers(io, roomService, sessionService, timerService, store);
+  registerSocketHandlers(
+    io,
+    roomService,
+    sessionBindingStore,
+    activeSessionResolver,
+    timerService,
+    roomStatePublisher,
+    store
+  );
   cleanupService.start();
 
   await app.listen({ port: PORT, host: HOST });

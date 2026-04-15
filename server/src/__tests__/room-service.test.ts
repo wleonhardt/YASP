@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { RoomService } from "../services/room-service.js";
-import { RoomStore } from "../services/room-store.js";
+import { InMemoryRoomStore, type RoomStore } from "../services/room-store.js";
 import { serializeRoom } from "../transport/serializers.js";
 
 let store: RoomStore;
 let service: RoomService;
 
 beforeEach(() => {
-  store = new RoomStore();
+  store = new InMemoryRoomStore();
   service = new RoomService(store);
 });
 

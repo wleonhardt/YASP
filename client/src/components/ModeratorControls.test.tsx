@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PublicRoomState } from "@yasp/shared";
 import { ModeratorControls } from "./ModeratorControls";
 import { makePublicRoomState } from "../test/roomState";
@@ -46,6 +46,10 @@ function handlers() {
     onTransferModerator: vi.fn().mockResolvedValue(true),
   };
 }
+
+beforeEach(() => {
+  storage.setStoredTimerSoundEnabled(true);
+});
 
 describe("ModeratorControls", () => {
   it("renders pacing controls with inline round actions on desktop", async () => {

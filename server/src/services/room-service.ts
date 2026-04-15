@@ -13,7 +13,7 @@ import {
   type VoteValue,
 } from "@yasp/shared";
 import type { Room, Participant } from "../domain/types.js";
-import { RoomStore } from "./room-store.js";
+import type { RoomStore } from "./room-store.js";
 import { resolveDeck } from "../domain/deck.js";
 import {
   reassignModeratorIfNeeded,
@@ -99,6 +99,10 @@ const ROOM_TIMER_PRESETS = Array.isArray(ROOM_TIMER_PRESET_SECONDS)
 export class RoomService {
   constructor(private store: RoomStore) {}
 
+  private saveRoom(room: Room): void {
+    this.store.save(room);
+  }
+
   createRoom(
     sessionId: SessionId,
     socketId: SocketId,
@@ -173,7 +177,7 @@ export class RoomService {
       votes: new Map(),
     };
 
-    this.store.set(room);
+    this.saveRoom(room);
     logger.info("Room created", { roomId, moderator: participantId });
     return success({ room, participantId });
   }
@@ -249,6 +253,7 @@ export class RoomService {
     }
 
     touchRoom(room);
+    this.saveRoom(room);
     logger.info("Participant joined", { roomId, participantId });
     return success({ room, participantId, replacedSocketId });
   }
@@ -276,6 +281,7 @@ export class RoomService {
     }
 
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -318,6 +324,7 @@ export class RoomService {
     }
 
     logger.info("Participant disconnected", { roomId, participantId: participant.id });
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -336,6 +343,7 @@ export class RoomService {
 
     room.votes.set(participant.id, value);
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -349,6 +357,7 @@ export class RoomService {
 
     room.votes.delete(participant.id);
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -364,6 +373,7 @@ export class RoomService {
 
     room.revealed = true;
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -378,6 +388,7 @@ export class RoomService {
 
     resetRoundState(room);
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -393,6 +404,7 @@ export class RoomService {
     resetRoundState(room);
     room.roundNumber += 1;
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -421,6 +433,7 @@ export class RoomService {
     room.moderatorId = targetParticipant.id;
     room.previousModeratorId = null; // Manual transfer clears auto-restore
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -444,6 +457,7 @@ export class RoomService {
     room.timer.completedAt = null;
     room.timer.endsAt = null;
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -463,6 +477,7 @@ export class RoomService {
     room.timer.endsAt = now() + remainingSeconds * 1000;
     room.timer.completedAt = null;
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -478,6 +493,7 @@ export class RoomService {
     room.timer.remainingSeconds = getRemainingSeconds(room.timer, now());
     stopRoomTimer(room);
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -494,6 +510,7 @@ export class RoomService {
     room.timer.remainingSeconds = room.timer.durationSeconds;
     room.timer.completedAt = null;
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -506,6 +523,7 @@ export class RoomService {
     room.timer.completedAt = now();
     room.revealed = true;
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -536,6 +554,7 @@ export class RoomService {
     room.timer.lastHonkAt = t;
     room.timer.honkAvailableAt = t + ROOM_TIMER_HONK_COOLDOWN_MS;
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -554,6 +573,7 @@ export class RoomService {
 
     participant.name = sanitizeName(name);
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -582,6 +602,7 @@ export class RoomService {
     }
 
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -604,6 +625,7 @@ export class RoomService {
     resetRoundState(room);
 
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 
@@ -625,6 +647,7 @@ export class RoomService {
 
     Object.assign(room.settings, settingsUpdate);
     touchRoom(room);
+    this.saveRoom(room);
     return success({ room });
   }
 

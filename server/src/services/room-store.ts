@@ -1,14 +1,28 @@
 import type { RoomId } from "@yasp/shared";
 import type { Room } from "../domain/types.js";
 
-export class RoomStore {
+/**
+ * Stores only the current active room state.
+ *
+ * Future distributed implementations may share active rooms across app
+ * instances, but must preserve YASP's ephemeral model: no history, archives,
+ * replay, or durable audit trail.
+ */
+export interface RoomStore {
+  get(roomId: RoomId): Room | undefined;
+  save(room: Room): void;
+  delete(roomId: RoomId): void;
+  list(): Room[];
+}
+
+export class InMemoryRoomStore implements RoomStore {
   private rooms = new Map<RoomId, Room>();
 
   get(roomId: RoomId): Room | undefined {
     return this.rooms.get(roomId);
   }
 
-  set(room: Room): void {
+  save(room: Room): void {
     this.rooms.set(room.id, room);
   }
 

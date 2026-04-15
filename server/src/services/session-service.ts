@@ -1,10 +1,24 @@
 import type { SessionId, SocketId, RoomId } from "@yasp/shared";
 
+export type SessionBinding = {
+  sessionId: SessionId;
+  roomId: RoomId;
+};
+
 /**
- * Maps socketId -> { sessionId, roomId } for resolving caller identity.
+ * Tracks the current socket binding for this process only.
+ *
+ * Future distributed implementations can replace this with a cluster-aware
+ * ephemeral binding store while preserving latest-tab-wins semantics.
  */
-export class SessionService {
-  private socketBindings = new Map<SocketId, { sessionId: SessionId; roomId: RoomId }>();
+export interface SessionBindingStore {
+  bind(socketId: SocketId, sessionId: SessionId, roomId: RoomId): void;
+  unbind(socketId: SocketId): void;
+  resolve(socketId: SocketId): SessionBinding | undefined;
+}
+
+export class InMemorySessionBindingStore implements SessionBindingStore {
+  private socketBindings = new Map<SocketId, SessionBinding>();
 
   bind(socketId: SocketId, sessionId: SessionId, roomId: RoomId): void {
     this.socketBindings.set(socketId, { sessionId, roomId });
@@ -14,7 +28,7 @@ export class SessionService {
     this.socketBindings.delete(socketId);
   }
 
-  resolve(socketId: SocketId): { sessionId: SessionId; roomId: RoomId } | undefined {
+  resolve(socketId: SocketId): SessionBinding | undefined {
     return this.socketBindings.get(socketId);
   }
 }

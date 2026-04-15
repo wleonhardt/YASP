@@ -20,9 +20,11 @@ import type {
 } from "@yasp/shared";
 import type { Room } from "../domain/types.js";
 import { RoomService } from "../services/room-service.js";
-import { SessionService } from "../services/session-service.js";
-import { TimerService } from "../services/timer-service.js";
+import type { SessionBindingStore } from "../services/session-service.js";
+import type { RoomTimerScheduler } from "../services/timer-service.js";
 import type { RoomStore } from "../services/room-store.js";
+import type { ActiveRoomSessionResolver } from "../services/active-room-session-resolver.js";
+import type { RoomStatePublisher } from "../services/room-state-publisher.js";
 import { serializeRoom } from "./serializers.js";
 import { validateSessionId, validateRoomId } from "./validators.js";
 import { applySocketRateLimit } from "./rate-limiter.js";
@@ -38,80 +40,40 @@ function ackFail(code: ErrorCode, message: string): AckResult<never> {
   return { ok: false, error: { code, message } };
 }
 
-function broadcastRoomState(io: SocketServer, roomId: RoomId, store: RoomStore): void {
-  const room = store.get(roomId);
-  if (!room) return;
-  for (const p of room.participants.values()) {
-    if (p.connected && p.socketId) {
-      io.to(p.socketId).emit("room_state", serializeRoom(room, p.sessionId));
-    }
-  }
-}
-
-function resolveCallerFromSocket(
-  socket: Socket,
-  sessionService: SessionService,
-  roomId: RoomId,
-  store: RoomStore,
-  ack?: (res: AckResult) => void
-): { sessionId: string } | null {
-  const binding = sessionService.resolve(socket.id);
-  if (!binding || binding.roomId !== roomId) {
-    ack?.(ackFail("PARTICIPANT_NOT_FOUND", "Not in this room"));
-    return null;
-  }
-
-  const room = store.get(roomId);
-  if (!room) {
-    ack?.(ackFail("ROOM_NOT_FOUND", "Room not found"));
-    return null;
-  }
-  const participant = room.participants.get(binding.sessionId);
-  if (!participant) {
-    ack?.(ackFail("PARTICIPANT_NOT_FOUND", "Not in this room"));
-    return null;
-  }
-  if (participant.socketId !== socket.id) {
-    ack?.(ackFail("SESSION_REPLACED", "Session replaced by another connection"));
-    return null;
-  }
-
-  return { sessionId: binding.sessionId };
-}
-
 function evaluateAutoReveal(
   room: Room,
   roomService: RoomService,
-  timerService: TimerService,
-  io: SocketServer,
+  timerScheduler: RoomTimerScheduler,
+  roomStatePublisher: RoomStatePublisher,
   store: RoomStore
 ): void {
   if (!room.settings.autoReveal || room.revealed) {
-    timerService.cancelAutoReveal(room.id);
+    timerScheduler.cancelAutoReveal(room.id);
     return;
   }
 
   if (roomService.allConnectedVotersVoted(room)) {
-    timerService.scheduleAutoReveal(room.id, room.settings.autoRevealDelayMs, () => {
+    timerScheduler.scheduleAutoReveal(room.id, room.settings.autoRevealDelayMs, () => {
       const current = store.get(room.id);
       if (!current || current.revealed) return;
       if (!roomService.allConnectedVotersVoted(current)) return;
       current.revealed = true;
-      broadcastRoomState(io, room.id, store);
+      store.save(current);
+      roomStatePublisher.broadcastRoomState(room.id);
     });
   } else {
-    timerService.cancelAutoReveal(room.id);
+    timerScheduler.cancelAutoReveal(room.id);
   }
 }
 
 function syncRoomTimer(
   roomId: RoomId,
   roomService: RoomService,
-  timerService: TimerService,
-  io: SocketServer,
+  timerScheduler: RoomTimerScheduler,
+  roomStatePublisher: RoomStatePublisher,
   store: RoomStore
 ): void {
-  timerService.cancelRoomTimer(roomId);
+  timerScheduler.cancelRoomTimer(roomId);
 
   const room = store.get(roomId);
   if (!room || !room.timer.running || room.timer.endsAt === null) {
@@ -119,22 +81,24 @@ function syncRoomTimer(
   }
 
   const delayMs = Math.max(0, room.timer.endsAt - now());
-  timerService.scheduleRoomTimer(roomId, delayMs, () => {
+  timerScheduler.scheduleRoomTimer(roomId, delayMs, () => {
     const result = roomService.completeTimer(roomId);
     if (!result.ok) {
       return;
     }
 
-    timerService.cancelAutoReveal(roomId);
-    broadcastRoomState(io, roomId, store);
+    timerScheduler.cancelAutoReveal(roomId);
+    roomStatePublisher.broadcastRoomState(roomId);
   });
 }
 
 export function registerSocketHandlers(
   io: SocketServer,
   roomService: RoomService,
-  sessionService: SessionService,
-  timerService: TimerService,
+  sessionBindingStore: SessionBindingStore,
+  activeSessionResolver: ActiveRoomSessionResolver,
+  timerScheduler: RoomTimerScheduler,
+  roomStatePublisher: RoomStatePublisher,
   store: RoomStore
 ): void {
   // Per-IP concurrent connection cap. Runs as Socket.IO connect middleware
@@ -169,39 +133,45 @@ export function registerSocketHandlers(
     });
 
     const refreshRoomState = (roomId: RoomId, room: Room | null = store.get(roomId) ?? null) => {
-      broadcastRoomState(io, roomId, store);
+      roomStatePublisher.broadcastRoomState(roomId);
       if (room) {
-        evaluateAutoReveal(room, roomService, timerService, io, store);
+        evaluateAutoReveal(room, roomService, timerScheduler, roomStatePublisher, store);
       }
-      syncRoomTimer(roomId, roomService, timerService, io, store);
+      syncRoomTimer(roomId, roomService, timerScheduler, roomStatePublisher, store);
     };
 
     // Helper: resolve caller, run service method, ack+broadcast on success.
     // afterEffect controls timer/auto-reveal behavior after broadcast.
+    // These after-effects are intentionally localized here so a future
+    // distributed coordinator can replace them without changing room-domain
+    // logic or socket event names.
     function roomAction<I extends { roomId: RoomId } & Record<string, unknown>>(
       event: string,
       serviceFn: (roomId: RoomId, sessionId: string, input: I) => AckResult<{ room: Room }>,
       afterEffect: RoomActionAfterEffect = "none"
     ) {
       socket.on(event, (input: I, ack?: (res: AckResult) => void) => {
-        const caller = resolveCallerFromSocket(socket, sessionService, input.roomId, store, ack);
-        if (!caller) return;
+        const resolution = activeSessionResolver.resolve(socket.id, input.roomId);
+        if (!resolution.ok) {
+          ack?.(ackFail(resolution.code, resolution.message));
+          return;
+        }
 
-        const result = serviceFn(input.roomId, caller.sessionId, input);
+        const result = serviceFn(input.roomId, resolution.sessionId, input);
         if (!result.ok) {
           ack?.(result);
           return;
         }
 
         ack?.({ ok: true, data: undefined });
-        if (afterEffect === "cancelAutoReveal") timerService.cancelAutoReveal(input.roomId);
-        if (afterEffect === "cancelRoomTimer") timerService.cancelRoomTimer(input.roomId);
-        broadcastRoomState(io, input.roomId, store);
+        if (afterEffect === "cancelAutoReveal") timerScheduler.cancelAutoReveal(input.roomId);
+        if (afterEffect === "cancelRoomTimer") timerScheduler.cancelRoomTimer(input.roomId);
+        roomStatePublisher.broadcastRoomState(input.roomId);
         if (afterEffect === "autoReveal") {
-          evaluateAutoReveal(result.data.room, roomService, timerService, io, store);
+          evaluateAutoReveal(result.data.room, roomService, timerScheduler, roomStatePublisher, store);
         }
         if (afterEffect === "syncRoomTimer") {
-          syncRoomTimer(input.roomId, roomService, timerService, io, store);
+          syncRoomTimer(input.roomId, roomService, timerScheduler, roomStatePublisher, store);
         }
       });
     }
@@ -226,7 +196,7 @@ export function registerSocketHandlers(
       }
 
       const { room } = result.data;
-      sessionService.bind(socket.id, input.sessionId, room.id);
+      sessionBindingStore.bind(socket.id, input.sessionId, room.id);
       socket.join(room.id);
 
       const state = serializeRoom(room, input.sessionId);
@@ -261,13 +231,10 @@ export function registerSocketHandlers(
 
       const { room, replacedSocketId } = result.data;
       if (replacedSocketId && replacedSocketId !== socket.id) {
-        io.to(replacedSocketId).emit("server_error", {
-          code: "SESSION_REPLACED",
-          message: "Your session has been taken over by another tab",
-        });
+        roomStatePublisher.notifySessionReplaced(replacedSocketId);
       }
 
-      sessionService.bind(socket.id, input.sessionId, room.id);
+      sessionBindingStore.bind(socket.id, input.sessionId, room.id);
       socket.join(room.id);
 
       const state = serializeRoom(room, input.sessionId);
@@ -276,16 +243,19 @@ export function registerSocketHandlers(
     });
 
     socket.on("leave_room", (input: LeaveRoomInput, ack?: (res: AckResult) => void) => {
-      const caller = resolveCallerFromSocket(socket, sessionService, input.roomId, store, ack);
-      if (!caller) return;
+      const resolution = activeSessionResolver.resolve(socket.id, input.roomId);
+      if (!resolution.ok) {
+        ack?.(ackFail(resolution.code, resolution.message));
+        return;
+      }
 
-      const result = roomService.leaveRoom(input.roomId, caller.sessionId);
+      const result = roomService.leaveRoom(input.roomId, resolution.sessionId);
       if (!result.ok) {
         ack?.(result);
         return;
       }
 
-      sessionService.unbind(socket.id);
+      sessionBindingStore.unbind(socket.id);
       socket.leave(input.roomId);
       ack?.({ ok: true, data: undefined });
 
@@ -337,7 +307,7 @@ export function registerSocketHandlers(
     });
 
     socket.on("disconnect", () => {
-      const binding = sessionService.resolve(socket.id);
+      const binding = sessionBindingStore.resolve(socket.id);
       if (!binding) return;
 
       const { sessionId, roomId } = binding;
@@ -353,7 +323,7 @@ export function registerSocketHandlers(
         }
       }
 
-      sessionService.unbind(socket.id);
+      sessionBindingStore.unbind(socket.id);
     });
   });
 }

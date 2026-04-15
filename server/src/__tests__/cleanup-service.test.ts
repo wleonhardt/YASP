@@ -3,12 +3,13 @@ import type { PublicRoomState } from "@yasp/shared";
 import { DISCONNECTED_PARTICIPANT_GRACE_MS } from "../config.js";
 import { CleanupService } from "../services/cleanup-service.js";
 import { RoomService } from "../services/room-service.js";
-import { RoomStore } from "../services/room-store.js";
-import { TimerService } from "../services/timer-service.js";
+import { SocketRoomStatePublisher } from "../services/room-state-publisher.js";
+import { InMemoryRoomStore, type RoomStore } from "../services/room-store.js";
+import { InMemoryRoomTimerScheduler, type RoomTimerScheduler } from "../services/timer-service.js";
 
 let store: RoomStore;
 let roomService: RoomService;
-let timerService: TimerService;
+let timerScheduler: RoomTimerScheduler;
 let emit: ReturnType<typeof vi.fn>;
 // Structural shape of the io.to(...) mock. Avoid vi.fn generics here:
 // their signature differs between vitest v2 (<TArgs, TReturn>) and v3
@@ -17,18 +18,19 @@ let io: { to: (...args: unknown[]) => { emit: typeof emit } };
 let cleanupService: CleanupService;
 
 beforeEach(() => {
-  store = new RoomStore();
+  store = new InMemoryRoomStore();
   roomService = new RoomService(store);
-  timerService = new TimerService();
+  timerScheduler = new InMemoryRoomTimerScheduler();
   emit = vi.fn();
   io = {
     to: vi.fn(() => ({ emit })),
   };
-  cleanupService = new CleanupService(store, timerService, io as never);
+  const roomStatePublisher = new SocketRoomStatePublisher(io as never, store);
+  cleanupService = new CleanupService(store, timerScheduler, roomStatePublisher);
 });
 
 afterEach(() => {
-  timerService.cancelAll();
+  timerScheduler.cancelAll();
   vi.restoreAllMocks();
 });
 

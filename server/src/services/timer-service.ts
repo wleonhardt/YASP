@@ -2,7 +2,22 @@ import type { RoomId } from "@yasp/shared";
 
 type TimerChannel = "auto-reveal" | "room-timer";
 
-export class TimerService {
+/**
+ * Schedules ephemeral per-room timers for the current process.
+ *
+ * Future distributed implementations can coordinate these callbacks across
+ * instances, but must keep the same temporary room semantics.
+ */
+export interface RoomTimerScheduler {
+  scheduleAutoReveal(roomId: RoomId, delayMs: number, callback: () => void): void;
+  cancelAutoReveal(roomId: RoomId): void;
+  scheduleRoomTimer(roomId: RoomId, delayMs: number, callback: () => void): void;
+  cancelRoomTimer(roomId: RoomId): void;
+  cancelRoom(roomId: RoomId): void;
+  cancelAll(): void;
+}
+
+export class InMemoryRoomTimerScheduler implements RoomTimerScheduler {
   private timers = new Map<string, NodeJS.Timeout>();
 
   private getKey(channel: TimerChannel, roomId: RoomId): string {
