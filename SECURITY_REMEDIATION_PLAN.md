@@ -11,13 +11,16 @@ This plan groups the audit findings into shippable work. PRs A–G have now ship
 This plan hardens the existing YASP architecture:
 
 - no accounts/auth
-- no database/Redis
-- no persistence across restarts
-- single-process in-memory state
+- no durable database/history/archive layer
+- optional Redis-backed active room/session state only
+- default deployment/profile remains single-instance memory mode
 - single Docker container deployment
 - lightweight EC2/CloudFront deployment path
 
 It intentionally does not turn YASP into a different product.
+
+Current blocking vs advisory CI/security lanes are documented in
+[`docs/security-scanning.md`](./docs/security-scanning.md).
 
 ## Current remediation status
 
@@ -237,8 +240,8 @@ Future option:
 Do not add in this cycle:
 
 - authentication/accounts
-- database/Redis/persistence
-- multi-instance scaling
+- durable database/history/archive persistence
+- multi-instance Redis scaling
 - cryptographic vote sealing
 - HSTS preload submission
 - mTLS between CloudFront and origin
@@ -251,8 +254,11 @@ These remain deliberate product decisions for YASP’s current scope.
 1. Room URL remains a bearer-style link.
 2. YASP remains intentionally no-auth.
 3. `sessionId` remains a client-side continuity token.
-4. Server restart destroys all rooms.
-5. Single-instance deployment remains accepted.
+4. YASP still has no durable room history/archive. In `memory` mode, restart
+   clears active rooms; the optional Redis profile only retains TTL-bound
+   active room/session state and is not a history feature.
+5. Single-instance deployment remains the accepted operating model. The
+   optional Redis profile is still operationally single-instance only.
 6. Votes are not cryptographically sealed against the operator.
 7. CloudFront → origin uses HTTP plus shared-secret header, not mTLS.
 8. Docker Hub remains a public image distribution channel.
@@ -260,4 +266,3 @@ These remain deliberate product decisions for YASP’s current scope.
 10. Determined DDoS remains out of scope beyond WAF and in-process shaping.
 
 If future product direction changes any of these assumptions, re-run the threat model and reclassify the risks.
-

@@ -1,166 +1,105 @@
-# Optional Horizontal Scaling
+# Optional Redis-Backed Active State
 
-YASP runs in local in-memory mode today, and that remains the default.
+YASP still defaults to a single-instance in-memory runtime.
 
-This document describes the current optional Redis-backed runtime and the
-remaining work before YASP can claim true multi-instance horizontal scaling.
-Redis is only allowed to act as distributed ephemeral memory.
+This document exists to answer one narrow question: what does the current
+optional Redis-backed mode actually do, and what does it still not do?
 
-## Current Modes
+## Supported profiles today
 
-### Default: memory
+### `memory` (default)
 
-- Single Node.js process
-- Active rooms stored in memory
-- No database
-- No accounts or authentication
-- Ephemeral rooms only
+- Single app instance
+- Active rooms stored in process memory
+- No external state dependency
+- Restarting the app clears active rooms
 
-### Opt-in: redis
+### `redis` (opt-in)
 
 - Enabled with `YASP_STATE_BACKEND=redis`
 - Requires `REDIS_URL`
-- Stores only active room state and active socket-session ownership in Redis
-- Keeps TTL-based expiry only; no history keys or archive keys
-- Reuses the same room-domain rules as memory mode through thin async adapters
+- Stores active room state plus active socket-session ownership in Redis
+- Uses TTL only; no history, archive, replay, or audit keys
+- Remains operationally **single-instance**
 
-Memory mode remains the default. Local mode behavior is unchanged.
+Redis mode is supported as a way to move active ephemeral state out of process.
+It is not yet the same thing as true multi-instance horizontal scaling.
 
-## What Redis Mode Supports After Phase 3
+## What Redis mode supports today
 
-Phase 3 makes Redis mode operational for authoritative active-room state in a
+After ADR 0003 / Phase 3, Redis mode supports the real room workflow for a
 single app instance:
 
 - create room
 - join room
-- reconnect
-- latest-tab-wins session ownership
-- votes
-- reveal / reset / next round
+- reconnect / latest-tab-wins continuity
+- vote / reveal / reset / next round
 - moderator transfer
-- settings updates
+- room settings updates
 - stale-participant cleanup
-- room expiry / empty-room cleanup using TTL-backed active state
+- TTL-backed room expiry / empty-room cleanup
 
-The composition root is the only place that selects the backend. Memory mode
-uses the original synchronous services. Redis mode uses the async store path.
-Room-domain semantics stay centralized in `RoomService`.
+Backend selection stays in the composition root:
 
-## Redis Data Model
+- memory mode uses the original synchronous services
+- Redis mode uses async adapters over the same room-domain rules
 
-Redis stores only active ephemeral keys:
+That keeps the behavior model centralized in `RoomService`.
+
+## What Redis mode does not provide
+
+Redis mode does **not** add:
+
+- room history
+- saved rounds
+- archives
+- replay
+- audit logs
+- user accounts
+- authentication
+- analytics storage
+- durable vote storage
+
+Redis is only approved as TTL-bound active-room/session state.
+
+## Redis key model
+
+Redis currently stores only active ephemeral keys:
 
 - `yasp:room:{roomId}` — active room state with TTL
-- `yasp:session:{socketId}` — active socket ownership with TTL
+- `yasp:session:{socketId}` — active socket-session ownership with TTL
 
-There are no history, archive, replay, or audit keys.
+There are no `history`, `archive`, `replay`, or long-term analytics keys.
 
-## Explicit Non-Goals
+## Why YASP is still not horizontally scalable
 
-Redis mode must not become a persistence feature. It does not add:
+The current Redis-backed profile is still **single-instance only**.
 
-- Room history
-- Saved rounds
-- Audit logs
-- Room replay
-- User accounts
-- Authentication
-- Analytics storage
-- Durable vote storage
+What is still missing before YASP can honestly claim safe multi-instance room
+serving:
 
-If a future design requires any of those capabilities, it is a separate product
-change and needs its own ADR.
+- Socket.IO Redis adapter / cross-node fanout
+- distributed timer completion ownership
+- distributed cleanup ownership
+- accepted cross-instance write coordination
 
-## Why Redis Mode Is Not Yet True Horizontal Scaling
+Today, multiple app instances pointed at the same Redis would still be outside
+the supported deployment model.
 
-Phase 3 intentionally stops short of full multi-instance support.
+## Relevant ADRs
 
-Redis mode is currently supported as:
+- [ADR 0001](../plans/decisions/0001-ephemeral-horizontal-scaling-seams.md) —
+  introduced the seam work
+- [ADR 0002](../plans/decisions/0002-redis-backed-state-prototypes.md) —
+  added Redis-backed state prototypes
+- [ADR 0003](../plans/decisions/0003-redis-runtime-wiring-single-instance-profile.md) —
+  made the Redis-backed runtime operational in a single-instance profile
 
-- single app instance
-- Redis-backed active state
+## Validation coverage
 
-It is not yet supported as:
+Redis mode is validated in two layers:
 
-- multiple app instances attached to the same Redis and all serving the same
-  room safely
+- fast contract coverage using `ioredis-mock`
+- live Redis contract + runtime integration coverage in CI
 
-The remaining blockers are explicit:
-
-- no Socket.IO Redis adapter yet
-- no distributed timer completion ownership
-- no distributed cleanup ownership
-- no accepted cross-instance write-coordination model yet
-
-If multiple app instances are pointed at the same Redis today, room-state keys
-may exist centrally, but socket fan-out and cleanup/timer semantics are not
-coordinated across nodes. That deployment profile is still out of scope.
-
-## Phase 1 Seams
-
-Phase 1 kept behavior unchanged while isolating the server-side boundaries a
-future Redis-backed implementation could plug into:
-
-- `RoomStore`
-- `SessionBindingStore`
-- `ActiveRoomSessionResolver`
-- `RoomTimerScheduler`
-- `RoomStatePublisher`
-
-The server composition root still wires only in-memory implementations:
-
-- `InMemoryRoomStore`
-- `InMemorySessionBindingStore`
-- `InMemoryActiveRoomSessionResolver`
-- `InMemoryRoomTimerScheduler`
-- `SocketRoomStatePublisher`
-
-## Phase 2 Prototypes
-
-Phase 2 adds the Redis-backed store prototypes behind an opt-in configuration
-switch while keeping local in-memory mode the default. See
-`plans/decisions/0002-redis-backed-state-prototypes.md` for the scope and
-the original non-wiring decision.
-
-- Config switch: `YASP_STATE_BACKEND=memory|redis` (default `memory`)
-- Required only when `backend=redis`: `REDIS_URL`
-- Redis dependency: `ioredis` (dynamic-imported — not loaded in memory mode)
-- New async interfaces: `AsyncRoomStore`, `AsyncSessionBindingStore`
-- New implementations:
-  - `AsyncInMemoryRoomStore` / `AsyncInMemorySessionBindingStore` — test-only
-    adapters over the existing sync stores
-  - `RedisRoomStore` / `RedisSessionBindingStore` — Redis-backed prototypes
-
-### Redis Key Model (Phase 2)
-
-- `yasp:room:{roomId}` — JSON-encoded active room. Maps serialize as arrays of
-  tuples. Key TTL is set on every `save` to
-  `max(5s, room.expiresAt - now + 60s)`.
-- `yasp:session:{socketId}` — JSON-encoded `{sessionId, roomId}` binding for a
-  single socket. Hard TTL of 24h as a crash-safety net.
-
-There are no `yasp:room:history:*`, `yasp:archive:*`, or any other durable
-keys. Redis is used as ephemeral distributed memory only.
-
-## Phase 3 Runtime Wiring
-
-Phase 3 removes the startup refusal and wires Redis mode into the real server
-runtime:
-
-- backend selection stays in the composition root
-- memory mode keeps the original synchronous path
-- Redis mode uses async store-backed adapters
-- `AsyncOperationQueue` serializes Redis-backed room mutations within the
-  process so the existing room-domain logic can run without mode checks
-- cleanup and expiry keep the same ephemeral intent, with Redis room-key TTL
-  grace aligned to the cleanup cadence
-
-See `plans/decisions/0003-redis-runtime-wiring-single-instance-profile.md`.
-
-## Still Out Of Scope After Phase 3
-
-- Socket.IO Redis adapter
-- Distributed timer ownership / coordination
-- Distributed cleanup ownership
-- Accepted cross-instance concurrent write coordination (CAS vs coordinator)
-- Multi-instance deployment guidance
+See [docs/redis-integration-testing.md](./redis-integration-testing.md).

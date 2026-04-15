@@ -1,8 +1,11 @@
-# YASP Accessibility Audit: WCAG 2.2 AAA Status
+# YASP Accessibility Audit: WCAG 2.2 Review Status
 
 ## Scope
 
-This document tracks the current accessibility status of YASP against the latest stable W3C recommendation, [WCAG 2.2](https://www.w3.org/TR/WCAG22/), with **AAA** as the target conformance level.
+This document tracks the current accessibility status of YASP against the
+latest stable W3C recommendation, [WCAG
+2.2](https://www.w3.org/TR/WCAG22/), with **AAA** as the aspirational review
+target.
 
 It reflects the current codebase after the semantic, contrast, focus, motion, modal, and keyboard remediation passes completed through March 29, 2026, and a manual accessibility QA pass on March 31, 2026.
 
@@ -33,12 +36,12 @@ The main reason is no longer obvious code-level failure in the tested flows. The
 
 The remaining manual work now has a dedicated validation package:
 
-- [ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md](/Users/william/Projects/yasp/ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md)
-- [Windows High Contrast Checklist](/Users/william/Projects/yasp/docs/a11y/windows-high-contrast-checklist.md)
-- [Screen Reader Checklist](/Users/william/Projects/yasp/docs/a11y/screen-reader-checklist.md)
-- [Speech Input Checklist](/Users/william/Projects/yasp/docs/a11y/speech-input-checklist.md)
-- [AAA Contrast Signoff Matrix](/Users/william/Projects/yasp/docs/a11y/aaa-contrast-signoff-matrix.md)
-- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
+- [ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md](./ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md)
+- [Windows High Contrast Checklist](./docs/a11y/windows-high-contrast-checklist.md)
+- [Screen Reader Checklist](./docs/a11y/screen-reader-checklist.md)
+- [Speech Input Checklist](./docs/a11y/speech-input-checklist.md)
+- [AAA Contrast Signoff Matrix](./docs/a11y/aaa-contrast-signoff-matrix.md)
+- [Evidence Template](./docs/a11y/evidence-template.md)
 
 These documents are the authoritative workflow for the remaining specialist validation. They are intentionally evidence-oriented and do not imply that the validations are already complete.
 
@@ -104,9 +107,7 @@ Tested sizes and themes included:
 - light mobile `390x844`
 - light small mobile `320x568`
 
-Artifacts from the latest browser pass are stored under:
-
-- `/Users/william/Projects/yasp/tmp/a11y-audit`
+Artifacts from the latest browser pass are stored under `tmp/a11y-audit`.
 
 ## 2. Manual accessibility QA pass (2026-03-31)
 
@@ -180,8 +181,8 @@ These are the items that still keep YASP from being responsibly described as WCA
 
 Execution workflow:
 
-- [Screen Reader Checklist](/Users/william/Projects/yasp/docs/a11y/screen-reader-checklist.md)
-- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
+- [Screen Reader Checklist](./docs/a11y/screen-reader-checklist.md)
+- [Evidence Template](./docs/a11y/evidence-template.md)
 
 Still needed:
 
@@ -205,8 +206,8 @@ Areas to verify manually:
 
 Execution workflow:
 
-- [Speech Input Checklist](/Users/william/Projects/yasp/docs/a11y/speech-input-checklist.md)
-- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
+- [Speech Input Checklist](./docs/a11y/speech-input-checklist.md)
+- [Evidence Template](./docs/a11y/evidence-template.md)
 
 A programmatic label-in-name audit was completed across all interactive elements on both landing and room pages. All primary controls have accessible names that contain their visible text.
 
@@ -235,8 +236,8 @@ Tested pages: landing page, room page. All content reflows to single column, hea
 
 Execution workflow:
 
-- [AAA Contrast Signoff Matrix](/Users/william/Projects/yasp/docs/a11y/aaa-contrast-signoff-matrix.md)
-- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
+- [AAA Contrast Signoff Matrix](./docs/a11y/aaa-contrast-signoff-matrix.md)
+- [Evidence Template](./docs/a11y/evidence-template.md)
 
 The current design system is materially improved, but a complete contrast matrix has not been documented across every text size/state combination, including:
 
@@ -254,8 +255,8 @@ The current design system is materially improved, but a complete contrast matrix
 
 Execution workflow:
 
-- [Windows High Contrast Checklist](/Users/william/Projects/yasp/docs/a11y/windows-high-contrast-checklist.md)
-- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
+- [Windows High Contrast Checklist](./docs/a11y/windows-high-contrast-checklist.md)
+- [Evidence Template](./docs/a11y/evidence-template.md)
 
 Still needed:
 
@@ -293,20 +294,20 @@ That means the current status is best described as:
 
 Key files touched by the remediation work include:
 
-- `/Users/william/Projects/yasp/client/src/routes/LandingPage.tsx`
-- `/Users/william/Projects/yasp/client/src/routes/RoomPage.tsx`
-- `/Users/william/Projects/yasp/client/src/components/DeckCustomizeModal.tsx`
-- `/Users/william/Projects/yasp/client/src/components/ModeratorControls.tsx`
-- `/Users/william/Projects/yasp/client/src/components/ParticipantsBoard.tsx`
-- `/Users/william/Projects/yasp/client/src/components/ResultsPanel.tsx`
-- `/Users/william/Projects/yasp/client/src/components/ThemeToggle.tsx`
-- `/Users/william/Projects/yasp/client/src/components/TopBar.tsx`
-- `/Users/william/Projects/yasp/client/src/components/VoteDeck.tsx`
-- `/Users/william/Projects/yasp/client/src/components/ConnectionBadge.tsx`
-- `/Users/william/Projects/yasp/client/src/hooks/useDocumentTitle.ts`
-- `/Users/william/Projects/yasp/client/src/lib/rovingFocus.ts`
-- `/Users/william/Projects/yasp/client/src/styles/globals.css`
-- `/Users/william/Projects/yasp/client/src/styles/theme.css`
+- `client/src/routes/LandingPage.tsx`
+- `client/src/routes/RoomPage.tsx`
+- `client/src/components/DeckCustomizeModal.tsx`
+- `client/src/components/ModeratorControls.tsx`
+- `client/src/components/ParticipantsBoard.tsx`
+- `client/src/components/ResultsPanel.tsx`
+- `client/src/components/ThemeToggle.tsx`
+- `client/src/components/TopBar.tsx`
+- `client/src/components/VoteDeck.tsx`
+- `client/src/components/ConnectionBadge.tsx`
+- `client/src/hooks/useDocumentTitle.ts`
+- `client/src/lib/rovingFocus.ts`
+- `client/src/styles/globals.css`
+- `client/src/styles/theme.css`
 
 ## Verification Checklist
 
@@ -321,7 +322,8 @@ Before claiming conformance, complete this list:
 - TalkBack on Android
 - NVDA or JAWS on Windows
 - high-contrast / forced-colors review beyond the current smoke test (requires Windows)
-- complete the manual validation package under [ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md](/Users/william/Projects/yasp/ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md)
+- complete the manual validation package under
+  [ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md](./ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md)
 - reduced-motion review with real user flow timing
 - AAA contrast ratio documentation for all text/background combinations
 - ~~fix deck modal focus return~~ ✅ remediated in follow-up code pass

@@ -8,9 +8,17 @@
   completion and room / stale-participant cleanup.
 - Add Socket.IO Redis adapter work only after the write-coordination and
   cleanup-ownership model is accepted.
+- Decide whether the AWS/CDK deployment path should remain intentionally
+  memory-only or gain first-class support for the optional Redis-backed active
+  state profile.
 
 ## Done
 
+- 2026-04-15: Refreshed the repository documentation so README, AGENTS,
+  security, accessibility, scaling, deployment, and localization guidance all
+  describe the current Fastify + Socket.IO product, the default memory runtime,
+  and the optional single-instance Redis-backed active-state profile
+  consistently.
 - 2026-04-15: Stabilized `ModeratorControls` client coverage by mocking the
   timer-sound storage read directly instead of relying on suite-global
   `localStorage`, which was racing under Vitest's parallel client workers.

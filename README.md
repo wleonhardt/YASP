@@ -1,76 +1,101 @@
 # YASP — Yet Another Scrum Poker
 
-A lightweight, real-time scrum poker app. No accounts, no database — just create a room and estimate.
+YASP is a lightweight, real-time scrum poker app for teams that want fast estimation without accounts, stored history, or vendor lock-in.
 
-**Try it now at [app.yasp.team](https://app.yasp.team/)**
+- No accounts or authentication
+- Ephemeral rooms by design
+- Default deployment: single Docker container
+- Optional AWS/CDK deployment path
+- Optional Redis-backed active-state backend for shared ephemeral room/session state
 
-## Why YASP?
+**Hosted version:** [app.yasp.team](https://app.yasp.team/)
 
-Most planning poker tools require sign-ups, store your data, and charge per seat. YASP is a single Docker container with zero external dependencies. All state lives in memory, the server is authoritative, and rooms expire automatically. Deploy it yourself or use the hosted version.
+## Product philosophy
 
-## Features
+YASP is intentionally narrow:
 
-- **Rooms** — create by code, join by link, no account required
-- **Voting** — hidden until reveal, change freely before reveal
-- **Shared round timer** — moderator-controlled countdown with presets, pause/reset, optional sound cues, manual beep, and auto-reveal at expiry
-- **Decks** — Fibonacci, Modified Fibonacci, T-shirt sizes, Powers of Two, with per-room customization (cap, toggles, fully custom cards)
-- **Stats** — average, median, mode, spread, consensus detection, distribution chart
-- **Roles** — vote as a participant or observe as a spectator
-- **Moderator controls** — reveal, reset, next round, transfer host
-- **Room settings** — moderator-only panel for reveal/reset/deck-change permissions plus participant options like spectators, name changes, and self role switching
-- **Auto-transfer** — moderator role passes automatically on disconnect and restores on reconnect
-- **Dark / light theme** — toggle with localStorage persistence
-- **Accessibility foundations** — semantic landmarks, keyboard-operable controls, live announcements, reduced-motion support, forced-colors fallbacks
-- **Reconnect** — refresh or lose connection and rejoin your session automatically
-- **Auto-expiry** — inactive rooms are cleaned up, no manual teardown
+- lightweight enough to self-host
+- ephemeral enough to avoid becoming a planning system of record
+- no-auth by design, with room links behaving like bearer-style meeting links
+- no history, archive, or audit-log feature
 
-## Tech Stack
+Redis does not change that philosophy. It is only an optional backend for
+TTL-bound active room and session state, not a history feature.
 
-| Layer   | Technology                     |
-| ------- | ------------------------------ |
-| Client  | React 18, Vite, TypeScript     |
-| Server  | Fastify, Socket.IO, TypeScript |
-| Shared  | TypeScript (project references) |
-| Runtime | Node.js 20+                    |
-| Deploy  | Docker (node:20-alpine)         |
+## Current feature set
+
+- Create a room and join by code or link
+- Vote as a participant or join as a spectator
+- Reveal, reset, and advance rounds
+- Moderator transfer, including disconnect handoff and reconnect continuity
+- Shared round timer with presets, pause/reset, honk, optional sound, and auto-reveal
+- Deck presets plus per-room custom decks
+- Results summary with average, median, mode, spread, consensus, and distribution
+- Room settings for reveal/reset/deck-change permissions and participant controls
+- Dark/light theme support
+- Localized UI in `en`, `es`, `fr`, `de`, `pt`, `ja`, `ko`, `zh-Hans`, and `zh-Hant`
+- Accessibility-focused interaction patterns: keyboard support, live announcements, reduced-motion handling, and forced-colors fallbacks
+
+## Runtime profiles
+
+YASP currently supports two runtime profiles:
+
+| Profile | Status | Stores | Does not provide |
+| --- | --- | --- | --- |
+| `memory` | shipped, default | active rooms in-process | history, archive, safe multi-instance support |
+| `redis` | shipped, opt-in, operationally single-instance | active room state and socket-session ownership in Redis with TTL | history, archive, audit trail, safe cross-node fanout/timer/cleanup coordination |
+
+Important constraints:
+
+- `memory` mode is still the default and the simplest deployment shape.
+- `redis` mode is **not** a claim of true horizontal scaling yet.
+- Multiple app instances pointed at the same Redis are still out of scope until
+  cross-node fanout, timer ownership, cleanup ownership, and write coordination
+  are explicitly solved.
+
+See [docs/horizontal-scaling.md](./docs/horizontal-scaling.md) and
+[plans/decisions/](./plans/decisions/) for the exact current scaling status.
 
 ## Architecture
 
-YASP runs as a single Node.js process. Fastify serves the static client bundle and exposes HTTP endpoints. Socket.IO handles all real-time communication.
+YASP uses a TypeScript monorepo with npm workspaces:
 
-```
-┌─────────────────────────────────────────────┐
-│  Browser (React SPA)                        │
-│  ├── LandingPage  — create / join           │
-│  └── RoomPage     — vote / reveal / manage  │
-└────────────┬────────────────────────────────┘
-             │ Socket.IO (WebSocket)
-┌────────────▼────────────────────────────────┐
-│  Fastify + Socket.IO  (single process)      │
-│  ├── Room state (in-memory Map)             │
-│  ├── Session service (socket → identity)    │
-│  ├── Cleanup service (periodic GC)          │
-│  └── Static file serving (production)       │
-└─────────────────────────────────────────────┘
-```
+| Layer | Technology |
+| --- | --- |
+| Client | React 18 + Vite |
+| Server | Fastify + Socket.IO |
+| Shared contracts | TypeScript project references in `shared/` |
+| Runtime | Node.js 20+ |
+| Default deploy | single Docker container |
+| Optional infra path | AWS CDK (`cdk/`) |
 
-The server is authoritative — clients send commands (`cast_vote`, `reveal_votes`, `start_timer`, etc.) and receive the full room state snapshot in response. Each browser tab generates a stable `sessionId` in `localStorage`, allowing the server to rebind returning users after a refresh or disconnect.
+The server is authoritative. Clients send commands such as `cast_vote`,
+`reveal_votes`, or timer actions; the server validates the action and publishes
+the updated room state.
 
-## Project Structure
+`sessionId` is a browser continuity token stored in `localStorage`. It supports
+reconnect and latest-tab-wins continuity. It is not an account or identity
+proof.
 
-```
+## Repository layout
+
+```text
 yasp/
-├── shared/       # Domain types, event contracts, deck definitions
-├── server/       # Fastify + Socket.IO, room logic, tests
-├── client/       # React SPA (Vite)
-├── cdk/          # AWS CDK deployment (optional)
-├── Dockerfile
-└── package.json  # npm workspaces root
+├── client/   React + Vite SPA
+├── server/   Fastify + Socket.IO runtime and tests
+├── shared/   Shared types and event contracts
+├── cdk/      Optional AWS deployment stack
+├── docs/     Focused deep-dive docs
+├── plans/    ADRs, queue, and open questions
+└── tests/    Script- and Playwright-based checks
 ```
 
-## Getting Started
+## Local development
 
-**Prerequisites:** Node.js 20+, npm 9+
+Prerequisites:
+
+- Node.js 20+
+- npm 9+
 
 ```bash
 git clone https://github.com/wleonhardt/YASP.git yasp
@@ -79,102 +104,55 @@ npm install
 npm run dev
 ```
 
-This starts both the server (port 3001) and Vite dev server (port 5173). Open [http://localhost:5173](http://localhost:5173).
+This starts:
 
-```bash
-npm test             # Run tests
-npm run i18n:check   # Validate locale files against English
-npm run lint         # ESLint
-npm run format:check # Prettier check
-npm run build        # Production build (shared → server → client)
-npm start            # Start production server on :3001
-```
+- the Fastify + Socket.IO server on `http://localhost:3001`
+- the Vite dev client on `http://localhost:5173`
 
-## Quality Checks
+### Common commands
 
-The repo includes a gated GitHub Actions pipeline:
-
-- `CI` runs on pull requests and pushes to `main`
-- validation includes build, tests, ESLint, and Prettier checks
-- Docker validation builds the production image, starts it, and verifies `GET /api/health` plus the root HTML document
-- `cdk synth` runs when files under [`cdk/`](./cdk/) change
-- image publish and AWS deploy only run after CI passes
-
-## Accessibility
-
-YASP has an active [WCAG 2.2 AAA audit](./ACCESSIBILITY_WCAG_2_2_AAA_AUDIT.md). The current UI includes:
-
-- semantic `main`/section landmarks and route-aware document titles
-- keyboard-operable radio groups, tablists, modal focus trapping, and visible focus styles
-- live-region announcements for room-state changes
-- reduced-motion handling and forced-colors fallbacks
-- dark/light theme support with stronger contrast-oriented tokens than the original baseline
-
-The app is in much better shape than the initial audit baseline, but it is **not claimed as WCAG 2.2 AAA conformant yet**. Manual assistive-technology validation is still required before making that claim.
-
-## Localization
-
-YASP uses a lean, git-based localization setup built on `i18next` + `react-i18next`.
-
-- locale files live in [`client/src/i18n/locales/`](./client/src/i18n/locales/)
-- Phase 1 uses a single namespace: `common.json`
-- English (`en`) is the default and fallback locale
-- Supported locales are `en`, `es`, `fr`, `de`, `pt`, `ja`, `ko`, `zh-Hans`, and `zh-Hant`
-- translations are bundled with the client and reviewed in pull requests
-- no hosted translation service, sync platform, or runtime locale fetching is used
-- English is the source locale, supported locales must stay in sync with it, and `npm run i18n:check` is enforced in CI
-- Chinese is handled as two explicit locale variants: `zh-Hans` (Simplified) and `zh-Hant` (Traditional)
-
-Language selection:
-
-- the selected language is stored in `localStorage`
-- on startup, YASP uses the stored locale first
-- if no locale was stored, YASP falls back to the browser language only when it matches a supported locale
-- browser locale normalization maps `ko-KR` to `ko`, `zh-CN` and `zh-SG` to `zh-Hans`, `zh-TW`, `zh-HK`, and `zh-MO` to `zh-Hant`, and plain `zh` to `zh-Hans`
-- otherwise it falls back to English
-
-To add a new string:
-
-1. Add a stable key to [`client/src/i18n/locales/en/common.json`](./client/src/i18n/locales/en/common.json).
-   Prefer semantic keys grouped by feature or screen, such as `landing.createRoom`, rather than English sentence keys.
-2. Add the translated value to each additional locale file.
-3. Use `t("your.key")` from `useTranslation()` in the client component.
-4. Run `npm run i18n:check` to verify keys, placeholders, and empty-string rules.
-
-To add a new language:
-
-1. Add a new locale file under [`client/src/i18n/locales/`](./client/src/i18n/locales/).
-2. Register it in [`client/src/i18n/index.ts`](./client/src/i18n/index.ts).
-3. Add the locale code to [`client/src/i18n/config.ts`](./client/src/i18n/config.ts).
-4. Add its visible label to the locale JSON files so the switcher exposes the new language consistently.
-
-Terminology guidance for future translation work lives in [docs/i18n-glossary.md](./docs/i18n-glossary.md).
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | run client + server in development |
+| `npm test` | script tests + server Vitest + client Vitest |
+| `npm run test:a11y` | Playwright accessibility smoke suite |
+| `npm run i18n:check` | validate locale keys/placeholders |
+| `npm run lint` | ESLint, zero warnings |
+| `npm run build` | production build for shared, server, and client |
+| `npm run format:check` | Prettier verification |
 
 ## Configuration
 
-| Variable   | Default    | Description                  |
-| ---------- | ---------- | ---------------------------- |
-| `PORT`     | `3001`     | HTTP + WebSocket listen port |
-| `HOST`     | `0.0.0.0` | Bind address                 |
-| `NODE_ENV` | —          | Set to `production` in Docker |
+No `.env` file is required for the default local memory profile.
 
-No `.env` file is required. All defaults work out of the box.
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `3001` | HTTP + WebSocket listen port |
+| `HOST` | `0.0.0.0` | bind address |
+| `YASP_STATE_BACKEND` | `memory` | choose `memory` or `redis` |
+| `REDIS_URL` | — | required only when `YASP_STATE_BACKEND=redis` |
+| `NODE_ENV` | unset locally | set to `production` in Docker/prod |
+
+Redis mode remains ephemeral-only. It stores active room/session state with
+TTL, not history.
 
 ## Docker
+
+The default self-hosted path is still a single container in `memory` mode:
 
 ```bash
 docker run --rm -p 3001:3001 wleonhardt/yasp:main
 ```
 
-Open [http://localhost:3001](http://localhost:3001). All room state is in-memory — restarting the container clears everything. This is by design.
+Open [http://localhost:3001](http://localhost:3001).
 
-On Apple Silicon, use the x86_64 image target explicitly:
+Notes:
 
-```bash
-docker run --rm --platform linux/amd64 -p 3001:3001 wleonhardt/yasp:main
-```
-
-For reproducible deployments, prefer an explicit published SHA tag over the moving `main` tag.
+- In `memory` mode, restarting the container clears active rooms.
+- The container exposes `GET /api/health`, and the image includes a Docker
+  `HEALTHCHECK`.
+- On Apple Silicon, use `--platform linux/amd64` if you need the x86_64 image
+  target.
 
 Build locally:
 
@@ -183,47 +161,127 @@ docker build -t yasp:local .
 docker run --rm -p 3001:3001 yasp:local
 ```
 
-Health check endpoint: `GET /api/health` returns `{ "ok": true }`.
+If you intentionally opt into `redis` mode, you must supply Redis separately
+and pass `YASP_STATE_BACKEND=redis` plus `REDIS_URL`. That profile is still
+single-instance and is documented in
+[docs/horizontal-scaling.md](./docs/horizontal-scaling.md).
 
-## AWS Deployment (Optional)
+## Deployment and operations
 
-A CDK stack under [`cdk/`](./cdk/) deploys YASP behind CloudFront on a single EC2 instance with WAF and Basic Auth. See the [CDK README](./cdk/README.md).
+- **Plain Docker:** the simplest supported deployment profile.
+- **AWS/CDK:** optional CloudFront + WAF + Basic Auth + single EC2 + nginx +
+  Docker path. See [cdk/README.md](./cdk/README.md).
 
-The deployed origin now ships container logs to CloudWatch Logs. With the default stack settings you can inspect recent origin logs with:
+The current CDK stack deploys the default single-instance memory profile. It
+does not yet wire first-class Redis configuration into the userdata/service
+bootstrap.
 
-```bash
-aws logs tail /yasp/origin --since 1h --follow
-```
+## Testing, CI, and quality gates
 
-## Security
+The repo has both blocking and advisory CI lanes.
 
-YASP is intentionally no-auth: room URLs are bearer-style meeting links, and `sessionId` is a per-browser continuity token — not an account. Within that product boundary, the runtime has been hardened against the usual abuse surfaces (DoS shaping, input validation, CSP, non-root + read-only Docker runtime, deploy rollback). The full story lives in three documents:
+The main blocking checks today are:
 
-- [`SECURITY_THREAT_MODEL.md`](./SECURITY_THREAT_MODEL.md) — what YASP does and does not defend against, and the accepted product tradeoffs.
-- [`SECURITY_AUDIT_REPORT.md`](./SECURITY_AUDIT_REPORT.md) — findings inventory (F-01 … F-22) with current remediation status.
-- [`SECURITY_REMEDIATION_PLAN.md`](./SECURITY_REMEDIATION_PLAN.md) — shipped remediation PRs and the remaining future-hardening backlog.
-- [`docs/security-scanning.md`](./docs/security-scanning.md) — the layered scanner surface (CodeQL, Trivy, Dependency Review, Dependabot, Scorecard, Knip, strict lint) with blocking-vs-advisory and scheduled-sweep tables, plus how to verify GitHub secret scanning and push protection.
+- `validate` — translations, lint, build, tests, format
+- `a11y-smoke` — Playwright accessibility smoke coverage
+- `docker-validation` — production image build + healthcheck + root document
+- `cdk-synth` — when `cdk/` changes
+- `CodeQL` — security query pack
 
-If you plan to add accounts, persistence, integrations, or stronger identity claims, re-read the threat model first — several current tradeoffs stop being "accepted" at that point.
+Additional security and hygiene lanes remain advisory until their baselines are
+clean or the relevant GitHub features are fully enabled:
 
-## Roadmap
+- dependency review
+- Trivy repo/image scans
+- `npm audit`
+- strict lint
+- Knip
+- OSSF Scorecard
 
-- [x] Custom deck creation from the UI
-- [x] WCAG 2.2 audit and core accessibility remediation pass
-- [x] Timer for voting rounds
-- [x] Room settings panel (reveal/reset/deck policies, spectator/name/role options)
-- [ ] Manual assistive-technology validation (VoiceOver, TalkBack, zoom/reflow, speech input)
-- [ ] Horizontal scaling with Redis adapter (opt-in)
+The source of truth for the current CI/security split is
+[docs/security-scanning.md](./docs/security-scanning.md).
 
-## The YASP Promise
+## Accessibility
 
-Scrum poker is one of the most misused ceremonies in software. Teams adopt it hoping to improve estimation, then watch it devolve into anchoring, pressure to converge, velocity tracking as a performance metric, or a rubber stamp for deadlines already set. The tool isn't the problem — it's how it's wielded.
+YASP has had substantial accessibility remediation work and now includes:
 
-YASP exists to make estimation conversations fast and frictionless, but the tool only works if the intent is right. So:
+- keyboard-operable core flows
+- semantic landmarks and route-aware titles
+- live-region announcements for room-state changes
+- reduced-motion handling
+- forced-colors fallbacks
 
-> *I solemnly swear not to use Scrum Poker to force certainty, measure people, justify deadlines, or replace real conversation. I will use it only to expose uncertainty, surface assumptions, and improve shared team understanding.*
+Current validation status:
 
-If your estimate sparked a discussion, the round was a success — even if you never reached consensus.
+- automated smoke coverage in CI via `npm run test:a11y`
+- browser/manual QA completed for core flows
+- real assistive-technology validation is still outstanding in a few areas
+
+YASP should **not** be publicly described as WCAG-conformant yet.
+
+See:
+
+- [ACCESSIBILITY_WCAG_2_2_AAA_AUDIT.md](./ACCESSIBILITY_WCAG_2_2_AAA_AUDIT.md)
+- [ACCESSIBILITY_MANUAL_QA_CHECKLIST.md](./ACCESSIBILITY_MANUAL_QA_CHECKLIST.md)
+- [ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md](./ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md)
+
+## Localization
+
+Localization uses `i18next` + `react-i18next` with locale files committed in
+the repo.
+
+- English is the source and fallback locale.
+- Supported locales: `en`, `es`, `fr`, `de`, `pt`, `ja`, `ko`, `zh-Hans`,
+  `zh-Hant`
+- `npm run i18n:check` is enforced in CI.
+- Terminology guidance lives in [docs/i18n-glossary.md](./docs/i18n-glossary.md).
+
+## Security posture
+
+YASP is intentionally no-auth:
+
+- room URLs are bearer-style meeting links
+- `sessionId` is continuity, not identity proof
+- moderators are a room-level role, not an authenticated account
+
+Within that product boundary, recent hardening includes:
+
+- CSP and browser security headers
+- input validation and abuse shaping
+- non-root container image plus hardened EC2 runtime flags
+- healthcheck-based deploy rollback
+- layered CI/security scanning
+
+YASP still does **not** claim:
+
+- strong user authentication
+- durable privacy guarantees beyond bearer-link secrecy
+- history or audit-trail persistence
+- true multi-instance readiness
+
+Source-of-truth docs:
+
+- [SECURITY_THREAT_MODEL.md](./SECURITY_THREAT_MODEL.md)
+- [SECURITY_AUDIT_REPORT.md](./SECURITY_AUDIT_REPORT.md)
+- [SECURITY_REMEDIATION_PLAN.md](./SECURITY_REMEDIATION_PLAN.md)
+- [docs/security-scanning.md](./docs/security-scanning.md)
+
+## Contributor workflow
+
+Before making or proposing structural changes:
+
+1. Read [plans/next-up.md](./plans/next-up.md).
+2. Read [plans/open-questions.md](./plans/open-questions.md).
+3. Check accepted ADRs under [plans/decisions/](./plans/decisions/).
+
+Before considering work complete:
+
+1. Run `npm test`.
+2. Run `npm run lint`.
+3. Run `npm run build`.
+4. Update docs/plans if product or operational behavior changed.
+
+AI-agent-specific repo rules live in [AGENTS.md](./AGENTS.md).
 
 ## License
 

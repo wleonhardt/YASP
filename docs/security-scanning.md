@@ -5,34 +5,39 @@ features and a few low-maintenance open-source tools. Everything here
 is either part of free GitHub Advanced Security for public repos or
 self-hosted in CI — no paid SaaS, no external tokens to rotate.
 
-## Blocking checks (merge-gated)
+## Merge blockers today
 
-These are hard gates on pull requests. A finding at or above the
-listed severity fails the job and blocks merge.
+These checks currently fail the PR when they fail.
 
 | Check | Workflow | Gate |
 |---|---|---|
 | Validate (build, test, lint, format, i18n) | `ci.yml` → `validate` | any failure |
-| Dependency review | `dependency-review.yml` | new dep at `high` or `critical` GHSA severity *(advisory until **Dependency graph** is enabled under Settings → Code security and analysis)* |
 | CodeQL (JS/TS, `security-extended`) | `codeql.yml` | any security finding |
-| Trivy filesystem + IaC + secret scan | `trivy.yml` → `repo-scan` | `HIGH` or `CRITICAL`, fixed versions only *(advisory until baseline HIGH/CRITICAL are burned down)* |
-| Trivy container image scan | `trivy.yml` → `image-scan` | `HIGH` or `CRITICAL`, fixed versions only *(advisory until baseline HIGH/CRITICAL are burned down)* |
 | Docker build + health check | `ci.yml` → `docker-validation` | any failure |
 | Accessibility smoke | `ci.yml` → `a11y-smoke` | any failure |
 | CDK synth (when `cdk/` changed) | `ci.yml` → `cdk-synth` | any failure |
 
-## Advisory checks (visible, non-blocking)
+## Advisory checks today
 
-These run on every PR but are allowed to fail without blocking merge.
-Their output appears in the PR check summary. Each of them has an
-explicit promotion path described in its workflow comments.
+These run in CI and stay visible in the PR summary or security dashboards, but
+they are intentionally non-blocking until the stated promotion condition is
+met.
 
-| Check | Workflow | Why advisory |
-|---|---|---|
-| `npm audit --omit=dev --audit-level=high` | `ci.yml` → `validate` → `npm-audit` step | Newly published advisories must not red a PR before triage. |
-| ESLint strict (type-aware `no-unsafe-*`) | `lint-strict.yml` | Pre-existing any-flavored patterns need incremental burn-down before strict lint becomes a gate. |
-| Knip (unused files/exports/deps) | `knip.yml` | Knip regularly flags intentionally-unused internal API surface; promote after the config is tuned to zero false positives. |
-| OSSF Scorecard | `scorecard.yml` | Scorecard is a posture *signal*, not a release gate. |
+| Check | Workflow | Current status | Promotion condition |
+|---|---|---|---|
+| Dependency review | `dependency-review.yml` | advisory | enable GitHub **Dependency graph** under Settings → Code security and analysis, then remove `continue-on-error` |
+| Trivy filesystem + IaC + secret scan | `trivy.yml` → `repo-scan` | advisory | burn down existing `HIGH` / `CRITICAL` baseline findings, then remove `continue-on-error` |
+| Trivy container image scan | `trivy.yml` → `image-scan` | advisory | burn down existing `HIGH` / `CRITICAL` image findings, then remove `continue-on-error` |
+| `npm audit --omit=dev --audit-level=high` | `ci.yml` → `validate` → `npm-audit` step | advisory | keep clean enough at `high` / `critical` to make the step blocking |
+| ESLint strict (type-aware `no-unsafe-*`) | `lint-strict.yml` | advisory | get `npm run lint:strict` clean on `main` |
+| Knip (unused files/exports/deps) | `knip.yml` | advisory | tune `knip.json` to zero meaningful false positives |
+| OSSF Scorecard | `scorecard.yml` | advisory | likely stays advisory; it is posture evidence, not a release gate |
+
+In practice:
+
+- the repo already has layered security coverage in CI
+- not every security lane is a merge blocker yet
+- the promotion path for each advisory lane is recorded in the workflow itself
 
 ## Scheduled sweeps
 

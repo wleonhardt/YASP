@@ -7,15 +7,17 @@ Last updated: 2026-03-31 (manual QA pass via browser automation + targeted remed
 ## How To Use This Checklist
 
 - Use this file for the browser/manual QA that has already been completed or can be rerun in ordinary desktop/mobile browser environments.
-- Use [ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md](/Users/william/Projects/yasp/ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md) for the remaining specialist manual work that requires real assistive technology, Windows High Contrast, or formal contrast measurement.
+- Use [ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md](./ACCESSIBILITY_MANUAL_VALIDATION_PLAN.md)
+  for the remaining specialist manual work that requires real assistive
+  technology, Windows High Contrast, or formal contrast measurement.
 
 Remaining specialist workflows:
 
-- [Windows High Contrast Checklist](/Users/william/Projects/yasp/docs/a11y/windows-high-contrast-checklist.md)
-- [Screen Reader Checklist](/Users/william/Projects/yasp/docs/a11y/screen-reader-checklist.md)
-- [Speech Input Checklist](/Users/william/Projects/yasp/docs/a11y/speech-input-checklist.md)
-- [AAA Contrast Signoff Matrix](/Users/william/Projects/yasp/docs/a11y/aaa-contrast-signoff-matrix.md)
-- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
+- [Windows High Contrast Checklist](./docs/a11y/windows-high-contrast-checklist.md)
+- [Screen Reader Checklist](./docs/a11y/screen-reader-checklist.md)
+- [Speech Input Checklist](./docs/a11y/speech-input-checklist.md)
+- [AAA Contrast Signoff Matrix](./docs/a11y/aaa-contrast-signoff-matrix.md)
+- [Evidence Template](./docs/a11y/evidence-template.md)
 
 ## Keyboard Navigation
 
@@ -73,10 +75,10 @@ Remaining specialist workflows:
 
 ## Still Requires Deeper Manual Validation
 
-- [ ] Run [Screen Reader Checklist](/Users/william/Projects/yasp/docs/a11y/screen-reader-checklist.md) with VoiceOver on macOS.
-- [ ] Run [Screen Reader Checklist](/Users/william/Projects/yasp/docs/a11y/screen-reader-checklist.md) with VoiceOver on iOS.
-- [ ] Run [Screen Reader Checklist](/Users/william/Projects/yasp/docs/a11y/screen-reader-checklist.md) with TalkBack on Android.
-- [ ] Run [Screen Reader Checklist](/Users/william/Projects/yasp/docs/a11y/screen-reader-checklist.md) with NVDA or JAWS on Windows.
-- [ ] Run [Windows High Contrast Checklist](/Users/william/Projects/yasp/docs/a11y/windows-high-contrast-checklist.md) on real Windows.
-- [ ] Run [Speech Input Checklist](/Users/william/Projects/yasp/docs/a11y/speech-input-checklist.md) with real speech-input software.
-- [ ] Complete [AAA Contrast Signoff Matrix](/Users/william/Projects/yasp/docs/a11y/aaa-contrast-signoff-matrix.md) with real measurements and evidence.
+- [ ] Run [Screen Reader Checklist](./docs/a11y/screen-reader-checklist.md) with VoiceOver on macOS.
+- [ ] Run [Screen Reader Checklist](./docs/a11y/screen-reader-checklist.md) with VoiceOver on iOS.
+- [ ] Run [Screen Reader Checklist](./docs/a11y/screen-reader-checklist.md) with TalkBack on Android.
+- [ ] Run [Screen Reader Checklist](./docs/a11y/screen-reader-checklist.md) with NVDA or JAWS on Windows.
+- [ ] Run [Windows High Contrast Checklist](./docs/a11y/windows-high-contrast-checklist.md) on real Windows.
+- [ ] Run [Speech Input Checklist](./docs/a11y/speech-input-checklist.md) with real speech-input software.
+- [ ] Complete [AAA Contrast Signoff Matrix](./docs/a11y/aaa-contrast-signoff-matrix.md) with real measurements and evidence.

@@ -29,6 +29,11 @@ Optional infrastructure-as-code for deploying YASP to AWS behind CloudFront on a
 
 **Why EC2?** YASP keeps room state in process memory and uses WebSockets. That requires a long-running process with stable connections — a single EC2 instance is the simplest shape without introducing ECS, Redis, or orchestration.
 
+This stack deploys the **default memory profile** today. It does not wire
+first-class `YASP_STATE_BACKEND=redis` / `REDIS_URL` support into the
+userdata/systemd bootstrap, and it should not be described as a multi-instance
+or Redis-backed deployment path yet.
+
 ## Security Model
 
 This stack is appropriate for a small internal tool, not a high-assurance security boundary.
@@ -195,6 +200,18 @@ The workflow also needs `secrets.AWS_DEPLOY_ROLE_ARN` pointing at an IAM role wh
 
 **Path B — full CDK redeploy.** Build, tag, push, then re-run `cdk deploy` with the new `-c imageTag=<version>`. Changing the image reference replaces the instance — this is intentional for reproducibility but disrupts active rooms. Use this when the userdata, security group, WAF rules, or other stack-level resources change; for plain image swaps prefer Path A.
 
+### Post-deploy operator checks
+
+After either deploy path, operators should at minimum verify:
+
+1. `GET /api/health` returns `200` through the CloudFront URL.
+2. `sudo systemctl status yasp` is healthy on the instance.
+3. `sudo docker logs yasp --tail 200` shows the expected image reference and no
+   startup errors.
+4. CloudWatch origin logs are clean after the restart window.
+5. One manual smoke flow works end to end: create room, join from a second
+   browser/device, cast votes, reveal, reset, and leave.
+
 ### Rotate credentials
 
 Re-run `cdk deploy` with new `--parameters BasicAuthPassword` or `--parameters OriginSecret` values.
@@ -211,6 +228,7 @@ CloudFront logs go to an S3 bucket with public access blocked, encryption, SSL-o
 
 - Single instance — no HA, no rolling deploys, no horizontal scale
 - Instance replacement disrupts active in-memory rooms
+- First-class Redis-backed deployment wiring is not implemented in this stack
 - CloudFront → EC2 is HTTP (not HTTPS) to keep the stack simple
 - CloudFront has a 60-second origin read timeout; idle WebSockets may be dropped at that interval (Socket.IO reconnects automatically)
 - CloudFront WAF adds a real monthly baseline cost

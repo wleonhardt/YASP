@@ -61,7 +61,7 @@ Always record:
 - whether anything was noisy, repetitive, or confusing
 - whether the user could complete the task confidently
 
-Use [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md) for each run.
+Use [Evidence Template](./evidence-template.md) for each run.
 
 ## Minimum Evidence Per Tool
 

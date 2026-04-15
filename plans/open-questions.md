@@ -10,6 +10,10 @@
 - 2026-04-14: In future multi-instance Redis mode, which process should own
   timer completion and cleanup so only one instance applies auto-reveal, room
   expiry, and stale-participant removal?
+- 2026-04-15: Should the AWS/CDK deployment path remain intentionally
+  memory-only, or should it grow first-class `YASP_STATE_BACKEND=redis` /
+  `REDIS_URL` support for the TTL-bound Redis active-state profile? The current
+  userdata/systemd bootstrap deploys the default memory profile only.
 
 ## Resolved
 

@@ -3,6 +3,10 @@
 Phase 3 keeps the fast mock-backed coverage from Phase 2 and adds live Redis
 coverage for both the store contracts and the real Redis-backed server runtime.
 
+This test surface is about the shipped Redis-backed **active-state** profile
+only. It does not imply durable history, archive semantics, or safe
+multi-instance support.
+
 ## What runs in CI today
 
 Store contract coverage runs against three backends in CI:

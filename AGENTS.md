@@ -20,7 +20,11 @@
 - **Commit after each meaningful change** with a descriptive message.
 - **TypeScript only** — no `.js` files in `src/`. Strict mode via `tsconfig.base.json`.
 - **Workspace layout matters:** `shared/` owns types used by both client and server. Never import server modules from client or vice versa — route shared code through `shared/`.
-- **No external state dependencies** — YASP is intentionally stateless (in-memory only). Do not introduce databases, caches, or external services without an ADR.
+- **No durable external state dependencies** — the default runtime is still
+  in-memory only. The only approved exception is the opt-in Redis-backed active
+  room/session backend documented in ADR 0003; it remains ephemeral-only and
+  operationally single-instance. Do not introduce databases, history, archives,
+  or external services without an ADR.
 
 ## Before telling the user work is done
 
@@ -41,10 +45,12 @@
 
 ## Project overview
 
-Real-time scrum poker. No accounts, no database — all state in memory. Single Docker container.
+Real-time scrum poker. No accounts. Default mode keeps active state in memory;
+optional Redis mode shares only TTL-bound active room/session state. Default
+deployment is still a single Docker container.
 
 - **Frontend:** React + Vite (`client/`)
-- **Backend:** Node.js/Express + WebSocket (`server/`)
+- **Backend:** Node.js/Fastify + Socket.IO (`server/`)
 - **Shared types:** `shared/`
 - **Infrastructure:** AWS CDK (`cdk/`)
 - **Tests:** Vitest (server + client), Playwright accessibility (`npm run test:a11y`)
@@ -68,7 +74,7 @@ Real-time scrum poker. No accounts, no database — all state in memory. Single 
 ```
 yasp/
 ├── shared/       Shared TypeScript types (client + server)
-├── server/       Node.js/Express + WebSocket
+├── server/       Node.js/Fastify + Socket.IO
 ├── client/       React + Vite SPA
 ├── cdk/          AWS CDK infrastructure
 ├── tests/        Playwright e2e + script tests

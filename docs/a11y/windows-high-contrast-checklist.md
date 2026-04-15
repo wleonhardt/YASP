@@ -141,7 +141,7 @@ For each tested page/state capture:
 - issue severity if failed
 - recommended fix
 
-Use [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md).
+Use [Evidence Template](./evidence-template.md).
 
 ## Reviewer Log Table
 

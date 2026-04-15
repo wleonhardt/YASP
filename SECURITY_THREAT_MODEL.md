@@ -1,7 +1,10 @@
 # YASP Security Threat Model
 
 **Scope:** Yet Another Scrum Poker (YASP) — realtime Socket.IO scrum poker app.  
-**Architecture under review:** Single Node.js process, in-memory room state, no database/Redis/auth. Served via CloudFront → EC2 nginx → container on port 3001.  
+**Architecture under review:** Single Node.js process, default in-memory active
+room state, optional TTL-bound Redis-backed active-state profile, no durable
+database/history layer, no auth. Served via CloudFront → EC2 nginx → container
+on port 3001.  
 **Audit date:** 2026-04-13  
 **Post-remediation update:** 2026-04-13
 
@@ -10,7 +13,9 @@
 This threat model is anchored to the repo-managed architecture as it exists today:
 
 - `shared/src/events.ts` and `shared/src/types.ts` define the public protocol surface.
-- `server/src/index.ts` and `server/src/services/*` implement a single-process in-memory room model.
+- `server/src/index.ts`, `server/src/config.ts`, and `server/src/services/*`
+  implement a single-process room runtime with backend-selected active state
+  (`memory` by default, optional TTL-bound Redis-backed active state).
 - `cdk/lib/yasp-stack.ts` and `cdk/lib/ec2-origin-bootstrap.ts` define the CloudFront → EC2 → nginx → container deployment path.
 - GitHub Actions publish Docker images and deploy through ECR/SSM/systemd.
 
@@ -18,7 +23,7 @@ This model deliberately does **not** assume hidden controls that the repo does n
 
 - no real user authentication
 - no origin-bound/browser-bound session secrets
-- no database-backed recovery/auditability
+- no durable database-backed recovery/auditability
 - no horizontal scaling
 - no cryptographic vote sealing
 
@@ -72,7 +77,7 @@ EC2 nginx
         ↓ loopback
 Node container
   - Fastify HTTP + Socket.IO
-  - server-authoritative in-memory RoomStore
+  - server-authoritative RoomService + selected active-state store
   - validation / permission checks / rate shaping
 ```
 
@@ -120,9 +125,13 @@ These are not currently treated as bugs. They are product and deployment tradeof
 2. **Room URLs are bearer-style links.** Treat them like meeting links.
 3. **`sessionId` is continuity, not identity proof.** It is intentionally client-generated and browser-stored.
 4. **A client’s own `sessionId` remains sensitive.** XSS or local compromise of that browser can still steal it.
-5. **No persistence.** Server restart destroys rooms.
-6. **No historical audit trail across restarts.** Runtime logs exist, but room history is not persisted.
-7. **Single process / single instance.** No horizontal scaling or cross-instance state.
+5. **No durable persistence or history.** In `memory` mode, restart destroys
+   active rooms. The optional Redis mode only retains TTL-bound active
+   room/session state and does not add history/archive semantics.
+6. **No historical audit trail across restarts.** Runtime logs exist, but room
+   history is not persisted.
+7. **Single-instance supported deployment only.** Optional Redis state does not
+   yet make YASP safe for multi-instance fanout/timer/cleanup coordination.
 8. **Votes are not cryptographically sealed.** The operator can inspect process memory.
 9. **CloudFront → origin uses HTTP plus shared-secret header, not mTLS.**
 10. **Docker Hub remains a public image distribution channel and intermediate registry.**
@@ -170,10 +179,9 @@ Re-run this threat model before shipping any of these changes:
 - persistent room history
 - exports or Jira/integration features
 - multi-instance deployment
-- Redis/database adoption
+- true multi-instance Redis deployment or durable database adoption
 - file uploads or rich text/markdown
 - public admin dashboard
 - cross-origin API access
 - stronger claims about identity or privacy
 - change from CloudFront → EC2/nginx ingress topology
-

@@ -122,4 +122,4 @@ For each target control:
 - If the speech tool exposes number overlays instead of label targeting, note that separately; it does not replace label-in-name validation.
 - If the tester must repeatedly use a workaround phrase instead of the visible label, treat that as `Needs follow-up` or `Fail` depending on severity.
 
-Use [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md) to capture each session.
+Use [Evidence Template](./evidence-template.md) to capture each session.

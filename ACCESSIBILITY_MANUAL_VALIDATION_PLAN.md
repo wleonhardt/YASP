@@ -4,9 +4,9 @@ This plan covers the remaining accessibility work that cannot be honestly closed
 
 It is intentionally narrow and evidence-driven. It does **not** replace the completed browser-based QA documented in:
 
-- [ACCESSIBILITY_MANUAL_QA_CHECKLIST.md](/Users/william/Projects/yasp/ACCESSIBILITY_MANUAL_QA_CHECKLIST.md)
-- [ACCESSIBILITY_WCAG_2_2_AAA_AUDIT.md](/Users/william/Projects/yasp/ACCESSIBILITY_WCAG_2_2_AAA_AUDIT.md)
-- [tmp/ACCESSIBILITY-MANUAL-QA-REPORT.md](/Users/william/Projects/yasp/tmp/ACCESSIBILITY-MANUAL-QA-REPORT.md)
+- [ACCESSIBILITY_MANUAL_QA_CHECKLIST.md](./ACCESSIBILITY_MANUAL_QA_CHECKLIST.md)
+- [ACCESSIBILITY_WCAG_2_2_AAA_AUDIT.md](./ACCESSIBILITY_WCAG_2_2_AAA_AUDIT.md)
+- `tmp/ACCESSIBILITY-MANUAL-QA-REPORT.md`
 
 ## Remaining Validation Streams
 
@@ -17,11 +17,11 @@ It is intentionally narrow and evidence-driven. It does **not** replace the comp
 
 Detailed workflows:
 
-- [Windows High Contrast Checklist](/Users/william/Projects/yasp/docs/a11y/windows-high-contrast-checklist.md)
-- [Screen Reader Checklist](/Users/william/Projects/yasp/docs/a11y/screen-reader-checklist.md)
-- [Speech Input Checklist](/Users/william/Projects/yasp/docs/a11y/speech-input-checklist.md)
-- [AAA Contrast Signoff Matrix](/Users/william/Projects/yasp/docs/a11y/aaa-contrast-signoff-matrix.md)
-- [Evidence Template](/Users/william/Projects/yasp/docs/a11y/evidence-template.md)
+- [Windows High Contrast Checklist](./docs/a11y/windows-high-contrast-checklist.md)
+- [Screen Reader Checklist](./docs/a11y/screen-reader-checklist.md)
+- [Speech Input Checklist](./docs/a11y/speech-input-checklist.md)
+- [AAA Contrast Signoff Matrix](./docs/a11y/aaa-contrast-signoff-matrix.md)
+- [Evidence Template](./docs/a11y/evidence-template.md)
 
 ## Ground Rules
 

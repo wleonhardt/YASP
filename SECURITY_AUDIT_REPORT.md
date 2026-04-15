@@ -7,7 +7,14 @@
 
 ## Executive summary
 
-YASP is a lightweight, no-account, ephemeral scrum-poker app. Its security model is intentionally modest: room URLs behave like bearer-style meeting links, `sessionId` is a browser continuity token rather than authentication, and all room state remains in a single in-memory Node process.
+YASP is a lightweight, no-account, ephemeral scrum-poker app. Its security
+model is intentionally modest: room URLs behave like bearer-style meeting
+links, `sessionId` is a browser continuity token rather than authentication,
+and YASP still provides no durable history/archive layer. The default runtime
+keeps active room state in a single in-memory Node process; an optional
+Redis-backed profile now exists for TTL-bound active room/session state, but it
+remains operationally single-instance and is not yet a claim of true
+multi-instance readiness.
 
 The original audit identified one Critical finding: **F-01**, where public participant IDs were equal to private `sessionId` values and were broadcast to peers. That issue has now been remediated by separating private session continuity tokens from public participant IDs.
 
@@ -19,6 +26,8 @@ After the A–G remediation sequence, the current practical posture is:
 - Browser hardening headers and CSP are enabled.
 - The EC2 Docker runtime is substantially hardened.
 - Deployment rollback behavior is safer.
+- Layered CI/security scanning exists and is documented in
+  `docs/security-scanning.md`.
 - Remaining items are accepted product tradeoffs or future hardening, not urgent blockers.
 
 This report still does **not** claim that YASP provides real user authentication. It does not. Anyone with a room URL can attempt to join, and a client’s own `sessionId` remains a bearer-style continuity token stored in the browser.
@@ -58,7 +67,7 @@ This package is anchored to the repo-managed YASP architecture:
 
 | Fact used by this audit | Repo evidence |
 |---|---|
-| Single-process Node/Fastify + Socket.IO with in-memory room state and no Redis/database | `server/src/index.ts`, `server/src/services/room-store.ts`, `server/src/services/room-service.ts` |
+| Single-process Node/Fastify + Socket.IO runtime with default in-memory state and an optional TTL-bound Redis-backed active-state profile; no durable database/history layer | `server/src/index.ts`, `server/src/services/room-store.ts`, `server/src/services/room-service.ts`, `server/src/config.ts` |
 | No account/login/identity-provider concept | `shared/src/events.ts`, `shared/src/types.ts`, client room/join flows |
 | Client-generated `sessionId` supports reconnect continuity | `shared/src/events.ts`, `server/src/transport/validators.ts`, `server/src/services/room-service.ts` |
 | Public participant IDs are now separate from private `sessionId` values | `server/src/domain/types.ts`, `server/src/services/room-service.ts`, `server/src/transport/serializers.ts` |
@@ -455,8 +464,11 @@ These remain acceptable for the current YASP product boundary:
 1. Room URLs remain bearer-style links.
 2. YASP has no accounts or login.
 3. `sessionId` remains a client-side continuity token, not identity proof.
-4. Server restart destroys all rooms.
-5. YASP remains single-process and single-instance.
+4. YASP still has no durable room history/archive. In `memory` mode, restarting
+   the app clears active rooms; the optional Redis mode only retains TTL-bound
+   active room/session state and does not add history.
+5. YASP remains single-instance in supported deployments. The optional
+   Redis-backed mode is still not safe multi-instance fanout/coordination.
 6. Votes live in process memory; operators are trusted.
 7. CloudFront → origin remains HTTP plus shared-secret header, not mTLS.
 8. Docker Hub remains a public distribution channel and intermediate registry.
@@ -480,4 +492,3 @@ If YASP later adds accounts, persistence, integrations, or stronger identity cla
 3. Consider digest verification between Docker publish and deploy workflows if Docker Hub trust becomes a concern.
 4. Re-run the threat model if YASP adds accounts, persistence, multiple instances, Jira integrations, or exports.
 5. Consider broadcast coalescing/deltas only if profiling shows real pressure.
-
