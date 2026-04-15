@@ -1,0 +1,62 @@
+# Knip: unused files, exports, and dependencies (advisory-only).
+#
+# Intentionally NOT a blocking gate. Knip's value is as a periodic
+# janitor signal, not a merge gate — it routinely surfaces
+# intentionally-unused internal API surface (tests-only exports,
+# adapters kept for future backends, etc.). Running it as `continue-on-
+# error` keeps the signal visible in the check summary without
+# creating pressure to delete code that is about to be used.
+#
+# Promote to a hard gate only once the config is tuned to zero
+# false-positives on main — see SECURITY_REMEDIATION_PLAN.md.
+name: Knip (advisory)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: knip-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  knip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run knip (advisory)
+        id: knip
+        continue-on-error: true
+        run: |
+          echo "## Knip results (advisory, non-blocking)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          set +e
+          npx knip --no-progress | tee /tmp/knip.txt
+          KNIP_EXIT=$?
+          set -e
+          cat /tmp/knip.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          if [ "$KNIP_EXIT" -ne 0 ]; then
+            echo "_Advisory: knip reported findings. Triage at leisure; this step does not block the PR._" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "_Clean._" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$KNIP_EXIT"

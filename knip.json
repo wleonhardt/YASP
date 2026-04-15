@@ -1,0 +1,46 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": [
+        "scripts/**/*.mjs",
+        "scripts/**/*.js",
+        "tests/**/*.{ts,mts,mjs,js}",
+        "playwright.a11y.config.ts",
+        "simulate.mjs",
+        "eslint.config.mjs"
+      ],
+      "project": ["scripts/**/*.{ts,mts,js,mjs}", "tests/**/*.{ts,mts,js,mjs}"],
+      "ignoreDependencies": [
+        "@axe-core/playwright",
+        "@playwright/test",
+        "@eslint/js",
+        "eslint-plugin-jsx-a11y",
+        "eslint-plugin-react-hooks",
+        "globals",
+        "prettier",
+        "concurrently"
+      ]
+    },
+    "shared": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "server": {
+      "entry": ["src/index.ts", "src/**/__tests__/**/*.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignoreDependencies": ["ioredis-mock"]
+    },
+    "client": {
+      "entry": [
+        "index.html",
+        "src/main.tsx",
+        "src/**/*.test.{ts,tsx}",
+        "scripts/**/*.mjs",
+        "vite.config.*",
+        "vitest.config.*"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "scripts/**/*.mjs"]
+    }
+  }
+}

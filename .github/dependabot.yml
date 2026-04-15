@@ -1,4 +1,13 @@
 version: 2
+
+# Dependabot surface for YASP.
+#
+# Workspace layout note: shared/, server/, client/ share the single
+# root package-lock.json (npm workspaces), so one `npm` ecosystem entry
+# rooted at `/` already covers all three. Adding separate entries for
+# each workspace sub-directory would error on missing lockfiles.
+# `cdk/` is a separate npm project with its own lockfile and gets its
+# own entry below.
 updates:
   - package-ecosystem: npm
     directory: /
@@ -55,6 +64,22 @@ updates:
       - dependency-name: eslint-plugin-react-hooks
         update-types:
           - version-update:semver-major
+
+  # CDK app has its own lockfile (cdk/package-lock.json) and deliberately
+  # tracks aws-cdk-lib 2.x — majors grouped so synth/deploy bumps land
+  # together rather than in piecemeal PRs.
+  - package-ecosystem: npm
+    directory: /cdk
+    schedule:
+      interval: weekly
+    groups:
+      cdk:
+        patterns:
+          - "aws-cdk*"
+          - "constructs"
+      dev:
+        dependency-type: development
+    open-pull-requests-limit: 5
 
   - package-ecosystem: github-actions
     directory: /

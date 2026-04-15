@@ -20,6 +20,8 @@
     "test:a11y": "playwright test --config=playwright.a11y.config.ts",
     "i18n:check": "node scripts/check-i18n.mjs",
     "lint": "eslint . --max-warnings=0",
+    "lint:strict": "YASP_LINT_STRICT=1 eslint . --max-warnings=0",
+    "knip": "knip",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "start": "npm run start -w server",
@@ -34,6 +36,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^17.5.0",
+    "knip": "^5.33.0",
     "prettier": "^3.8.2",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.2"

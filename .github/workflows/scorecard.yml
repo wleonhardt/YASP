@@ -1,0 +1,61 @@
+# OSSF Scorecard: supply-chain posture scoring (advisory-only).
+#
+# Runs weekly and on push to main. Produces a SARIF that lands under
+# Security → Code scanning with category `scorecard` so each check
+# (branch protection, code review, pinned dependencies, etc.) becomes
+# a tracked finding. The action itself is allowed to fail without
+# failing the whole workflow — Scorecard is meant as a posture
+# signal, not a blocking gate.
+#
+# Permissions kept to the minimum Scorecard needs: `security-events`
+# to push SARIF, `id-token` for its OIDC publish to the public
+# Scorecards database (helps track trends over time), and `read-all`
+# on repo contents via the implicit checkout.
+name: Scorecard
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly, Wednesday 08:00 UTC. Different day from the CodeQL /
+    # Trivy sweeps so a bad Monday morning does not queue three
+    # long-running scans at once.
+    - cron: "0 8 * * 3"
+
+permissions: read-all
+
+concurrency:
+  group: scorecard-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analysis:
+    name: Scorecard analysis (advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      security-events: write
+      id-token: write
+      contents: read
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard analysis
+        uses: ossf/scorecard-action@v2.4.0
+        with:
+          results_file: scorecard.sarif
+          results_format: sarif
+          # `publish_results: true` emits data to the public Scorecards
+          # dataset so the badge stays current. Safe for a public repo;
+          # switch to `false` if the repo ever goes private.
+          publish_results: true
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: scorecard.sarif
+          category: scorecard

@@ -1,0 +1,71 @@
+# GitHub CodeQL static analysis for JavaScript / TypeScript.
+#
+# Runs on:
+#   - pull_request  : blocking gate on PRs against main
+#   - push to main  : post-merge sweep so baseline is always fresh
+#   - schedule      : weekly, catches newly published query updates
+#                     against code that hasn't been touched in a while
+#
+# Findings surface as code-scanning alerts under Security → Code
+# scanning and (for PRs) as inline review comments. Non-blocking
+# informational queries stay out of the PR exit code; security queries
+# that trigger at `security-extended` cause the job to fail.
+name: CodeQL
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    # Weekly sweep: Monday 06:00 UTC. Off-peak for most maintainers so
+    # a failed run does not collide with active PR traffic.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: CodeQL analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      # Required to upload SARIF into the code-scanning dashboard.
+      security-events: write
+      # Needed by the init action to read config.
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # Single language today (JS/TS covers both client and server
+        # TypeScript as one analysis unit). Add rows here if we ever
+        # introduce Python/Go/etc. sources to scan.
+        language: [javascript-typescript]
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # `security-extended` widens the default `security` query
+          # suite to include higher-noise queries that have caught real
+          # bugs in similar stacks. If noise becomes an issue we can
+          # fall back to `security-and-quality` or the default suite.
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

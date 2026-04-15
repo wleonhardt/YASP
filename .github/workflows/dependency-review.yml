@@ -1,0 +1,38 @@
+# Dependency Review: PR-only gate that inspects the diff between base
+# and head for newly introduced vulnerable or disallowed dependencies.
+# Fails on high/critical GHSA advisories. Runs on every PR, including
+# forks (uses read-only `contents` permission).
+#
+# Why a separate workflow: the action needs `pull_request` event
+# metadata and its own permissions surface; folding it into ci.yml
+# would bloat that workflow's permission grant for no benefit.
+name: Dependency review
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dep-review-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Run dependency review
+        uses: actions/dependency-review-action@v4
+        with:
+          # Hard gate: newly introduced high/critical advisories block
+          # the PR. Moderate/low show in the summary but do not fail.
+          fail-on-severity: high
+          # Surface the full report in the PR check summary so reviewers
+          # see every advisory touched by the change, not just the ones
+          # that trip the gate.
+          comment-summary-in-pr: on-failure

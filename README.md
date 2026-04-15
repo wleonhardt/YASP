@@ -202,6 +202,7 @@ YASP is intentionally no-auth: room URLs are bearer-style meeting links, and `se
 - [`SECURITY_THREAT_MODEL.md`](./SECURITY_THREAT_MODEL.md) — what YASP does and does not defend against, and the accepted product tradeoffs.
 - [`SECURITY_AUDIT_REPORT.md`](./SECURITY_AUDIT_REPORT.md) — findings inventory (F-01 … F-22) with current remediation status.
 - [`SECURITY_REMEDIATION_PLAN.md`](./SECURITY_REMEDIATION_PLAN.md) — shipped remediation PRs and the remaining future-hardening backlog.
+- [`docs/security-scanning.md`](./docs/security-scanning.md) — the layered scanner surface (CodeQL, Trivy, Dependency Review, Dependabot, Scorecard, Knip, strict lint) with blocking-vs-advisory and scheduled-sweep tables, plus how to verify GitHub secret scanning and push protection.
 
 If you plan to add accounts, persistence, integrations, or stronger identity claims, re-read the threat model first — several current tradeoffs stop being "accepted" at that point.
 

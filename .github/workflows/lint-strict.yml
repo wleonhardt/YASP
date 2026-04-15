@@ -1,0 +1,65 @@
+# Type-aware ESLint strict pass (advisory-only).
+#
+# Enables `@typescript-eslint/no-unsafe-*` via YASP_LINT_STRICT=1. Kept
+# advisory because the recommended-type-checked rules flag
+# pre-existing any-flavored patterns across tests and adapters that
+# the team has not yet triaged; making it blocking today would mean a
+# large drive-by cleanup PR. The advisory run keeps the posture
+# visible so the fallout can be burned down incrementally.
+#
+# Promote to a hard gate once `npm run lint:strict` is clean on main
+# — tracked in SECURITY_REMEDIATION_PLAN.md.
+name: Lint strict (advisory)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-strict-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-strict:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared (strict lint needs declarations)
+        run: npm run build:shared
+
+      - name: Run strict lint (advisory)
+        id: strict
+        continue-on-error: true
+        run: |
+          echo "## ESLint strict (type-aware, advisory)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          set +e
+          npm run lint:strict 2>&1 | tee /tmp/lint-strict.txt
+          STRICT_EXIT=$?
+          set -e
+          tail -c 60000 /tmp/lint-strict.txt >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          if [ "$STRICT_EXIT" -ne 0 ]; then
+            echo "_Advisory: strict lint reported issues. Not a merge gate; track incremental burn-down._" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "_Clean — consider promoting strict lint to a hard gate._" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$STRICT_EXIT"

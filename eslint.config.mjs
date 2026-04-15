@@ -4,12 +4,46 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
+// Opt-in strict pass: `YASP_LINT_STRICT=1 npm run lint:strict` layers
+// type-aware rules (`no-unsafe-*`) on top of the standard recommended
+// config. Kept opt-in because enabling them unconditionally would
+// require a large one-shot fallout cleanup across tests and adapters,
+// which conflicts with "no flaky gates" — see SECURITY_REMEDIATION_PLAN.md.
+const STRICT = process.env.YASP_LINT_STRICT === "1";
+
+const strictTypedConfigs = STRICT
+  ? [
+      ...tseslint.configs.recommendedTypeChecked,
+      {
+        files: ["**/*.{ts,tsx,mts,cts}"],
+        languageOptions: {
+          parserOptions: {
+            // `projectService` lets typescript-eslint discover each
+            // workspace's tsconfig on demand, so strict-mode runs work
+            // across shared/server/client/cdk without wiring a
+            // bespoke project glob here.
+            projectService: true,
+            tsconfigRootDir: import.meta.dirname,
+          },
+        },
+        rules: {
+          "@typescript-eslint/no-unsafe-assignment": "error",
+          "@typescript-eslint/no-unsafe-call": "error",
+          "@typescript-eslint/no-unsafe-argument": "error",
+          "@typescript-eslint/no-unsafe-member-access": "error",
+          "@typescript-eslint/no-unsafe-return": "error",
+        },
+      },
+    ]
+  : [];
+
 export default tseslint.config(
   {
     ignores: ["**/dist/**", "**/node_modules/**", "cdk/cdk.out/**", "tmp/**"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  ...strictTypedConfigs,
   {
     files: ["**/*.{ts,tsx,mts,cts}"],
     languageOptions: {
