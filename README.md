@@ -208,6 +208,11 @@ advisory.
 The source of truth for the current CI/security split is
 [docs/security-scanning.md](./docs/security-scanning.md).
 
+Dependabot auto-merge is also intentionally conservative: only low-risk
+single-dependency Dependabot PRs get GitHub auto-merge enabled, and required
+checks still gate the actual merge. Runtime, deployment, Docker, CDK, grouped,
+and major-version updates stay manual.
+
 ## Accessibility
 
 YASP has had substantial accessibility remediation work and now includes:

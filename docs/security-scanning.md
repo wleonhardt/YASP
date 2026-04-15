@@ -133,6 +133,54 @@ and `eslint-plugin-react-hooks` (pre-existing rule fallout). Minor
 and patch updates still flow. Each pin documents its removal
 condition inline.
 
+## Dependabot auto-merge policy
+
+YASP uses a separate conservative workflow,
+[`dependabot-automerge.yml`](../.github/workflows/dependabot-automerge.yml),
+that only **enables GitHub auto-merge** for low-risk Dependabot PRs.
+
+Important boundaries:
+
+- it only runs for `dependabot[bot]` PRs
+- it does **not** merge directly
+- it does **not** bypass branch protection
+- required checks still decide whether GitHub actually merges
+
+Current allowlist:
+
+| PR type | Auto-merge eligible? | Notes |
+|---|---|---|
+| GitHub Actions update, patch/minor, single dependency | yes | only if the PR avoids risky paths |
+| npm devDependency update, patch/minor, single dependency | yes | only if the package is not denylisted |
+| Dependabot security update, patch/minor, single dependency | yes | only if the package/path is not excluded |
+| Major update | no | always manual |
+| Docker ecosystem update | no | always manual |
+| Any PR touching `cdk/` | no | always manual |
+| Any PR touching deploy workflows | no | always manual |
+| Grouped / multi-dependency PR | no | stays manual for now |
+
+Excluded dependency categories:
+
+- React / React DOM
+- Vite
+- Vitest
+- TypeScript
+- ESLint and the major lint stack (`eslint`, `@eslint/*`, `@typescript-eslint/*`, `eslint-plugin-*`)
+- `i18next` / `react-i18next`
+- Fastify core packages (`fastify`, `@fastify/*`)
+- Socket.IO core/runtime packages (`socket.io`, `socket.io-client`, `@socket.io/*`)
+
+Excluded paths:
+
+- `cdk/**`
+- `Dockerfile`
+- `.github/workflows/deploy-aws.yml`
+- `.github/workflows/docker-publish.yml`
+
+This is intentionally conservative because the repo has recent history of bot
+PRs breaking lint, tests, and build. Coverage can expand later, but only after
+the false-positive and breakage rate stays low.
+
 ## Triage workflow
 
 1. **Alert lands** — SARIF uploads route CodeQL, Trivy, and Scorecard

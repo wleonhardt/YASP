@@ -1,0 +1,262 @@
+name: Dependabot auto-merge
+
+on:
+  pull_request_target:
+    branches: [main]
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+      - labeled
+      - unlabeled
+      - ready_for_review
+
+permissions:
+  # Required to enable GitHub auto-merge on eligible PRs.
+  contents: write
+  # Required to read PR metadata/files and mutate the PR auto-merge setting.
+  pull-requests: write
+
+concurrency:
+  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  enable-automerge:
+    # Never run this workflow for human-authored PRs.
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      # Fetch Dependabot's dependency metadata without checking out PR code.
+      # This workflow intentionally stays metadata-only because
+      # `pull_request_target` runs with a writable repo token.
+      - name: Fetch Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Evaluate conservative eligibility
+        id: evaluate
+        uses: actions/github-script@v7
+        env:
+          PACKAGE_ECOSYSTEM: ${{ steps.dependabot-metadata.outputs.package-ecosystem }}
+          DEPENDENCY_NAMES: ${{ steps.dependabot-metadata.outputs.dependency-names }}
+          DEPENDENCY_TYPE: ${{ steps.dependabot-metadata.outputs.dependency-type }}
+          UPDATE_TYPE: ${{ steps.dependabot-metadata.outputs.update-type }}
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const core = require('@actions/core');
+
+            // Fail closed on any metadata we cannot reason about safely.
+            const ecosystem = (process.env.PACKAGE_ECOSYSTEM || '').trim();
+            const dependencyType = (process.env.DEPENDENCY_TYPE || '').trim();
+            const updateType = (process.env.UPDATE_TYPE || '').trim();
+            const dependencyNames = (process.env.DEPENDENCY_NAMES || '')
+              .split(',')
+              .map((name) => name.trim())
+              .filter(Boolean);
+
+            const changedFiles = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+
+            const filenames = changedFiles.map((file) => file.filename);
+            const labels = new Set((pr.labels || []).map((label) => label.name.toLowerCase()));
+            const body = pr.body || '';
+            const isSecurityUpdate =
+              labels.has('security') ||
+              /dependabot has resolved/i.test(body) ||
+              /security update/i.test(pr.title || '');
+            const isDevDependency = /development/i.test(dependencyType);
+            const isPatchOrMinor = [
+              'version-update:semver-patch',
+              'version-update:semver-minor',
+            ].includes(updateType);
+
+            // Start conservative:
+            // - single-dependency PRs only
+            // - no majors
+            // - no runtime/framework/lint-stack hotspots
+            // - no CDK, Docker, or deploy workflow changes
+            // - GitHub required checks still decide when/if GitHub merges
+            const riskyPathPatterns = [
+              /^cdk\//,
+              /^Dockerfile$/,
+              /^\.github\/workflows\/deploy-aws\.yml$/,
+              /^\.github\/workflows\/docker-publish\.yml$/,
+            ];
+            const riskyDependencyPatterns = [
+              /^react$/,
+              /^react-dom$/,
+              /^vite$/,
+              /^vitest$/,
+              /^typescript$/,
+              /^eslint$/,
+              /^@eslint\//,
+              /^@typescript-eslint\//,
+              /^eslint-plugin-/,
+              /^i18next$/,
+              /^react-i18next$/,
+              /^fastify$/,
+              /^@fastify\//,
+              /^socket\.io$/,
+              /^socket\.io-client$/,
+              /^@socket\.io\//,
+            ];
+
+            const reasons = [];
+
+            if (pr.draft) {
+              reasons.push('draft PR');
+            }
+
+            if (!ecosystem) {
+              reasons.push('missing Dependabot package ecosystem metadata');
+            }
+
+            if (!isPatchOrMinor) {
+              reasons.push(`unsupported update type: ${updateType || 'unknown'}`);
+            }
+
+            if (dependencyNames.length !== 1) {
+              reasons.push(
+                `grouped or multi-dependency PR (${dependencyNames.length || 0} dependencies) stays manual`,
+              );
+            }
+
+            if (ecosystem === 'docker') {
+              reasons.push('docker ecosystem updates stay manual');
+            }
+
+            if (!['github-actions', 'npm'].includes(ecosystem)) {
+              reasons.push(`ecosystem ${ecosystem || 'unknown'} is not in the auto-merge allowlist`);
+            }
+
+            const riskyFiles = filenames.filter((filename) =>
+              riskyPathPatterns.some((pattern) => pattern.test(filename)),
+            );
+            if (riskyFiles.length > 0) {
+              reasons.push(`touches risky path(s): ${riskyFiles.join(', ')}`);
+            }
+
+            const riskyDependencies = dependencyNames.filter((name) =>
+              riskyDependencyPatterns.some((pattern) => pattern.test(name)),
+            );
+            if (riskyDependencies.length > 0) {
+              reasons.push(`dependency denylist hit: ${riskyDependencies.join(', ')}`);
+            }
+
+            if (ecosystem === 'npm' && !isSecurityUpdate && !isDevDependency) {
+              reasons.push('non-security npm PR is not a devDependency update');
+            }
+
+            const eligible = reasons.length === 0;
+            const summary = [
+              `ecosystem=${ecosystem || 'unknown'}`,
+              `dependencyType=${dependencyType || 'unknown'}`,
+              `updateType=${updateType || 'unknown'}`,
+              `dependencies=${dependencyNames.join(', ') || 'unknown'}`,
+              `securityUpdate=${isSecurityUpdate}`,
+              `eligible=${eligible}`,
+            ].join('\n');
+
+            core.setOutput('eligible', eligible ? 'true' : 'false');
+            core.setOutput('reason', reasons.length > 0 ? reasons.join('; ') : 'eligible');
+
+            await core.summary
+              .addHeading('Dependabot auto-merge evaluation')
+              .addCodeBlock(summary, 'text')
+              .addRaw(
+                eligible
+                  ? 'Eligible: GitHub auto-merge can be enabled and will still wait for required checks.'
+                  : `Manual review required: ${reasons.join('; ')}`,
+              )
+              .write();
+
+      - name: Enable GitHub auto-merge
+        if: steps.evaluate.outputs.eligible == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const core = require('@actions/core');
+
+            try {
+              await github.graphql(
+                `
+                  mutation EnableAutoMerge($pullRequestId: ID!) {
+                    enablePullRequestAutoMerge(
+                      input: {
+                        pullRequestId: $pullRequestId
+                        mergeMethod: SQUASH
+                      }
+                    ) {
+                      pullRequest {
+                        number
+                        autoMergeRequest {
+                          enabledAt
+                        }
+                      }
+                    }
+                  }
+                `,
+                { pullRequestId: pr.node_id },
+              );
+            } catch (error) {
+              if (/already enabled/i.test(error.message)) {
+                core.info('Auto-merge was already enabled for this PR.');
+                return;
+              }
+              throw error;
+            }
+
+      - name: Disable GitHub auto-merge when PR is not eligible
+        if: steps.evaluate.outputs.eligible != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const core = require('@actions/core');
+
+            if (!pr.auto_merge) {
+              core.info('Auto-merge was not enabled, nothing to disable.');
+              return;
+            }
+
+            try {
+              await github.graphql(
+                `
+                  mutation DisableAutoMerge($pullRequestId: ID!) {
+                    disablePullRequestAutoMerge(
+                      input: {
+                        pullRequestId: $pullRequestId
+                      }
+                    ) {
+                      pullRequest {
+                        number
+                      }
+                    }
+                  }
+                `,
+                { pullRequestId: pr.node_id },
+              );
+            } catch (error) {
+              if (/auto-merge is not enabled/i.test(error.message)) {
+                core.info('Auto-merge was already disabled.');
+                return;
+              }
+              throw error;
+            }
+
+      - name: Explain manual-review outcome
+        if: steps.evaluate.outputs.eligible != 'true'
+        run: |
+          echo "Dependabot PR kept manual: ${{ steps.evaluate.outputs.reason }}"
