@@ -19,7 +19,7 @@ import { getNextRovingValue } from "../lib/rovingFocus";
 import { useRoom } from "../hooks/useRoom";
 import { useSession } from "../hooks/useSession";
 import { useSocket } from "../hooks/useSocket";
-import { getConnectedVoterCounts, getSelf } from "../lib/room";
+import { getConnectedVoterCounts, getSelf, isMeModerator } from "../lib/room";
 import { getRoomShortcutAction } from "../lib/roomShortcuts";
 import { getStoredDisplayName, getStoredRole, setStoredDisplayName, setStoredRole } from "../lib/storage";
 
@@ -166,7 +166,7 @@ export function RoomPage() {
 
   // Capture a client-side `revealedAt` when the room transitions into
   // the revealed phase. The server does not expose this on
-  // PublicRoomState — the modal is moderator-only and ephemeral, so a
+  // PublicRoomState — the modal is current-round-only and ephemeral, so a
   // local stamp is fine.
   useEffect(() => {
     if (!roomState) {
@@ -746,6 +746,7 @@ export function RoomPage() {
           open
           state={state}
           revealedAt={revealedAt}
+          mode={isMeModerator(state) ? "moderator" : "participant"}
           onClose={() => setRoundReportOpen(false)}
           returnFocusRef={roundReportButtonRef}
         />

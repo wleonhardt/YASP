@@ -1,4 +1,4 @@
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 import { useCallback, useId, useLayoutEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { DeckToken } from "./DeckToken";
@@ -12,10 +12,13 @@ import {
 } from "../lib/roundReport";
 import type { PublicRoomState } from "@yasp/shared";
 
+export type RoundReportModalMode = "moderator" | "participant";
+
 type Props = {
   open: boolean;
   state: PublicRoomState;
   revealedAt: number;
+  mode: RoundReportModalMode;
   onClose(): void;
   returnFocusRef?: RefObject<HTMLElement | null>;
 };
@@ -68,7 +71,7 @@ function formatNumber(value: number | null, fallback: string): string {
   return value.toFixed(1).replace(/\.0$/, "");
 }
 
-export function RoundReportModal({ open, state, revealedAt, onClose, returnFocusRef }: Props) {
+export function RoundReportModal({ open, state, revealedAt, mode, onClose, returnFocusRef }: Props) {
   const { t, i18n } = useTranslation();
   const modalRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -78,6 +81,7 @@ export function RoundReportModal({ open, state, revealedAt, onClose, returnFocus
   const votesHeadingId = useId();
   const distributionHeadingId = useId();
 
+  const isModeratorMode = mode === "moderator";
   const report: RoundReport | null = useMemo(() => {
     if (!open) {
       return null;
@@ -196,6 +200,9 @@ export function RoundReportModal({ open, state, revealedAt, onClose, returnFocus
   const consensusValue = report.stats.consensus ? t("room.consensusReached") : t("room.noConsensus");
   const revealedAtLabel = formatRevealedAt(report.revealedAt, i18n.language);
   const distributionMax = report.stats.distribution[0]?.count ?? 1;
+  const hasNonNumericVotes = report.voters.some((voter) => voter.vote !== null && !voter.voteIsNumeric);
+  const modalTitle = isModeratorMode ? t("room.roundReport.title") : t("room.roundReport.summaryTitle");
+  const closeLabel = isModeratorMode ? t("room.roundReport.close") : t("room.roundReport.closeSummary");
 
   return (
     <div className="modal-backdrop">
@@ -209,7 +216,7 @@ export function RoundReportModal({ open, state, revealedAt, onClose, returnFocus
       >
         <div className="deck-modal__header">
           <div className="deck-modal__title-group">
-            <h2 id={titleId}>{t("room.roundReport.title")}</h2>
+            <h2 id={titleId}>{modalTitle}</h2>
             <p id={subtitleId} className="deck-modal__subtitle">
               {t("room.roundReport.meta", {
                 round: report.roundNumber,
@@ -225,7 +232,7 @@ export function RoundReportModal({ open, state, revealedAt, onClose, returnFocus
             ref={closeButtonRef}
             className="deck-modal__close"
             type="button"
-            aria-label={t("room.roundReport.close")}
+            aria-label={closeLabel}
             onClick={onClose}
           >
             ×
@@ -258,6 +265,10 @@ export function RoundReportModal({ open, state, revealedAt, onClose, returnFocus
               />
             </div>
           </section>
+
+          {hasNonNumericVotes && (
+            <p className="round-report-modal__footer-note">{t("room.roundReport.nonNumericNote")}</p>
+          )}
 
           <section className="round-report-modal__votes" aria-labelledby={votesHeadingId}>
             <div className="results-panel__section-header">
@@ -327,20 +338,26 @@ export function RoundReportModal({ open, state, revealedAt, onClose, returnFocus
             </div>
           </section>
 
-          <p className="round-report-modal__footer-note">{t("room.roundReport.ephemeralNote")}</p>
+          {isModeratorMode && (
+            <p className="round-report-modal__footer-note">{t("room.roundReport.ephemeralNote")}</p>
+          )}
         </div>
 
         <div className="deck-modal__footer round-report-modal__footer">
           <div className="deck-modal__footer-actions">
-            <button className="button button--secondary" type="button" onClick={handleExportCsv}>
-              {t("room.roundReport.exportCsv")}
-            </button>
-            <button className="button button--secondary" type="button" onClick={handleExportJson}>
-              {t("room.roundReport.exportJson")}
-            </button>
-            <button className="button button--secondary" type="button" onClick={handlePrint}>
-              {t("room.roundReport.print")}
-            </button>
+            {isModeratorMode && (
+              <>
+                <button className="button button--secondary" type="button" onClick={handleExportCsv}>
+                  {t("room.roundReport.exportCsv")}
+                </button>
+                <button className="button button--secondary" type="button" onClick={handleExportJson}>
+                  {t("room.roundReport.exportJson")}
+                </button>
+                <button className="button button--secondary" type="button" onClick={handlePrint}>
+                  {t("room.roundReport.print")}
+                </button>
+              </>
+            )}
             <button className="button button--primary" type="button" onClick={onClose}>
               {t("room.close")}
             </button>
@@ -351,7 +368,7 @@ export function RoundReportModal({ open, state, revealedAt, onClose, returnFocus
   );
 }
 
-function StatTile({ label, value, meta }: { label: string; value: React.ReactNode; meta?: string }) {
+function StatTile({ label, value, meta }: { label: string; value: ReactNode; meta?: string }) {
   return (
     <div className="stat-tile stat-tile--supporting round-report-modal__stat-tile">
       <div className="stat-tile__label">{label}</div>

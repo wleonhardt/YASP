@@ -14,6 +14,11 @@
 
 ## Done
 
+- 2026-04-15: Extended the revealed-round detail modal so non-moderators can
+  open a view-only "Round summary" after reveal using the same current-round
+  client snapshot as the moderator report. Export actions remain
+  moderator-only, no backend/persistence/history was added, and the modal
+  still disappears on reset with no past-round recovery.
 - 2026-04-15: Added a conservative Dependabot auto-merge workflow that only
   enables GitHub auto-merge for single-dependency low-risk bot PRs
   (GitHub Actions patch/minor, npm devDependency patch/minor, and qualifying

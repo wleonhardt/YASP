@@ -56,6 +56,9 @@ export function ResultsPanel({ state, onOpenRoundReport, roundReportButtonRef }:
   const medianValue = formatOptionalStat(median, notAvailableLabel);
   const mostCommonValue = stats.mostCommon !== null ? <DeckToken token={stats.mostCommon} /> : t("room.tie");
   const spreadValue = formatOptionalStat(spread, notAvailableLabel);
+  const reportMode = isMeModerator(state) ? "moderator" : "participant";
+  const reportButtonLabel =
+    reportMode === "moderator" ? t("room.roundReport.openButton") : t("room.roundReport.openSummaryButton");
 
   return (
     <section className="app-panel results-panel" aria-labelledby={headingId}>
@@ -87,7 +90,7 @@ export function ResultsPanel({ state, onOpenRoundReport, roundReportButtonRef }:
         distributionLabel={distributionLabel}
         highestCount={highestCount}
       />
-      {onOpenRoundReport && isMeModerator(state) && (
+      {onOpenRoundReport && (
         <div className="results-panel__footer">
           <button
             ref={roundReportButtonRef}
@@ -95,7 +98,7 @@ export function ResultsPanel({ state, onOpenRoundReport, roundReportButtonRef }:
             className="button button--secondary"
             onClick={onOpenRoundReport}
           >
-            {t("room.roundReport.openButton")}
+            {reportButtonLabel}
           </button>
         </div>
       )}

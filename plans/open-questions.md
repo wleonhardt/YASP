@@ -8,6 +8,11 @@
 
 ## Resolved
 
+- 2026-04-15: Revealed-round detail access is now split by role without adding
+  new permissions complexity. Moderators keep the report/export tooling, while
+  non-moderators can open a view-only "Round summary" for the current revealed
+  round only. The implementation remains client-only, session-only, and
+  ephemeral with no history/archive behavior.
 - 2026-04-15: Dependabot auto-merge remains intentionally conservative. YASP
   only enables GitHub auto-merge for low-risk single-dependency Dependabot PRs
   after normal required checks pass. Major updates, runtime/deployment
