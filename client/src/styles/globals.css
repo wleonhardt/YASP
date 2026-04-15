@@ -2049,6 +2049,7 @@ select.input {
   white-space: nowrap;
 }
 
+.controls-panel__section--settings,
 .controls-panel__section--transfer {
   display: flex;
   flex-direction: column;
@@ -2083,6 +2084,30 @@ select.input {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-soft);
+}
+
+.controls-panel__settings-disclosure,
+.controls-panel__settings-fields,
+.controls-panel__settings-group,
+.controls-panel__setting-toggle-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.controls-panel__settings-disclosure,
+.controls-panel__settings-group,
+.controls-panel__setting-toggle-grid {
+  gap: var(--space-4);
+}
+
+.controls-panel__settings-fields {
+  gap: var(--space-3);
+}
+
+.controls-panel__settings-help {
+  margin-top: 0.4rem;
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
 }
 
 .controls-panel__transfer-row {
@@ -2122,6 +2147,7 @@ select.input {
   gap: var(--space-2);
 }
 
+.controls-panel--compact .controls-panel__section--settings,
 .controls-panel--compact .controls-panel__section--transfer {
   gap: var(--space-2);
   padding-top: var(--space-3);

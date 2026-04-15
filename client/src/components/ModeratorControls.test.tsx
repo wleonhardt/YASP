@@ -34,6 +34,7 @@ function makeState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
 
 function handlers() {
   return {
+    onUpdateSettings: vi.fn().mockResolvedValue(true),
     onSetTimerDuration: vi.fn(),
     onStartTimer: vi.fn().mockResolvedValue(true),
     onPauseTimer: vi.fn(),
@@ -59,7 +60,7 @@ describe("ModeratorControls", () => {
     expect(scope.getByRole("button", { name: /start/i })).toBeInTheDocument();
     expect(scope.getByRole("button", { name: /sound on/i })).toBeInTheDocument();
     expect(scope.queryByRole("button", { name: /timer & pacing/i })).not.toBeInTheDocument();
-    expect(scope.getByRole("button", { name: /reveal votes/i })).toBeInTheDocument();
+    expect(scope.getByRole("button", { name: /^reveal votes$/i })).toBeInTheDocument();
     expect(scope.getByRole("button", { name: /^transfer$/i })).toBeInTheDocument();
     expect(panel.querySelectorAll(".controls-panel__status-rail .ui-chip")).toHaveLength(2);
 
@@ -84,7 +85,7 @@ describe("ModeratorControls", () => {
     expect(panel.querySelector(".controls-panel__status-rail")).not.toBeInTheDocument();
     expect(panel.querySelectorAll(".controls-panel__status-row .ui-chip")).toHaveLength(1);
     expect(scope.queryByRole("button", { name: /start/i })).not.toBeInTheDocument();
-    expect(scope.getByRole("button", { name: /reveal votes/i })).toBeInTheDocument();
+    expect(scope.getByRole("button", { name: /^reveal votes$/i })).toBeInTheDocument();
     expect(scope.getByText(/duration 10s • sound on/i)).toBeInTheDocument();
 
     await user.click(timerToggle);
@@ -221,5 +222,110 @@ describe("ModeratorControls", () => {
 
     const panel = screen.getByRole("region", { name: /moderator controls/i });
     expect(within(panel).queryByRole("button", { name: /^transfer$/i })).not.toBeInTheDocument();
+  });
+
+  it("shows room settings for moderators and renders values from room state", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ModeratorControls
+        compact={false}
+        state={makeState({
+          settings: {
+            revealPolicy: "anyone",
+            resetPolicy: "moderator_only",
+            deckChangePolicy: "anyone",
+            allowNameChange: false,
+            allowSelfRoleSwitch: true,
+            allowSpectators: false,
+            autoReveal: false,
+            autoRevealDelayMs: 1500,
+          },
+        })}
+        {...handlers()}
+      />
+    );
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+    const scope = within(panel);
+
+    await user.click(scope.getByRole("button", { name: /room settings/i }));
+
+    expect(scope.getByRole("combobox", { name: /reveal votes/i })).toHaveValue("anyone");
+    expect(scope.getByRole("combobox", { name: /reset round/i })).toHaveValue("moderator_only");
+    expect(scope.getByRole("combobox", { name: /deck changes/i })).toHaveValue("anyone");
+    expect(scope.getByRole("checkbox", { name: /allow name changes/i })).not.toBeChecked();
+    expect(scope.getByRole("checkbox", { name: /allow role switching/i })).toBeChecked();
+    expect(scope.getByRole("checkbox", { name: /allow spectators/i })).not.toBeChecked();
+  });
+
+  it("hides room settings from non-moderators", () => {
+    render(
+      <ModeratorControls
+        compact={false}
+        state={makeState({
+          participants: [
+            {
+              id: "me",
+              name: "Alice",
+              role: "voter",
+              connected: true,
+              hasVoted: false,
+              isSelf: true,
+              isModerator: false,
+            },
+            {
+              id: "p2",
+              name: "Bob",
+              role: "voter",
+              connected: true,
+              hasVoted: false,
+              isSelf: false,
+              isModerator: true,
+            },
+          ],
+        })}
+        {...handlers()}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: /room settings/i })).not.toBeInTheDocument();
+  });
+
+  it("sends updated room settings when a moderator changes a control", async () => {
+    const user = userEvent.setup();
+    const props = handlers();
+
+    render(<ModeratorControls compact={false} state={makeState()} {...props} />);
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+    const scope = within(panel);
+
+    await user.click(scope.getByRole("button", { name: /room settings/i }));
+    await user.selectOptions(scope.getByRole("combobox", { name: /reveal votes/i }), "anyone");
+    await user.click(scope.getByRole("checkbox", { name: /allow spectators/i }));
+
+    expect(props.onUpdateSettings).toHaveBeenNthCalledWith(1, { revealPolicy: "anyone" });
+    expect(props.onUpdateSettings).toHaveBeenNthCalledWith(2, { allowSpectators: false });
+  });
+
+  it("opens and closes room settings from the keyboard", async () => {
+    const user = userEvent.setup();
+
+    render(<ModeratorControls compact={false} state={makeState()} {...handlers()} />);
+
+    const trigger = screen.getByRole("button", { name: /room settings/i });
+    trigger.focus();
+    expect(trigger).toHaveFocus();
+
+    await user.keyboard("{Enter}");
+
+    const revealPolicy = screen.getByRole("combobox", { name: /reveal votes/i });
+    expect(revealPolicy).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("combobox", { name: /reveal votes/i })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
   });
 });

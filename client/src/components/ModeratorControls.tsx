@@ -10,11 +10,13 @@ import {
   getRoomTimerStatus,
   useRoomTimerCountdown,
 } from "./RoomTimer";
+import { RoomSettingsPanel } from "./RoomSettingsPanel";
 
 type Props = {
   compact: boolean;
   state: PublicRoomState;
   serverClockOffsetMs?: number;
+  onUpdateSettings: (settings: Partial<PublicRoomState["settings"]>) => Promise<boolean> | boolean;
   onSetTimerDuration: (durationSeconds: number) => Promise<unknown> | unknown;
   onStartTimer: () => Promise<boolean> | boolean;
   onPauseTimer: () => Promise<unknown> | unknown;
@@ -388,6 +390,7 @@ export function ModeratorControls({
   compact,
   state,
   serverClockOffsetMs = 0,
+  onUpdateSettings,
   onSetTimerDuration,
   onStartTimer,
   onPauseTimer,
@@ -624,6 +627,8 @@ export function ModeratorControls({
           />
         )}
       </div>
+
+      <RoomSettingsPanel state={state} onUpdateSettings={onUpdateSettings} disabled={disabled} />
 
       <TransferSection
         isModerator={isModerator}

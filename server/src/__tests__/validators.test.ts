@@ -263,6 +263,11 @@ describe("validateSettingsUpdate", () => {
   it("accepts valid partial settings", () => {
     expect(validateSettingsUpdate({ autoReveal: true })).toEqual({ valid: true });
     expect(validateSettingsUpdate({ revealPolicy: "anyone" })).toEqual({ valid: true });
+    expect(validateSettingsUpdate({ resetPolicy: "moderator_only" })).toEqual({ valid: true });
+    expect(validateSettingsUpdate({ deckChangePolicy: "anyone" })).toEqual({ valid: true });
+    expect(validateSettingsUpdate({ allowNameChange: true })).toEqual({ valid: true });
+    expect(validateSettingsUpdate({ allowSelfRoleSwitch: false })).toEqual({ valid: true });
+    expect(validateSettingsUpdate({ allowSpectators: true })).toEqual({ valid: true });
   });
 
   it("rejects invalid boolean", () => {

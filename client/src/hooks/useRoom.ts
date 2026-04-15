@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Socket } from "socket.io-client";
-import type { PublicRoomState, AckResult, ServerErrorEvent, ParticipantRole } from "@yasp/shared";
+import type {
+  PublicRoomState,
+  AckResult,
+  ServerErrorEvent,
+  ParticipantRole,
+  RoomSettings,
+} from "@yasp/shared";
 import type { CreateRoomOutput, JoinRoomOutput, DeckInput } from "@yasp/shared";
 
 export function useRoom(socket: Socket, sessionId: string) {
@@ -168,6 +174,13 @@ export function useRoom(socket: Socket, sessionId: string) {
     [emitAck]
   );
 
+  const updateSettings = useCallback(
+    async (roomId: string, settings: Partial<RoomSettings>): Promise<AckResult> => {
+      return emitAck("update_settings", { roomId, settings });
+    },
+    [emitAck]
+  );
+
   return {
     roomState,
     error,
@@ -186,5 +199,6 @@ export function useRoom(socket: Socket, sessionId: string) {
     pauseTimer,
     resetTimer,
     honkTimer,
+    updateSettings,
   };
 }

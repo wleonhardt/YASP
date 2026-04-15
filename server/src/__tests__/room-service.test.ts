@@ -621,6 +621,16 @@ describe("RoomService.changeRole", () => {
     expect(result.data.room.participants.get("s1")!.role).toBe("spectator");
     expect(result.data.room.votes.has(create.data.participantId)).toBe(false);
   });
+
+  it("rejects switching to spectator when spectators are disabled", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    create.data.room.settings.allowSpectators = false;
+
+    const result = service.changeRole(create.data.room.id, "s1", "spectator");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("SPECTATORS_DISABLED");
+  });
 });
 
 describe("RoomService.changeDeck", () => {
@@ -640,14 +650,33 @@ describe("RoomService.changeDeck", () => {
 });
 
 describe("RoomService.updateSettings", () => {
-  it("updates settings", () => {
+  it("updates surfaced room settings without corrupting current room state", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
     if (!create.ok) return;
+    const roomId = create.data.room.id;
+    const spectatorJoin = service.joinRoom(roomId, "s2", "sock-2", "Bob", "spectator");
+    if (!spectatorJoin.ok) return;
+    service.castVote(roomId, "s1", "5");
 
-    const result = service.updateSettings(create.data.room.id, "s1", { autoReveal: true });
+    const result = service.updateSettings(roomId, "s1", {
+      revealPolicy: "anyone",
+      resetPolicy: "anyone",
+      deckChangePolicy: "anyone",
+      allowNameChange: false,
+      allowSelfRoleSwitch: false,
+      allowSpectators: false,
+    });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.room.settings.autoReveal).toBe(true);
+    expect(result.data.room.settings.revealPolicy).toBe("anyone");
+    expect(result.data.room.settings.resetPolicy).toBe("anyone");
+    expect(result.data.room.settings.deckChangePolicy).toBe("anyone");
+    expect(result.data.room.settings.allowNameChange).toBe(false);
+    expect(result.data.room.settings.allowSelfRoleSwitch).toBe(false);
+    expect(result.data.room.settings.allowSpectators).toBe(false);
+    expect(result.data.room.participants.get("s2")?.role).toBe("spectator");
+    expect(result.data.room.votes.get(create.data.participantId)).toBe("5");
+    expect(result.data.room.revealed).toBe(false);
   });
 
   it("rejects from non-moderator", () => {

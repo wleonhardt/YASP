@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import type { ParticipantRole } from "@yasp/shared";
+import type { ParticipantRole, RoomSettings } from "@yasp/shared";
 import { Banner } from "../components/Banner";
 import { ConnectionBadge } from "../components/ConnectionBadge";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
@@ -50,6 +50,7 @@ export function RoomPage() {
     pauseTimer,
     resetTimer: resetSharedTimer,
     honkTimer,
+    updateSettings,
   } = useRoom(socket, sessionId);
 
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
@@ -470,6 +471,18 @@ export function RoomPage() {
     return result.ok;
   }, [actionsDisabled, honkTimer, roomId]);
 
+  const handleUpdateSettings = useCallback(
+    async (settings: Partial<RoomSettings>) => {
+      if (!roomId || actionsDisabled) {
+        return false;
+      }
+
+      const result = await updateSettings(roomId, settings);
+      return result.ok;
+    },
+    [actionsDisabled, roomId, updateSettings]
+  );
+
   useEffect(() => {
     if (!roomState || actionsDisabled || status !== "connected") {
       return;
@@ -672,6 +685,7 @@ export function RoomPage() {
           onPauseTimer={handlePauseTimer}
           onResetTimer={handleResetTimer}
           onHonkTimer={handleHonkTimer}
+          onUpdateSettings={handleUpdateSettings}
           onReveal={handleReveal}
           onReset={handleReset}
           onNextRound={handleNextRound}
