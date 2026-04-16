@@ -39,7 +39,7 @@ YASP is a fast, no-fuss collaborative estimation tool. No accounts. No stored hi
 | 📊 | Results with avg, median, mode, spread, consensus |
 | 🔁 | Moderator transfer + disconnect handoff |
 | 🌍 | Localized in 9 languages |
-| ♿ | Keyboard-navigable, live-region announcements |
+| 🦾 | Keyboard-navigable, live-region announcements |
 | 🧼 | No database · No Redis · No external services |
 
 ---
@@ -329,7 +329,7 @@ Source of truth → [docs/security-scanning.md](./docs/security-scanning.md)
 
 ---
 
-## ♿ Accessibility
+## 🦾 Accessibility
 
 - Keyboard-operable core flows
 - Semantic landmarks and route-aware titles
