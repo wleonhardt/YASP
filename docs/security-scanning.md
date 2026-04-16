@@ -23,19 +23,24 @@ process, or dismissal candidates.
 
 ### Maintainer checklist for remaining governance alerts
 
+The full ruleset, required-checks list, and merge-queue guidance lives in
+[`docs/branch-protection.md`](./branch-protection.md). The short version:
+
 - Open GitHub **Settings → Rules → Rulesets → New branch ruleset** and target
   `refs/heads/main`.
 - Enable **Block force pushes** and **Restrict deletions** for `main`.
-- Enable **Require a pull request before merging**.
-- Set **Required approvals** to at least `1`.
-- Enable **Dismiss stale approvals when new commits are pushed**.
-- Enable **Require approval of the most recent reviewable push**.
-- Enable **Require status checks to pass before merging** and select the normal
-  required checks for this repo (at minimum the main validation workflow).
+- Enable **Require a pull request before merging** with at least `1`
+  approval, dismiss stale approvals, and require approval of the most recent
+  reviewable push.
+- Enable **Require status checks to pass before merging** and select the
+  blocking checks listed in
+  [`docs/branch-protection.md`](./branch-protection.md#required-status-checks-blocking-lanes).
 - Apply the ruleset to administrators too unless there is a deliberate,
   documented bypass policy.
 - Stop pushing human changes directly to `main`; merge through reviewed pull
   requests only.
+- Merge queue stays optional; turn it on only if `main` starts breaking from
+  serial-merge races.
 
 ### Recorded dismissal rationale text
 

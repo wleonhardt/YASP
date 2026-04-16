@@ -14,6 +14,16 @@
 
 ## Done
 
+- 2026-04-16: Added the next layer of low-noise maintenance signals without
+  growing the scanner stack. The validate CI job now appends a per-asset
+  client bundle-size report to the run summary and uploads a seven-day
+  `client/dist/` preview artifact on PRs. New focused docs consolidate the
+  exact `main` ruleset / required-checks / merge-queue posture
+  (`docs/branch-protection.md`) and the deployed-instance ops runbook
+  covering uptime, certificate awareness, container restarts, and synthetic
+  reconnect probes (`docs/operations-runbook.md`). Bundle thresholds stay
+  advisory, no new scanner was added, and Dependabot/scanner posture is
+  unchanged.
 - 2026-04-16: Closed the remaining refresh-time recovery flash in the
   realtime bootstrap flow. Persisted compatibility mode now stays quiet on
   page refresh while the initial socket/bootstrap failure signals settle, and

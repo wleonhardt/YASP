@@ -8,6 +8,15 @@
 
 ## Resolved
 
+- 2026-04-16: Maintenance/CI roadmap for the next slice is settled. Next
+  additions stay low-noise rather than adding more scanners: a PR-time
+  advisory client bundle-size report and a seven-day `client/dist/` preview
+  artifact in the existing `validate` job, plus two focused docs
+  (`docs/branch-protection.md`, `docs/operations-runbook.md`) covering the
+  required-checks list, merge-queue posture, uptime/cert/restart/reconnect
+  visibility for the deployed instance. Coverage gating, full PR preview
+  infra, Lighthouse/perf SaaS, CODEOWNERS, and additional scanners are
+  explicitly deferred as overkill at YASP's current size.
 - 2026-04-16: Persisted compatibility mode no longer causes the recovery
   notice to flash on page refresh. The client now treats early
   `connect_error`/retry noise during initial bootstrap as pending failure

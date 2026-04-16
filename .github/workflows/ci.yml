@@ -62,6 +62,79 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
+      # Lightweight client bundle-size visibility (F-21) — advisory.
+      #
+      # The Vite build output ships in client/dist/. Posting a per-file
+      # listing in the run summary surfaces material bundle growth on
+      # PRs without adding bundle-size SaaS or a second workflow. Soft
+      # thresholds intentionally stay out of the gate so a 1 KiB
+      # regression cannot red the PR — the goal is reviewer awareness.
+      #
+      # Promote the threshold to a hard gate only after watching it on
+      # several PRs and confirming it does not flap.
+      - name: Client bundle size report (advisory)
+        if: always()
+        run: |
+          report_dir=client/dist
+          echo "## Client bundle sizes (advisory)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ ! -d "$report_dir" ]; then
+            echo "_Skipped: ${report_dir} not present (build did not run)._" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          {
+            echo "| Asset | Size | Gzip |"
+            echo "| --- | ---: | ---: |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          while IFS= read -r file; do
+            rel=${file#"$report_dir"/}
+            raw=$(stat -c%s "$file")
+            gz=$(gzip -c "$file" | wc -c | tr -d ' ')
+            printf "| \`%s\` | %s | %s |\n" \
+              "$rel" \
+              "$(numfmt --to=iec-i --suffix=B "$raw")" \
+              "$(numfmt --to=iec-i --suffix=B "$gz")" \
+              >> "$GITHUB_STEP_SUMMARY"
+          done < <(find "$report_dir" -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' -o -name '*.woff2' \) | sort)
+
+          total_js=$(find "$report_dir" -type f -name '*.js' -exec gzip -c {} + | wc -c | tr -d ' ')
+          total_css=$(find "$report_dir" -type f -name '*.css' -exec gzip -c {} + | wc -c | tr -d ' ')
+          {
+            echo ""
+            echo "Total JS gzip: $(numfmt --to=iec-i --suffix=B "$total_js")"
+            echo "Total CSS gzip: $(numfmt --to=iec-i --suffix=B "$total_css")"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Soft, advisory threshold. Today's gzip JS budget is ~150 KiB;
+          # 220_000 leaves a comfortable head-room for normal feature
+          # growth before the note appears.
+          if [ "$total_js" -gt 220000 ]; then
+            {
+              echo ""
+              echo "_Advisory: total JS gzip > 220 KiB. Consider code-splitting or trimming unused deps._"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # PR-only client preview artifact (advisory).
+      #
+      # Uploads the built SPA bundle so reviewers can grab a static
+      # copy without spinning up the dev server. The artifact is the
+      # client shell only; the realtime server is still required for
+      # full functional review. Retention is short to keep storage
+      # noise minimal.
+      - name: Upload client preview artifact (PRs only)
+        if: github.event_name == 'pull_request' && hashFiles('client/dist/index.html') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: client-dist-pr-${{ github.event.pull_request.number }}
+          path: client/dist
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
       # Advisory-only production dependency audit (F-20).
       #
       # Runs `npm audit --omit=dev --audit-level=high`:

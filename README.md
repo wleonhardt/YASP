@@ -181,6 +181,12 @@ until Redis mode is honestly more than a single-instance runtime profile. Any
 future Redis deploy support would be a separate advanced profile, not the
 default path.
 
+Day-to-day runtime monitoring, certificate awareness, container restart
+handling, and reconnect-failure visibility live in
+[docs/operations-runbook.md](./docs/operations-runbook.md). Branch protection,
+required-checks list, and merge queue setup live in
+[docs/branch-protection.md](./docs/branch-protection.md).
+
 ## Testing, CI, and quality gates
 
 The repo has both blocking and advisory CI lanes.
@@ -208,12 +214,23 @@ The planned blocker-promotion order for the repo-managed advisory lanes is:
 advisory.
 
 The source of truth for the current CI/security split is
-[docs/security-scanning.md](./docs/security-scanning.md).
+[docs/security-scanning.md](./docs/security-scanning.md). The exact required-
+checks list and merge-queue posture for `main` lives in
+[docs/branch-protection.md](./docs/branch-protection.md).
 
 Dependabot auto-merge is also intentionally conservative: only low-risk
 single-dependency Dependabot PRs get GitHub auto-merge enabled, and required
 checks still gate the actual merge. Runtime, deployment, Docker, CDK, grouped,
 and major-version updates stay manual.
+
+Each PR also gets two advisory-only signals from the `validate` job:
+
+- **Client bundle size report** — per-asset raw + gzip totals are appended
+  to the run summary so material bundle growth is visible at review time.
+- **Client preview artifact** — the built `client/dist/` is uploaded for
+  seven days so reviewers can grab the static SPA shell without spinning
+  up the dev server. The realtime server is still required for full
+  functional review.
 
 ## Accessibility
 
