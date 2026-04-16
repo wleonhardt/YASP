@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS base
 WORKDIR /app
 
 # Install dependencies
@@ -6,7 +6,7 @@ COPY package.json package-lock.json* ./
 COPY shared/package.json shared/
 COPY server/package.json server/
 COPY client/package.json client/
-RUN npm install
+RUN npm ci
 
 # Copy source
 COPY tsconfig.base.json .
@@ -24,7 +24,7 @@ RUN npm run build:client
 RUN npm run build:server
 
 # Production stage
-FROM node:20-alpine
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293
 WORKDIR /app
 
 # Copy build artifacts and runtime deps. Files retain their default root:root
@@ -40,6 +40,12 @@ COPY --from=base /app/node_modules node_modules/
 COPY --from=base /app/shared/dist shared/dist/
 COPY --from=base /app/server/dist server/dist/
 COPY --from=base /app/client/dist client/dist/
+
+# The runtime container never invokes npm, npx, or corepack. Remove the
+# bundled package-manager toolchain so base-image CVEs under
+# `/usr/local/lib/node_modules/npm/...` do not ship in production.
+RUN rm -rf /usr/local/lib/node_modules/npm \
+  && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 
 ENV NODE_ENV=production
 ENV PORT=3001

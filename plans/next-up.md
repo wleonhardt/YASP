@@ -14,6 +14,14 @@
 
 ## Done
 
+- 2026-04-16: Hardened the repository against the current GitHub code
+  scanning backlog by pinning GitHub Action usages to immutable commits,
+  narrowing the Dependabot auto-merge workflow token scope, replacing the
+  privileged `workflow_run` checkout in the Docker publish workflow with an
+  immutable Git context, pinning the Docker base image to a digest, removing
+  the unused bundled npm toolchain from the runtime image to eliminate
+  container-only CVEs, and adding a first-class `SECURITY.md` reporting
+  policy. The app runtime behavior stayed unchanged.
 - 2026-04-16: Polished the realtime recovery notice and revealed-round footer
   with calmer support copy, a current-tab-only compatibility-mode helper, and
   quiet current-round helper text for report/summary access. The diagnostics

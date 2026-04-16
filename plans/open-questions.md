@@ -8,6 +8,13 @@
 
 ## Resolved
 
+- 2026-04-16: The open CodeQL `js/biased-cryptographic-random` finding for
+  room IDs is a false positive, not a code bug. YASP's room ID alphabet is 32
+  characters wide (`ABCDEFGHJKLMNPQRSTUVWXYZ23456789`), and `randomBytes()`
+  yields uniform byte values across 256 possibilities. Because 256 is an exact
+  multiple of 32, `byte % 32` remains uniform here and does not introduce
+  modulo bias; the correct action is dismissing the alert with that rationale
+  rather than changing the ID generator.
 - 2026-04-16: Connection recovery help text and revealed-round affordances now
   stay intentionally modest. Compatibility mode is explained only as a
   current-tab fallback for "page loads but live updates stay disconnected",

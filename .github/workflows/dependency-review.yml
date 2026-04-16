@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Check out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       # Advisory until the repo has the Dependency graph feature
       # enabled under Settings → Code security and analysis. Without
@@ -35,7 +35,7 @@ jobs:
       - name: Run dependency review (advisory until dep-graph enabled)
         id: dep-review
         continue-on-error: true
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
         with:
           # Hard gate once promoted: newly introduced high/critical
           # advisories block the PR. Moderate/low show in the summary

@@ -13,8 +13,9 @@ on:
       - ready_for_review
 
 permissions:
-  # Required to enable GitHub auto-merge on eligible PRs.
-  contents: write
+  # Metadata-only workflow; contents read is sufficient because the GraphQL
+  # auto-merge mutation is scoped via `pull-requests: write`.
+  contents: read
   # Required to read PR metadata/files and mutate the PR auto-merge setting.
   pull-requests: write
 
@@ -35,13 +36,13 @@ jobs:
       # `pull_request_target` runs with a writable repo token.
       - name: Fetch Dependabot metadata
         id: dependabot-metadata
-        uses: dependabot/fetch-metadata@v2
+        uses: dependabot/fetch-metadata@21025c705c08248db411dc16f3619e6b5f9ea21a # v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Evaluate conservative eligibility
         id: evaluate
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         env:
           PACKAGE_ECOSYSTEM: ${{ steps.dependabot-metadata.outputs.package-ecosystem }}
           DEPENDENCY_NAMES: ${{ steps.dependabot-metadata.outputs.dependency-names }}
@@ -183,7 +184,7 @@ jobs:
 
       - name: Enable GitHub auto-merge
         if: steps.evaluate.outputs.eligible == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -220,7 +221,7 @@ jobs:
 
       - name: Disable GitHub auto-merge when PR is not eligible
         if: steps.evaluate.outputs.eligible != 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const pr = context.payload.pull_request;
