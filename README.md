@@ -9,6 +9,27 @@ YASP is a lightweight, real-time scrum poker app for teams that want fast estima
 - Optional Redis-backed active-state backend for shared ephemeral room/session state
 
 **Hosted version:** [app.yasp.team](https://app.yasp.team/)
+**Docker image:** [`wleonhardt/yasp`](https://hub.docker.com/r/wleonhardt/yasp)
+
+## Quick start with Docker
+
+```bash
+docker run --rm -p 3001:3001 wleonhardt/yasp:main
+```
+
+Then open [http://localhost:3001](http://localhost:3001).
+
+What this gives you:
+
+- a single-container self-hosted scrum poker app
+- in-memory active rooms by default
+- no accounts, no database, no stored history
+
+Important runtime behavior:
+
+- restarting the container clears active rooms in the default `memory` profile
+- the image exposes `GET /api/health` and includes a Docker `HEALTHCHECK`
+- on Apple Silicon, add `--platform linux/amd64` if you need the published x86_64 image target
 
 ## Product philosophy
 
@@ -138,9 +159,18 @@ No `.env` file is required for the default local memory profile.
 Redis mode remains ephemeral-only. It stores active room/session state with
 TTL, not history.
 
-## Docker
+## Docker image
 
-The default self-hosted path is still a single container in `memory` mode:
+The published image is designed for the default self-hosted path: one
+container, `memory` mode, no extra infrastructure.
+
+Recommended long-running invocation:
+
+```bash
+docker run -d --restart unless-stopped --name yasp -p 3001:3001 wleonhardt/yasp:main
+```
+
+Minimal one-off invocation:
 
 ```bash
 docker run --rm -p 3001:3001 wleonhardt/yasp:main
@@ -148,11 +178,15 @@ docker run --rm -p 3001:3001 wleonhardt/yasp:main
 
 Open [http://localhost:3001](http://localhost:3001).
 
+Published tags:
+
+- `main` — the rolling image built from the current `main` branch
+- `<short-sha>` — immutable commit-tagged images for debugging and rollback
+
 Notes:
 
 - In `memory` mode, restarting the container clears active rooms.
-- The container exposes `GET /api/health`, and the image includes a Docker
-  `HEALTHCHECK`.
+- The container exposes `GET /api/health`, and the image includes a Docker `HEALTHCHECK`.
 - On Apple Silicon, use `--platform linux/amd64` if you need the x86_64 image
   target.
 
