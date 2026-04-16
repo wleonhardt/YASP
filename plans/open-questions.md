@@ -8,6 +8,13 @@
 
 ## Resolved
 
+- 2026-04-16: Persisted compatibility mode no longer causes the recovery
+  notice to flash on page refresh. The client now treats early
+  `connect_error`/retry noise during initial bootstrap as pending failure
+  state, waits for the initial attempt to either recover or survive a short
+  post-probe grace window, and only then surfaces the warning/recovery block.
+  Offline, reconnect-failed, and confirmed failed states still show the full
+  recovery UI immediately.
 - 2026-04-16: Realtime recovery bootstrap stays intentionally quiet until
   YASP has an actual recovery problem to show. The client hook now exports an
   explicit recovery-notice flag so landing and room routes keep first-load

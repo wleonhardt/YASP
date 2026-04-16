@@ -283,4 +283,23 @@ describe("LandingPage create room deck behavior", () => {
     expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Try compatibility mode" })).not.toBeInTheDocument();
   });
+
+  it("keeps the recovery notice hidden during bootstrap when compatibility mode was reused", () => {
+    mocks.connection.status = "connecting";
+    mocks.connection.compatibilityMode = true;
+    mocks.connection.showRecoveryNotice = false;
+    mocks.connection.diagnostics = {
+      ...mocks.connection.diagnostics,
+      status: "connecting",
+      compatibilityMode: true,
+      transport: "polling",
+    };
+
+    render(<LandingPage />);
+
+    expect(screen.queryByRole("heading", { name: "Connecting to realtime" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Try compatibility mode" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Use default mode" })).not.toBeInTheDocument();
+  });
 });

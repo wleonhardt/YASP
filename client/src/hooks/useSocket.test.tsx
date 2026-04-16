@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Socket } from "socket.io-client";
 import { useSocket } from "./useSocket";
 
@@ -142,6 +142,10 @@ describe("useSocket", () => {
     });
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("keeps the default transport strategy on the happy path", async () => {
     const { result } = renderHook(() => useSocket());
     const socket = mocks.createdSockets[0];
@@ -182,10 +186,15 @@ describe("useSocket", () => {
       socket.emitSocketEvent("connect_error", new Error("xhr poll error"));
     });
 
-    await waitFor(() => {
-      expect(result.current.status).toBe("failed");
-      expect(result.current.showRecoveryNotice).toBe(true);
+    expect(result.current.status).toBe("connecting");
+    expect(result.current.showRecoveryNotice).toBe(false);
+
+    act(() => {
+      socket.emitManagerEvent("reconnect_failed");
     });
+
+    expect(result.current.status).toBe("failed");
+    expect(result.current.showRecoveryNotice).toBe(true);
   });
 
   it("retries the active socket on demand", () => {
@@ -257,6 +266,50 @@ describe("useSocket", () => {
         upgrade: false,
       })
     );
+  });
+
+  it("keeps refresh bootstrap quiet when compatibility mode is already enabled for the session", async () => {
+    vi.useFakeTimers();
+    window.sessionStorage.setItem("yasp.compatibilityMode", "1");
+
+    const { result } = renderHook(() => useSocket());
+    const socket = mocks.createdSockets[0];
+
+    expect(result.current.compatibilityMode).toBe(true);
+    expect(result.current.status).toBe("connecting");
+    expect(result.current.showRecoveryNotice).toBe(false);
+
+    act(() => {
+      socket.emitManagerEvent("reconnect_attempt", 3);
+      socket.emitSocketEvent("connect_error", new Error("xhr poll error"));
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(result.current.status).toBe("connecting");
+    expect(result.current.showRecoveryNotice).toBe(false);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(900);
+    });
+
+    expect(result.current.showRecoveryNotice).toBe(false);
+
+    act(() => {
+      socket.io.engine.transport.name = "polling";
+      socket.emitSocketEvent("connect");
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(result.current.status).toBe("connected");
+    expect(result.current.showRecoveryNotice).toBe(false);
+    expect(result.current.diagnostics.transport).toBe("polling");
   });
 
   it("can clear the compatibility preference and rebuild the default socket transport", async () => {

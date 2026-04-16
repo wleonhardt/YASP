@@ -14,6 +14,13 @@
 
 ## Done
 
+- 2026-04-16: Closed the remaining refresh-time recovery flash in the
+  realtime bootstrap flow. Persisted compatibility mode now stays quiet on
+  page refresh while the initial socket/bootstrap failure signals settle, and
+  the recovery notice only appears after the initial attempt is terminally
+  failed or survives the health-probe grace window. Happy-path refreshes stay
+  neutral/connecting, compatibility mode remains session-scoped, and no
+  backend changes were required.
 - 2026-04-16: Smoothed the realtime recovery UX so the full recovery notice
   no longer flashes during initial bootstrap before a real failure signal, and
   compatibility mode now persists for the current browser session via

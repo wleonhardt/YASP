@@ -15,6 +15,8 @@ import { createSocket, getHealthProbeUrl, getRealtimeBaseUrl } from "../lib/sock
 const FAILURE_RETRY_THRESHOLD = 2;
 const HEALTH_PROBE_TIMEOUT_MS = 3_500;
 const HEALTH_PROBE_COOLDOWN_MS = 10_000;
+const INITIAL_CONNECTION_SETTLE_MS = 250;
+const INITIAL_FAILURE_GRACE_MS = 1_000;
 
 export type SocketConnectionState = {
   socket: Socket;
@@ -49,6 +51,9 @@ export function useSocket(): SocketConnectionState {
   const [socket, setSocket] = useState<Socket>(() =>
     createSocket({ compatibilityMode: initialCompatibilityMode })
   );
+  const [hasResolvedInitialConnectionState, setHasResolvedInitialConnectionState] = useState(
+    () => !getBrowserOnlineState()
+  );
   const [status, setStatus] = useState<ConnectionStatus>(() =>
     getBrowserOnlineState() ? "connecting" : "offline"
   );
@@ -59,19 +64,122 @@ export function useSocket(): SocketConnectionState {
   const [lastError, setLastError] = useState<string | null>(null);
   const [lastConnectedAt, setLastConnectedAt] = useState<number | null>(null);
   const [healthStatus, setHealthStatus] = useState<HealthProbeStatus>("unknown");
+  const [initialFailurePending, setInitialFailurePending] = useState(false);
 
   const hasConnectedRef = useRef(false);
   const retryCountRef = useRef(0);
   const lastProbeAtRef = useRef(0);
   const onlineRef = useRef(online);
+  const hasResolvedInitialConnectionStateRef = useRef(hasResolvedInitialConnectionState);
+  const initialConnectionTimerRef = useRef<number | null>(null);
+  const initialFailureTimerRef = useRef<number | null>(null);
+  const initialFailureStartedAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     onlineRef.current = online;
   }, [online]);
 
   useEffect(() => {
+    hasResolvedInitialConnectionStateRef.current = hasResolvedInitialConnectionState;
+  }, [hasResolvedInitialConnectionState]);
+
+  useEffect(() => {
     setStoredCompatibilityModeEnabled(compatibilityMode);
   }, [compatibilityMode]);
+
+  const clearInitialConnectionTimer = useCallback(() => {
+    if (initialConnectionTimerRef.current !== null) {
+      globalThis.clearTimeout(initialConnectionTimerRef.current);
+      initialConnectionTimerRef.current = null;
+    }
+  }, []);
+
+  const clearInitialFailureTimer = useCallback(() => {
+    if (initialFailureTimerRef.current !== null) {
+      globalThis.clearTimeout(initialFailureTimerRef.current);
+      initialFailureTimerRef.current = null;
+    }
+  }, []);
+
+  const clearPendingInitialFailure = useCallback(() => {
+    clearInitialFailureTimer();
+    initialFailureStartedAtRef.current = null;
+    setInitialFailurePending(false);
+  }, [clearInitialFailureTimer]);
+
+  const beginInitialFailurePending = useCallback(() => {
+    if (initialFailureStartedAtRef.current === null) {
+      initialFailureStartedAtRef.current = Date.now();
+    }
+
+    clearInitialFailureTimer();
+    setInitialFailurePending(true);
+  }, [clearInitialFailureTimer]);
+
+  const resolveInitialConnectionState = useCallback(() => {
+    clearInitialConnectionTimer();
+    if (!hasResolvedInitialConnectionStateRef.current) {
+      hasResolvedInitialConnectionStateRef.current = true;
+      setHasResolvedInitialConnectionState(true);
+    }
+  }, [clearInitialConnectionTimer]);
+
+  const resetInitialConnectionState = useCallback(() => {
+    clearInitialConnectionTimer();
+    hasResolvedInitialConnectionStateRef.current = false;
+    setHasResolvedInitialConnectionState(false);
+    clearPendingInitialFailure();
+  }, [clearInitialConnectionTimer, clearPendingInitialFailure]);
+
+  const scheduleInitialConnectionResolution = useCallback(() => {
+    if (hasResolvedInitialConnectionStateRef.current) {
+      return;
+    }
+
+    clearInitialConnectionTimer();
+    initialConnectionTimerRef.current = globalThis.setTimeout(() => {
+      hasResolvedInitialConnectionStateRef.current = true;
+      setHasResolvedInitialConnectionState(true);
+      initialConnectionTimerRef.current = null;
+    }, INITIAL_CONNECTION_SETTLE_MS);
+  }, [clearInitialConnectionTimer]);
+
+  useEffect(() => {
+    return () => {
+      clearInitialConnectionTimer();
+      clearInitialFailureTimer();
+    };
+  }, [clearInitialConnectionTimer, clearInitialFailureTimer]);
+
+  const resolvePendingInitialFailure = useCallback(() => {
+    clearInitialFailureTimer();
+
+    if (socket.connected || !onlineRef.current || hasResolvedInitialConnectionStateRef.current) {
+      return;
+    }
+
+    initialFailureStartedAtRef.current = null;
+    setInitialFailurePending(false);
+    resolveInitialConnectionState();
+    setStatus("failed");
+    setShowRecoveryNotice(true);
+  }, [clearInitialFailureTimer, resolveInitialConnectionState, socket]);
+
+  const schedulePendingInitialFailureResolution = useCallback(() => {
+    if (!initialFailurePending || hasResolvedInitialConnectionStateRef.current) {
+      return;
+    }
+
+    const startedAt = initialFailureStartedAtRef.current ?? Date.now();
+    const elapsed = Date.now() - startedAt;
+    const delay = Math.max(0, INITIAL_FAILURE_GRACE_MS - elapsed);
+
+    clearInitialFailureTimer();
+    initialFailureTimerRef.current = globalThis.setTimeout(() => {
+      initialFailureTimerRef.current = null;
+      resolvePendingInitialFailure();
+    }, delay);
+  }, [clearInitialFailureTimer, initialFailurePending, resolvePendingInitialFailure]);
 
   useEffect(() => {
     const manager = socket.io;
@@ -101,17 +209,22 @@ export function useSocket(): SocketConnectionState {
       setRetryCount(0);
       setLastError(null);
       setHealthStatus("unknown");
+      clearPendingInitialFailure();
       setStatus("connected");
       setShowRecoveryNotice(false);
       setLastConnectedAt(Date.now());
       bindEngineEvents();
       syncTransport();
+      scheduleInitialConnectionResolution();
     };
 
     const handleDisconnect = (reason: string) => {
+      clearInitialConnectionTimer();
       syncTransport();
 
       if (!onlineRef.current) {
+        clearPendingInitialFailure();
+        resolveInitialConnectionState();
         setStatus("offline");
         setHealthStatus("unknown");
         setShowRecoveryNotice(true);
@@ -123,24 +236,41 @@ export function useSocket(): SocketConnectionState {
       }
 
       setHealthStatus("unknown");
-      setStatus(hasConnectedRef.current ? "reconnecting" : "connecting");
-      if (hasConnectedRef.current) {
+      const nextStatus = hasResolvedInitialConnectionStateRef.current ? "reconnecting" : "connecting";
+      setStatus(nextStatus);
+      if (hasResolvedInitialConnectionStateRef.current) {
         setShowRecoveryNotice(true);
       }
     };
 
     const handleConnectError = (error: unknown) => {
+      clearInitialConnectionTimer();
       setLastError(sanitizeConnectionError(error));
       setHealthStatus("unknown");
       syncTransport();
 
       if (!onlineRef.current) {
+        clearPendingInitialFailure();
+        resolveInitialConnectionState();
         setStatus("offline");
         setShowRecoveryNotice(true);
         return;
       }
 
-      const nextStatus = retryCountRef.current > FAILURE_RETRY_THRESHOLD ? "failed" : "connecting";
+      const nextStatus =
+        retryCountRef.current > FAILURE_RETRY_THRESHOLD
+          ? "failed"
+          : hasResolvedInitialConnectionStateRef.current
+            ? "reconnecting"
+            : "connecting";
+
+      if (!hasResolvedInitialConnectionStateRef.current && nextStatus === "failed") {
+        beginInitialFailurePending();
+        setStatus("connecting");
+        setShowRecoveryNotice(false);
+        return;
+      }
+
       setStatus(nextStatus);
       if (nextStatus === "failed") {
         setShowRecoveryNotice(true);
@@ -151,8 +281,9 @@ export function useSocket(): SocketConnectionState {
       retryCountRef.current = attempt;
       setRetryCount(attempt);
       setHealthStatus("unknown");
-      setStatus(hasConnectedRef.current ? "reconnecting" : "connecting");
-      if (hasConnectedRef.current) {
+      const nextStatus = hasResolvedInitialConnectionStateRef.current ? "reconnecting" : "connecting";
+      setStatus(nextStatus);
+      if (hasResolvedInitialConnectionStateRef.current) {
         setShowRecoveryNotice(true);
       }
       syncTransport();
@@ -163,12 +294,17 @@ export function useSocket(): SocketConnectionState {
     };
 
     const handleReconnectFailed = () => {
+      clearInitialConnectionTimer();
       if (!onlineRef.current) {
+        clearPendingInitialFailure();
+        resolveInitialConnectionState();
         setStatus("offline");
         setShowRecoveryNotice(true);
         return;
       }
 
+      clearPendingInitialFailure();
+      resolveInitialConnectionState();
       setStatus("failed");
       setShowRecoveryNotice(true);
     };
@@ -195,10 +331,19 @@ export function useSocket(): SocketConnectionState {
       trackedEngine?.off("upgrade", syncTransport);
       socket.disconnect();
     };
-  }, [socket]);
+  }, [
+    beginInitialFailurePending,
+    clearInitialConnectionTimer,
+    clearPendingInitialFailure,
+    resolveInitialConnectionState,
+    scheduleInitialConnectionResolution,
+    socket,
+  ]);
 
   useEffect(() => {
     if (!online) {
+      clearPendingInitialFailure();
+      resolveInitialConnectionState();
       setStatus("offline");
       setHealthStatus("unknown");
       setShowRecoveryNotice(true);
@@ -207,13 +352,16 @@ export function useSocket(): SocketConnectionState {
     }
 
     if (!socket.connected) {
-      setStatus(hasConnectedRef.current ? "reconnecting" : "connecting");
-      if (hasConnectedRef.current) {
+      const nextStatus = hasResolvedInitialConnectionStateRef.current ? "reconnecting" : "connecting";
+      setStatus(nextStatus);
+      if (hasResolvedInitialConnectionStateRef.current) {
         setShowRecoveryNotice(true);
+      } else {
+        setShowRecoveryNotice(false);
       }
       socket.connect();
     }
-  }, [online, socket]);
+  }, [clearPendingInitialFailure, online, resolveInitialConnectionState, socket]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -226,15 +374,22 @@ export function useSocket(): SocketConnectionState {
       setRetryCount(0);
       setLastError(null);
       setHealthStatus("unknown");
-      setStatus(hasConnectedRef.current ? "reconnecting" : "connecting");
-      if (hasConnectedRef.current || showRecoveryNotice) {
+      clearPendingInitialFailure();
+      if (hasConnectedRef.current && hasResolvedInitialConnectionStateRef.current) {
+        setStatus("reconnecting");
         setShowRecoveryNotice(true);
+      } else {
+        resetInitialConnectionState();
+        setStatus("connecting");
+        setShowRecoveryNotice(false);
       }
       socket.connect();
     };
 
     const handleOffline = () => {
       setOnline(false);
+      clearPendingInitialFailure();
+      resolveInitialConnectionState();
       setHealthStatus("unknown");
       setStatus("offline");
       setShowRecoveryNotice(true);
@@ -247,10 +402,10 @@ export function useSocket(): SocketConnectionState {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [showRecoveryNotice, socket]);
+  }, [clearPendingInitialFailure, resetInitialConnectionState, resolveInitialConnectionState, socket]);
 
   useEffect(() => {
-    if (!online || (status !== "reconnecting" && status !== "failed")) {
+    if (!online || (!(status === "reconnecting" || status === "failed") && !initialFailurePending)) {
       return;
     }
 
@@ -282,25 +437,33 @@ export function useSocket(): SocketConnectionState {
         }
 
         setHealthStatus(response.ok ? "reachable" : "unreachable");
+        if (initialFailurePending && !hasResolvedInitialConnectionStateRef.current && !socket.connected) {
+          schedulePendingInitialFailureResolution();
+        }
       } catch {
         if (cancelled) {
           return;
         }
 
         setHealthStatus("unreachable");
+        if (initialFailurePending && !hasResolvedInitialConnectionStateRef.current && !socket.connected) {
+          schedulePendingInitialFailureResolution();
+        }
       } finally {
-        window.clearTimeout(timeoutId);
+        globalThis.clearTimeout(timeoutId);
       }
     })();
 
     return () => {
       cancelled = true;
       controller.abort();
-      window.clearTimeout(timeoutId);
+      globalThis.clearTimeout(timeoutId);
     };
-  }, [online, retryCount, status]);
+  }, [initialFailurePending, online, retryCount, schedulePendingInitialFailureResolution, socket, status]);
 
   const retry = useCallback(() => {
+    clearInitialConnectionTimer();
+    clearPendingInitialFailure();
     retryCountRef.current = 0;
     setRetryCount(0);
     setLastError(null);
@@ -316,7 +479,7 @@ export function useSocket(): SocketConnectionState {
     setShowRecoveryNotice(true);
     socket.disconnect();
     socket.connect();
-  }, [socket]);
+  }, [clearInitialConnectionTimer, clearPendingInitialFailure, socket]);
 
   const enableCompatibilityMode = useCallback(() => {
     if (compatibilityMode) {
@@ -329,6 +492,7 @@ export function useSocket(): SocketConnectionState {
     setRetryCount(0);
     setLastError(null);
     setHealthStatus("unknown");
+    clearPendingInitialFailure();
     setTransport("unknown");
     setStatus(onlineRef.current ? "connecting" : "offline");
     setShowRecoveryNotice(true);
@@ -336,7 +500,7 @@ export function useSocket(): SocketConnectionState {
       currentSocket.disconnect();
       return createSocket({ compatibilityMode: true });
     });
-  }, [compatibilityMode, retry]);
+  }, [clearPendingInitialFailure, compatibilityMode, retry]);
 
   const disableCompatibilityMode = useCallback(() => {
     if (!compatibilityMode) {
@@ -349,6 +513,7 @@ export function useSocket(): SocketConnectionState {
     setRetryCount(0);
     setLastError(null);
     setHealthStatus("unknown");
+    clearPendingInitialFailure();
     setTransport("unknown");
     setStatus(onlineRef.current ? "connecting" : "offline");
     setShowRecoveryNotice(true);
@@ -356,7 +521,7 @@ export function useSocket(): SocketConnectionState {
       currentSocket.disconnect();
       return createSocket();
     });
-  }, [compatibilityMode, retry]);
+  }, [clearPendingInitialFailure, compatibilityMode, retry]);
 
   const diagnostics = useMemo<ConnectionDiagnostics>(() => {
     return {
