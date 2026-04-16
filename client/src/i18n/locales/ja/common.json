@@ -356,6 +356,19 @@
       "exportJson": "JSON をエクスポート",
       "print": "印刷",
       "ephemeralNote": "このレポートは一時的なもので、エクスポートしない限り、このセッション内にのみ存在します。"
+    },
+    "sessionReport": {
+      "title": "セッションレポート",
+      "summaryTitle": "セッションサマリー",
+      "openButton": "セッションレポートを表示",
+      "openSummaryButton": "セッションサマリーを表示",
+      "copySummary": "セッションサマリーをコピー",
+      "close": "セッションレポートを閉じる",
+      "closeSummary": "セッションサマリーを閉じる",
+      "meta": "{{count}} ラウンド完了",
+      "meta_other": "{{count}} ラウンド完了",
+      "summaryHeading": "セッションサマリー — ルーム {{roomId}}",
+      "ephemeralNote": "このレポートは現在のセッションのみをカバーし、保存されません。"
     }
   },
   "documentTitle": {

@@ -9,6 +9,9 @@ type Props = {
   onOpenRoundReport?: () => void;
   onCopyRoundSummary?: () => void | Promise<void>;
   roundReportButtonRef?: Ref<HTMLButtonElement>;
+  onOpenSessionReport?: () => void;
+  onCopySessionSummary?: () => void | Promise<void>;
+  sessionReportButtonRef?: Ref<HTMLButtonElement>;
 };
 
 function formatOptionalStat(value: number | null, fallback: string): string {
@@ -19,7 +22,15 @@ function formatOptionalStat(value: number | null, fallback: string): string {
   return value.toFixed(1).replace(/\.0$/, "");
 }
 
-export function ResultsPanel({ state, onCopyRoundSummary, onOpenRoundReport, roundReportButtonRef }: Props) {
+export function ResultsPanel({
+  state,
+  onCopyRoundSummary,
+  onOpenRoundReport,
+  roundReportButtonRef,
+  onOpenSessionReport,
+  onCopySessionSummary,
+  sessionReportButtonRef,
+}: Props) {
   const { t } = useTranslation();
   const headingId = useId();
   const keyStatsId = useId();
@@ -68,6 +79,12 @@ export function ResultsPanel({ state, onCopyRoundSummary, onOpenRoundReport, rou
   const copySummaryHandler = isModerator ? onCopyRoundSummary : undefined;
   const showCopySummary = typeof copySummaryHandler === "function";
   const showRoundDetailNote = typeof onOpenRoundReport === "function";
+  const hasSessionRounds = state.sessionRounds.length > 0;
+  const copySessionSummaryHandler = isModerator ? onCopySessionSummary : undefined;
+  const showCopySessionSummary = typeof copySessionSummaryHandler === "function";
+  const sessionButtonLabel = isModerator
+    ? t("room.sessionReport.openButton")
+    : t("room.sessionReport.openSummaryButton");
 
   return (
     <section className="app-panel results-panel" aria-labelledby={headingId}>
@@ -123,6 +140,31 @@ export function ResultsPanel({ state, onCopyRoundSummary, onOpenRoundReport, rou
             )}
           </div>
           {showRoundDetailNote && <p className="results-panel__footer-note">{reportHelperLabel}</p>}
+        </div>
+      )}
+      {hasSessionRounds && (onOpenSessionReport || showCopySessionSummary) && (
+        <div className="results-panel__footer results-panel__footer--session">
+          <div className="results-panel__footer-actions">
+            {showCopySessionSummary && (
+              <button
+                type="button"
+                className="button button--ghost"
+                onClick={() => void copySessionSummaryHandler()}
+              >
+                {t("room.sessionReport.copySummary")}
+              </button>
+            )}
+            {onOpenSessionReport && (
+              <button
+                ref={sessionReportButtonRef}
+                type="button"
+                className="button button--secondary"
+                onClick={onOpenSessionReport}
+              >
+                {sessionButtonLabel}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </section>

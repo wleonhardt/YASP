@@ -20,6 +20,7 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     previousModeratorId: null,
     participants: new Map(),
     votes: new Map(),
+    sessionRounds: [],
     ...overrides,
   };
 }

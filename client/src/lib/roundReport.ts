@@ -1,4 +1,10 @@
-import type { PublicRoomState, PublicParticipant, RevealStats, VoteValue } from "@yasp/shared";
+import type {
+  PublicRoomState,
+  PublicParticipant,
+  RevealStats,
+  SessionRoundSnapshot,
+  VoteValue,
+} from "@yasp/shared";
 import { getMedian, getNumericVotes, getSpread } from "./room";
 
 export type RoundReportVoter = {
@@ -174,6 +180,155 @@ export function formatExportFilename(report: RoundReport, extension: "csv" | "js
         .replace(/-\d{3}Z$/, "Z")
     : "snapshot";
   return `yasp-round-${report.roomId}-r${report.roundNumber}-${iso}.${extension}`;
+}
+
+// ---------------------------------------------------------------------------
+// Session-level export helpers
+// ---------------------------------------------------------------------------
+
+function isNumericVoteStr(value: string): boolean {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && String(parsed) === value;
+}
+
+/**
+ * Build a flat CSV covering all completed rounds in a session.
+ * Columns: round_number, revealed_at, deck_label, participant_name,
+ *          participant_role, vote, is_numeric_vote, numeric_vote_value,
+ *          average, median, most_common, consensus, tie
+ */
+export function sessionToCsv(snapshots: SessionRoundSnapshot[], locale: string): string {
+  const header = [
+    "round_number",
+    "revealed_at",
+    "deck_label",
+    "participant_name",
+    "participant_role",
+    "vote",
+    "is_numeric_vote",
+    "numeric_vote_value",
+    "average",
+    "median",
+    "most_common",
+    "consensus",
+    "tie",
+  ];
+
+  const rows: string[] = [];
+
+  for (const snap of snapshots) {
+    const revealedAtLabel = formatRoundReportTime(snap.revealedAt, locale);
+    const numericVotes = snap.participants
+      .map((p) => p.vote)
+      .filter((v): v is string => v !== null && isNumericVoteStr(v))
+      .map(Number);
+    const median = numericVotes.length > 0 ? computeMedian(numericVotes) : null;
+    const avg = snap.stats.numericAverage !== null ? String(snap.stats.numericAverage) : "";
+    const medianStr = median !== null ? String(median) : "";
+    const mostCommon = snap.stats.mostCommon ?? "";
+    const consensus = snap.stats.consensus ? "true" : "false";
+    const tie = snap.stats.mostCommon === null && snap.stats.totalVotes > 0 ? "true" : "false";
+
+    for (const p of snap.participants) {
+      const voteStr = p.vote ?? "";
+      const isNumeric = p.vote !== null && isNumericVoteStr(p.vote) ? "true" : "false";
+      const numericVal = p.vote !== null && isNumericVoteStr(p.vote) ? p.vote : "";
+
+      rows.push(
+        [
+          String(snap.roundNumber),
+          revealedAtLabel,
+          snap.deck.label,
+          p.name,
+          p.role,
+          voteStr,
+          isNumeric,
+          numericVal,
+          avg,
+          medianStr,
+          mostCommon,
+          consensus,
+          tie,
+        ]
+          .map(csvEscape)
+          .join(",")
+      );
+    }
+  }
+
+  return [header.join(","), ...rows].join("\r\n") + "\r\n";
+}
+
+function computeMedian(sorted: number[]): number | null {
+  const nums = [...sorted].sort((a, b) => a - b);
+  if (nums.length === 0) return null;
+  const mid = Math.floor(nums.length / 2);
+  return nums.length % 2 === 0 ? ((nums[mid - 1] ?? 0) + (nums[mid] ?? 0)) / 2 : (nums[mid] ?? null);
+}
+
+export function sessionToJson(snapshots: SessionRoundSnapshot[]): string {
+  return JSON.stringify(snapshots, null, 2);
+}
+
+export function formatSessionExportFilename(roomId: string, extension: "csv" | "json"): string {
+  const iso = new Date()
+    .toISOString()
+    .replace(/[:.]/g, "-")
+    .replace("T", "_")
+    .replace(/-\d{3}Z$/, "Z");
+  return `yasp-session-${roomId}-${iso}.${extension}`;
+}
+
+/**
+ * Build plain-text summary for clipboard: one compact block per round.
+ */
+export function sessionToPlainText(
+  snapshots: SessionRoundSnapshot[],
+  roomId: string,
+  locale: string,
+  t: (key: string, opts?: Record<string, unknown>) => string
+): string {
+  const lines: string[] = [t("room.sessionReport.summaryHeading", { roomId }), ""];
+
+  for (const snap of snapshots) {
+    const revealedAtLabel = formatRoundReportTime(snap.revealedAt, locale);
+    const numericVotes = snap.participants
+      .map((p) => p.vote)
+      .filter((v): v is string => v !== null && isNumericVoteStr(v))
+      .map(Number);
+    const median = computeMedian(numericVotes);
+
+    lines.push(
+      t("room.roundReport.meta", { round: snap.roundNumber, time: revealedAtLabel }),
+      t("room.roundReport.deck", { deck: snap.deck.label })
+    );
+
+    if (snap.stats.numericAverage !== null) {
+      lines.push(`${t("room.average")}: ${snap.stats.numericAverage}`);
+    }
+    if (median !== null) {
+      lines.push(`${t("room.median")}: ${median}`);
+    }
+    if (snap.stats.mostCommon !== null) {
+      lines.push(`${t("room.mostCommon")}: ${snap.stats.mostCommon}`);
+    }
+
+    const consensusLabel = snap.stats.consensus
+      ? t("room.consensusReached")
+      : snap.stats.mostCommon === null && snap.stats.totalVotes > 0
+        ? t("room.tie")
+        : t("room.noConsensus");
+    lines.push(`${t("room.consensus")}: ${consensusLabel}`);
+
+    const voteEntries = snap.participants
+      .filter((p) => p.role === "voter" || p.vote !== null)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((p) => `${p.name}: ${p.vote ?? t("room.participant.notVoted")}`);
+    lines.push(`${t("room.roundReport.votes")}: ${voteEntries.join("; ")}`);
+    lines.push("");
+  }
+
+  return lines.join("\n").trimEnd();
 }
 
 /**

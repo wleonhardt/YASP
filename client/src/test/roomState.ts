@@ -36,6 +36,7 @@ export function makePublicRoomState(overrides: Partial<PublicRoomState> = {}): P
     ],
     votes: null,
     stats: null,
+    sessionRounds: [],
     me: {
       participantId: "me",
       sessionId: "session-1",

@@ -34,6 +34,7 @@ function makeRoom(id: string, overrides: Partial<Room> = {}): Room {
     previousModeratorId: null,
     participants: new Map([["s1", makeParticipant()]]),
     votes: new Map(),
+    sessionRounds: [],
     ...overrides,
   };
 }

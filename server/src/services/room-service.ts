@@ -9,12 +9,14 @@ import {
   type RoomSettings,
   type ServerErrorEvent,
   type SessionId,
+  type SessionRoundSnapshot,
   type SocketId,
   type VoteValue,
 } from "@yasp/shared";
 import type { Room, Participant } from "../domain/types.js";
 import type { RoomStore } from "./room-store.js";
 import { resolveDeck } from "../domain/deck.js";
+import { computeStats } from "../domain/stats.js";
 import {
   reassignModeratorIfNeeded,
   findNextModerator,
@@ -186,6 +188,7 @@ export class RoomService {
       previousModeratorId: null,
       participants: new Map([[sessionId, participant]]),
       votes: new Map(),
+      sessionRounds: [],
     };
 
     this.saveRoom(room);
@@ -383,6 +386,23 @@ export class RoomService {
     }
 
     room.revealed = true;
+
+    const stats = computeStats(room.votes, room.deck.cards);
+    const snapshot: SessionRoundSnapshot = {
+      roundNumber: room.roundNumber,
+      revealedAt: now(),
+      deck: room.deck,
+      participants: Array.from(room.participants.values()).map((p) => ({
+        participantId: p.id,
+        name: p.name,
+        role: p.role,
+        vote: room.votes.get(p.id) ?? null,
+        connected: p.connected,
+      })),
+      stats,
+    };
+    room.sessionRounds.push(snapshot);
+
     touchRoom(room);
     this.saveRoom(room);
     return success({ room });
@@ -398,6 +418,23 @@ export class RoomService {
     // Mirror the pre-Phase-3 socket callback behavior: auto-reveal flips the
     // reveal bit without extending last-activity / expiry.
     room.revealed = true;
+
+    const autoStats = computeStats(room.votes, room.deck.cards);
+    const autoSnapshot: SessionRoundSnapshot = {
+      roundNumber: room.roundNumber,
+      revealedAt: now(),
+      deck: room.deck,
+      participants: Array.from(room.participants.values()).map((p) => ({
+        participantId: p.id,
+        name: p.name,
+        role: p.role,
+        vote: room.votes.get(p.id) ?? null,
+        connected: p.connected,
+      })),
+      stats: autoStats,
+    };
+    room.sessionRounds.push(autoSnapshot);
+
     this.saveRoom(room);
     return success({ room, changed: true });
   }

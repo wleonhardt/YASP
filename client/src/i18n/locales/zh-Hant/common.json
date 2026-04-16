@@ -356,6 +356,19 @@
       "exportJson": "匯出 JSON",
       "print": "列印",
       "ephemeralNote": "此報告是暫時的，除非匯出，否則僅存在於此工作階段中。"
+    },
+    "sessionReport": {
+      "title": "工作階段報告",
+      "summaryTitle": "工作階段摘要",
+      "openButton": "查看工作階段報告",
+      "openSummaryButton": "查看工作階段摘要",
+      "copySummary": "複製工作階段摘要",
+      "close": "關閉工作階段報告",
+      "closeSummary": "關閉工作階段摘要",
+      "meta": "{{count}} 個已完成回合",
+      "meta_other": "{{count}} 個已完成回合",
+      "summaryHeading": "工作階段摘要 — 房間 {{roomId}}",
+      "ephemeralNote": "此報告僅涵蓋當前工作階段，不會儲存於任何地方。"
     }
   },
   "documentTitle": {

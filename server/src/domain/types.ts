@@ -8,6 +8,7 @@ import type {
   Deck,
   RoomSettings,
   RoomTimerState,
+  SessionRoundSnapshot,
 } from "@yasp/shared";
 
 export type Participant = {
@@ -52,4 +53,5 @@ export type Room = {
   previousModeratorId: ParticipantId | null;
   participants: Map<SessionId, Participant>;
   votes: Map<ParticipantId, VoteValue>;
+  sessionRounds: SessionRoundSnapshot[];
 };

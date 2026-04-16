@@ -47,6 +47,7 @@ export function serializeRoom(room: Room, selfSessionId: SessionId): PublicRoomS
     participants,
     votes,
     stats,
+    sessionRounds: room.sessionRounds,
     me: {
       participantId: selfParticipant?.id ?? null,
       sessionId: selfSessionId,

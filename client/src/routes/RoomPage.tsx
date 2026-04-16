@@ -10,6 +10,7 @@ import { ModeratorControls } from "../components/ModeratorControls";
 import { ParticipantsBoard } from "../components/ParticipantsBoard";
 import { ResultsPanel } from "../components/ResultsPanel";
 import { RoundReportModal } from "../components/RoundReportModal";
+import { SessionReportModal } from "../components/SessionReportModal";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Toast, type ToastState } from "../components/Toast";
 import { TopBar } from "../components/TopBar";
@@ -23,6 +24,7 @@ import { useSocket } from "../hooks/useSocket";
 import {
   buildRoundReport,
   formatRoundReportTime,
+  sessionToPlainText,
   toPlainTextSummary,
   writeTextToClipboard,
 } from "../lib/roundReport";
@@ -78,6 +80,8 @@ export function RoomPage() {
   const [roundReportOpen, setRoundReportOpen] = useState(false);
   const [revealedAt, setRevealedAt] = useState<number | null>(null);
   const roundReportButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [sessionReportOpen, setSessionReportOpen] = useState(false);
+  const sessionReportButtonRef = useRef<HTMLButtonElement | null>(null);
   const [compactRoundLayout, setCompactRoundLayout] = useState(() =>
     typeof window !== "undefined" && typeof window.matchMedia === "function"
       ? window.matchMedia(COMPACT_ROUND_LAYOUT_QUERY).matches
@@ -269,6 +273,26 @@ export function RoomPage() {
       showToast("error", t("room.copyFailed"));
     }
   }, [i18n.language, revealedAt, roomState, showToast, t]);
+
+  const handleCopySessionSummary = useCallback(async () => {
+    if (!roomState || !isMeModerator(roomState)) {
+      return;
+    }
+
+    const { sessionRounds } = roomState;
+    if (sessionRounds.length === 0) {
+      return;
+    }
+
+    const summaryText = sessionToPlainText(sessionRounds, roomState.id, i18n.language, t);
+
+    try {
+      await writeTextToClipboard(summaryText);
+      showToast("success", t("room.copied"));
+    } catch {
+      showToast("error", t("room.copyFailed"));
+    }
+  }, [i18n.language, roomState, showToast, t]);
 
   useEffect(() => {
     return () => {
@@ -794,6 +818,15 @@ export function RoomPage() {
                 onCopyRoundSummary={isMeModerator(state) ? handleCopyRoundSummary : undefined}
                 onOpenRoundReport={() => setRoundReportOpen(true)}
                 roundReportButtonRef={roundReportButtonRef}
+                onOpenSessionReport={
+                  state.sessionRounds.length > 0 ? () => setSessionReportOpen(true) : undefined
+                }
+                onCopySessionSummary={
+                  isMeModerator(state) && state.sessionRounds.length > 0
+                    ? handleCopySessionSummary
+                    : undefined
+                }
+                sessionReportButtonRef={sessionReportButtonRef}
               />
             ) : (
               <VoteDeck
@@ -816,6 +849,17 @@ export function RoomPage() {
           mode={isMeModerator(state) ? "moderator" : "participant"}
           onClose={() => setRoundReportOpen(false)}
           returnFocusRef={roundReportButtonRef}
+        />
+      )}
+
+      {sessionReportOpen && state.sessionRounds.length > 0 && (
+        <SessionReportModal
+          open
+          roomId={state.id}
+          sessionRounds={state.sessionRounds}
+          mode={isMeModerator(state) ? "moderator" : "participant"}
+          onClose={() => setSessionReportOpen(false)}
+          returnFocusRef={sessionReportButtonRef}
         />
       )}
 

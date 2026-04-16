@@ -52,6 +52,22 @@ export type RevealStats = {
   mostCommon: string | null;
 };
 
+export type SessionRoundParticipant = {
+  participantId: string;
+  name: string;
+  role: "voter" | "spectator";
+  vote: string | null;
+  connected: boolean;
+};
+
+export type SessionRoundSnapshot = {
+  roundNumber: number;
+  revealedAt: number;
+  deck: Deck;
+  participants: SessionRoundParticipant[];
+  stats: RevealStats;
+};
+
 export type PublicRoomState = {
   id: RoomId;
   title?: string;
@@ -63,6 +79,7 @@ export type PublicRoomState = {
   participants: PublicParticipant[];
   votes: Record<ParticipantId, VoteValue> | null;
   stats: RevealStats | null;
+  sessionRounds: SessionRoundSnapshot[];
   me: {
     participantId: ParticipantId | null;
     sessionId: SessionId;

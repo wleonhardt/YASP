@@ -356,6 +356,19 @@
       "exportJson": "Exportar JSON",
       "print": "Imprimir",
       "ephemeralNote": "Este relatório é temporário e só existe nesta sessão, a menos que o exportes."
+    },
+    "sessionReport": {
+      "title": "Relatório de sessão",
+      "summaryTitle": "Resumo de sessão",
+      "openButton": "Ver relatório de sessão",
+      "openSummaryButton": "Ver resumo de sessão",
+      "copySummary": "Copiar resumo de sessão",
+      "close": "Fechar relatório de sessão",
+      "closeSummary": "Fechar resumo de sessão",
+      "meta": "{{count}} ronda concluída",
+      "meta_other": "{{count}} rondas concluídas",
+      "summaryHeading": "Resumo de sessão — Sala {{roomId}}",
+      "ephemeralNote": "Este relatório cobre apenas a sessão atual e não é armazenado em nenhum lugar."
     }
   },
   "documentTitle": {

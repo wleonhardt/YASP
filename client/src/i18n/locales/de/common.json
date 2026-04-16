@@ -356,6 +356,19 @@
       "exportJson": "Als JSON exportieren",
       "print": "Drucken",
       "ephemeralNote": "Dieser Bericht ist temporär und existiert nur in dieser Sitzung, sofern du ihn nicht exportierst."
+    },
+    "sessionReport": {
+      "title": "Sitzungsbericht",
+      "summaryTitle": "Sitzungszusammenfassung",
+      "openButton": "Sitzungsbericht anzeigen",
+      "openSummaryButton": "Sitzungszusammenfassung anzeigen",
+      "copySummary": "Sitzungszusammenfassung kopieren",
+      "close": "Sitzungsbericht schließen",
+      "closeSummary": "Sitzungszusammenfassung schließen",
+      "meta": "{{count}} abgeschlossene Runde",
+      "meta_other": "{{count}} abgeschlossene Runden",
+      "summaryHeading": "Sitzungszusammenfassung — Raum {{roomId}}",
+      "ephemeralNote": "Dieser Bericht umfasst nur die aktuelle Sitzung und wird nirgendwo gespeichert."
     }
   },
   "documentTitle": {

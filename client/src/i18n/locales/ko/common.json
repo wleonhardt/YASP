@@ -356,6 +356,19 @@
       "exportJson": "JSON 내보내기",
       "print": "인쇄",
       "ephemeralNote": "이 리포트는 일시적이며, 내보내지 않는 한 이 세션에서만 존재합니다."
+    },
+    "sessionReport": {
+      "title": "세션 리포트",
+      "summaryTitle": "세션 요약",
+      "openButton": "세션 리포트 보기",
+      "openSummaryButton": "세션 요약 보기",
+      "copySummary": "세션 요약 복사",
+      "close": "세션 리포트 닫기",
+      "closeSummary": "세션 요약 닫기",
+      "meta": "완료된 라운드 {{count}}개",
+      "meta_other": "완료된 라운드 {{count}}개",
+      "summaryHeading": "세션 요약 — 룸 {{roomId}}",
+      "ephemeralNote": "이 리포트는 현재 세션만 다루며 어디에도 저장되지 않습니다."
     }
   },
   "documentTitle": {

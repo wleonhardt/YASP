@@ -356,6 +356,19 @@
       "exportJson": "Export JSON",
       "print": "Print",
       "ephemeralNote": "This report is temporary and exists only in this session unless you export it."
+    },
+    "sessionReport": {
+      "title": "Session report",
+      "summaryTitle": "Session summary",
+      "openButton": "View session report",
+      "openSummaryButton": "View session summary",
+      "copySummary": "Copy session summary",
+      "close": "Close session report",
+      "closeSummary": "Close session summary",
+      "meta": "{{count}} completed round",
+      "meta_other": "{{count}} completed rounds",
+      "summaryHeading": "Session summary — Room {{roomId}}",
+      "ephemeralNote": "This report covers the current session only and is not stored anywhere."
     }
   },
   "documentTitle": {

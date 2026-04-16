@@ -356,6 +356,19 @@
       "exportJson": "Exporter en JSON",
       "print": "Imprimer",
       "ephemeralNote": "Ce rapport est temporaire et n'existe que dans cette session, sauf si vous l'exportez."
+    },
+    "sessionReport": {
+      "title": "Rapport de session",
+      "summaryTitle": "Résumé de session",
+      "openButton": "Voir le rapport de session",
+      "openSummaryButton": "Voir le résumé de session",
+      "copySummary": "Copier le résumé de session",
+      "close": "Fermer le rapport de session",
+      "closeSummary": "Fermer le résumé de session",
+      "meta": "{{count}} tour terminé",
+      "meta_other": "{{count}} tours terminés",
+      "summaryHeading": "Résumé de session — Salle {{roomId}}",
+      "ephemeralNote": "Ce rapport couvre uniquement la session en cours et n'est pas stocké."
     }
   },
   "documentTitle": {
