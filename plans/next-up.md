@@ -14,6 +14,11 @@
 
 ## Done
 
+- 2026-04-16: Tightened the round report consensus stat so it no longer tries
+  to render long status prose as the primary metric value. The modal now uses
+  a compact consensus indicator with supporting copy and vote count in the
+  tile meta, keeping the stat grid readable at narrow card widths without
+  changing report behavior or data.
 - 2026-04-16: Localized the realtime recovery and diagnostics `connection`
   namespace for the non-English locale bundles (`de`, `es`, `fr`, `pt`, `ja`,
   `ko`, `zh-Hans`, `zh-Hant`) so the new disconnected/retry/compatibility and

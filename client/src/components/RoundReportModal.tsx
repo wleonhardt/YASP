@@ -183,7 +183,7 @@ export function RoundReportModal({ open, state, revealedAt, mode, onClose, retur
   const medianValue = formatNumber(report.stats.median, notAvailable);
   const mostCommonValue = report.stats.mostCommon ?? t("room.tie");
   const mostCommonMeta = report.stats.consensus ? t("room.consensus") : t("room.plurality");
-  const consensusValue = report.stats.consensus ? t("room.consensusReached") : t("room.noConsensus");
+  const consensusStateLabel = report.stats.consensus ? t("room.consensusReached") : t("room.noConsensus");
   const revealedAtLabel = formatRoundReportTime(report.revealedAt, i18n.language);
   const distributionMax = report.stats.distribution[0]?.count ?? 1;
   const hasNonNumericVotes = report.voters.some((voter) => voter.vote !== null && !voter.voteIsNumeric);
@@ -246,8 +246,28 @@ export function RoundReportModal({ open, state, revealedAt, mode, onClose, retur
               />
               <StatTile
                 label={t("room.consensus")}
-                value={consensusValue}
-                meta={t("room.roundReport.totalVotes", { count: report.stats.totalVotes })}
+                value={
+                  <span
+                    className={[
+                      "round-report-modal__consensus-indicator",
+                      report.stats.consensus
+                        ? "round-report-modal__consensus-indicator--reached"
+                        : "round-report-modal__consensus-indicator--split",
+                    ].join(" ")}
+                    role="img"
+                    aria-label={consensusStateLabel}
+                  >
+                    <span aria-hidden="true">{report.stats.consensus ? "✓" : "≠"}</span>
+                  </span>
+                }
+                meta={
+                  <span className="round-report-modal__consensus-meta">
+                    <span>{consensusStateLabel}</span>
+                    <span className="round-report-modal__consensus-meta-count">
+                      {t("room.roundReport.totalVotes", { count: report.stats.totalVotes })}
+                    </span>
+                  </span>
+                }
               />
             </div>
           </section>
@@ -354,7 +374,7 @@ export function RoundReportModal({ open, state, revealedAt, mode, onClose, retur
   );
 }
 
-function StatTile({ label, value, meta }: { label: string; value: ReactNode; meta?: string }) {
+function StatTile({ label, value, meta }: { label: string; value: ReactNode; meta?: ReactNode }) {
   return (
     <div className="stat-tile stat-tile--supporting round-report-modal__stat-tile">
       <div className="stat-tile__label">{label}</div>

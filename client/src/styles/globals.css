@@ -3536,6 +3536,37 @@ select.input {
   min-height: 108px;
 }
 
+.round-report-modal__consensus-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: rgba(148, 172, 204, 0.08);
+  color: var(--color-text-secondary);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.round-report-modal__consensus-indicator--reached {
+  border-color: rgba(16, 185, 129, 0.28);
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--color-success);
+}
+
+.round-report-modal__consensus-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.round-report-modal__consensus-meta-count {
+  color: var(--color-text-secondary);
+}
+
 .round-report-modal__votes,
 .round-report-modal__distribution,
 .round-report-modal__stats {

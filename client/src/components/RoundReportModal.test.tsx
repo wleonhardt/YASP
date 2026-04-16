@@ -243,6 +243,38 @@ describe("RoundReportModal participant mode", () => {
     expect(within(dialog).getByRole("button", { name: /^close$/i })).toBeInTheDocument();
   });
 
+  it("renders the consensus stat as a compact indicator with supporting copy", () => {
+    render(
+      <RoundReportModal
+        open
+        state={makeRevealedState({
+          selfModerator: false,
+          overrides: {
+            votes: { me: "3", p2: "3" },
+            stats: {
+              totalVotes: 2,
+              numericAverage: 3,
+              distribution: { "3": 2 },
+              consensus: true,
+              mostCommon: "3",
+            },
+          },
+        })}
+        revealedAt={Date.UTC(2026, 3, 15, 14, 30)}
+        mode="participant"
+        onClose={vi.fn()}
+      />
+    );
+
+    const dialog = screen.getByRole("dialog", { name: /round summary/i });
+    const consensusIndicator = within(dialog).getByRole("img", { name: /consensus reached/i });
+    const consensusTile = consensusIndicator.closest(".stat-tile");
+
+    expect(consensusTile).not.toBeNull();
+    expect(within(consensusTile as HTMLElement).getByText(/^consensus$/i)).toBeInTheDocument();
+    expect(within(consensusTile as HTMLElement).getByText(/2 votes counted/i)).toBeInTheDocument();
+  });
+
   it("opens, closes on outside click, and restores focus to the summary trigger", async () => {
     const user = userEvent.setup();
 
