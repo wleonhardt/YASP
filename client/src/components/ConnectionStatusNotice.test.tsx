@@ -55,8 +55,16 @@ describe("ConnectionStatusNotice", () => {
 
     render(<ConnectionStatusNotice connection={connection} />);
 
+    const compatibilityAction = screen.getByRole("button", { name: "Try compatibility mode" });
+    const compatibilityHelp = screen.getByText(
+      "Use this if the page loads but live updates stay disconnected. Some networks or browser extensions can block realtime connections."
+    );
+
+    expect(compatibilityHelp).toBeInTheDocument();
+    expect(compatibilityAction).toHaveAttribute("aria-describedby", compatibilityHelp.id);
+
     await user.click(screen.getByRole("button", { name: "Retry" }));
-    await user.click(screen.getByRole("button", { name: "Try compatibility mode" }));
+    await user.click(compatibilityAction);
 
     expect(connection.retry).toHaveBeenCalledTimes(1);
     expect(connection.enableCompatibilityMode).toHaveBeenCalledTimes(1);
@@ -137,6 +145,29 @@ describe("ConnectionStatusNotice", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps diagnostics collapsed for reconnecting states until the disclosure is opened", async () => {
+    const user = userEvent.setup();
+    const connection = buildConnection("reconnecting", {
+      retryCount: 1,
+      problem: "realtime_blocked",
+      lastError: "transport close",
+      healthStatus: "reachable",
+    });
+
+    render(<ConnectionStatusNotice connection={connection} />);
+
+    const detailsToggle = screen.getByRole("button", { name: "Connection details" });
+
+    expect(detailsToggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText("Diagnostics")).not.toBeInTheDocument();
+
+    await user.click(detailsToggle);
+
+    expect(detailsToggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Diagnostics")).toBeInTheDocument();
+    expect(screen.getByText("transport close")).toBeInTheDocument();
+  });
+
   it("keeps compatibility mode obvious once the fallback is active", () => {
     const connection = buildConnection("failed", {
       compatibilityMode: true,
@@ -149,5 +180,8 @@ describe("ConnectionStatusNotice", () => {
 
     expect(screen.getAllByText("Compatibility mode active").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Try compatibility mode" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Use this if the page loads but live updates stay disconnected/i)
+    ).not.toBeInTheDocument();
   });
 });

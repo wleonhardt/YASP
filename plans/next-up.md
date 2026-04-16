@@ -14,6 +14,12 @@
 
 ## Done
 
+- 2026-04-16: Polished the realtime recovery notice and revealed-round footer
+  with calmer support copy, a current-tab-only compatibility-mode helper, and
+  quiet current-round helper text for report/summary access. The diagnostics
+  disclosure stayed non-sensitive, the happy path stayed visually quiet, and
+  the report/summary flow remained current-round-only/session-only with
+  moderator-only exports.
 - 2026-04-16: Tightened the round report consensus stat so it no longer tries
   to render long status prose as the primary metric value. The modal now uses
   a compact consensus indicator with supporting copy and vote count in the

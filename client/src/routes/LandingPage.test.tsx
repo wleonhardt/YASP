@@ -253,5 +253,10 @@ describe("LandingPage create room deck behavior", () => {
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Try compatibility mode" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Connection details" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Use this if the page loads but live updates stay disconnected. Some networks or browser extensions can block realtime connections."
+      )
+    ).toBeInTheDocument();
   });
 });

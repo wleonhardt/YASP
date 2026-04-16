@@ -61,8 +61,13 @@ export function ResultsPanel({ state, onCopyRoundSummary, onOpenRoundReport, rou
   const reportMode = isModerator ? "moderator" : "participant";
   const reportButtonLabel =
     reportMode === "moderator" ? t("room.roundReport.openButton") : t("room.roundReport.openSummaryButton");
+  const reportHelperLabel =
+    reportMode === "moderator"
+      ? t("room.roundReport.footerNoteModerator")
+      : t("room.roundReport.footerNoteParticipant");
   const copySummaryHandler = isModerator ? onCopyRoundSummary : undefined;
   const showCopySummary = typeof copySummaryHandler === "function";
+  const showRoundDetailNote = typeof onOpenRoundReport === "function";
 
   return (
     <section className="app-panel results-panel" aria-labelledby={headingId}>
@@ -117,6 +122,7 @@ export function ResultsPanel({ state, onCopyRoundSummary, onOpenRoundReport, rou
               </button>
             )}
           </div>
+          {showRoundDetailNote && <p className="results-panel__footer-note">{reportHelperLabel}</p>}
         </div>
       )}
     </section>

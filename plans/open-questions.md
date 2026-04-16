@@ -8,6 +8,13 @@
 
 ## Resolved
 
+- 2026-04-16: Connection recovery help text and revealed-round affordances now
+  stay intentionally modest. Compatibility mode is explained only as a
+  current-tab fallback for "page loads but live updates stay disconnected",
+  likely blockers are named cautiously (extensions, proxies, network policy),
+  diagnostics remain sanitized/non-sensitive, and the revealed-round helper
+  text clarifies current-round-only access without implying history or saved
+  reports.
 - 2026-04-15: Realtime recovery for "page loads but room never connects"
   cases now stays intentionally lightweight. YASP keeps the normal
   websocket-capable Socket.IO path on the happy path, exposes compatibility

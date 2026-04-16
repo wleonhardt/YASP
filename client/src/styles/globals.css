@@ -1072,6 +1072,14 @@ select.input {
   gap: var(--space-2);
 }
 
+.connection-notice__action-help {
+  margin: calc(var(--space-2) * -0.25) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-meta);
+  line-height: 1.45;
+  max-width: 60ch;
+}
+
 .connection-notice__details {
   gap: var(--space-3);
   padding-top: var(--space-3);
@@ -1090,6 +1098,7 @@ select.input {
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: var(--space-3);
   margin: 0;
+  align-items: start;
 }
 
 .connection-notice__grid > div {
@@ -1107,6 +1116,7 @@ select.input {
 .connection-notice__grid dd {
   margin: 0;
   color: var(--color-text);
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 
@@ -3465,7 +3475,10 @@ select.input {
 
 .results-panel__footer {
   display: flex;
+  flex-direction: column;
   justify-content: flex-end;
+  align-items: flex-end;
+  gap: var(--space-2);
   margin-top: var(--space-3);
 }
 
@@ -3484,6 +3497,15 @@ select.input {
   text-align: center;
 }
 
+.results-panel__footer-note {
+  margin: 0;
+  max-width: 32rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-meta);
+  line-height: 1.45;
+  text-align: right;
+}
+
 @media (max-width: 768px) {
   .results-panel__footer-actions .button:not(:only-child) {
     flex: 1 1 calc(50% - var(--space-2));
@@ -3493,6 +3515,7 @@ select.input {
 @media (max-width: 420px) {
   .results-panel__footer {
     margin-top: var(--space-2);
+    align-items: stretch;
   }
 
   .results-panel__footer-actions {
@@ -3502,6 +3525,11 @@ select.input {
 
   .results-panel__footer-actions .button {
     width: 100%;
+  }
+
+  .results-panel__footer-note {
+    max-width: none;
+    text-align: left;
   }
 }
 

@@ -122,6 +122,9 @@ describe("ResultsPanel round detail entry point", () => {
 
     expect(screen.getByRole("button", { name: /copy summary/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /view round report/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/available for this revealed round\. export before reset if you need a copy\./i)
+    ).toBeInTheDocument();
 
     rerender(
       <ResultsPanel
@@ -133,6 +136,7 @@ describe("ResultsPanel round detail entry point", () => {
 
     expect(screen.queryByRole("button", { name: /copy summary/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /view round summary/i })).toBeInTheDocument();
+    expect(screen.getByText(/available for this revealed round only\./i)).toBeInTheDocument();
   });
 
   it("renders the participant trigger label after reveal", async () => {
@@ -152,6 +156,7 @@ describe("ResultsPanel round detail entry point", () => {
     expect(screen.queryByRole("button", { name: /view round report/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /view round summary/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /copy summary/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/available for this revealed round/i)).not.toBeInTheDocument();
   });
 
   it("does not render either trigger before reveal", () => {
@@ -195,6 +200,24 @@ describe("ResultsPanel round detail entry point", () => {
         delete clipboardHolder.clipboard;
       }
     }
+  });
+
+  it("removes round detail access after the round is reset", async () => {
+    const user = userEvent.setup();
+
+    render(<RoundDetailsHarness initialState={makeRevealedState()} />);
+
+    await user.click(screen.getByRole("button", { name: /view round report/i }));
+    expect(screen.getByRole("dialog", { name: /round report/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /reset round/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: /round report/i })).not.toBeInTheDocument();
+    });
+    expect(screen.queryByRole("button", { name: /view round report/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /view round summary/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId("pre-reveal-placeholder")).toBeInTheDocument();
   });
 });
 

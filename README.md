@@ -31,6 +31,8 @@ TTL-bound active room and session state, not a history feature.
 - Shared round timer with presets, pause/reset, honk, optional sound, and auto-reveal
 - Deck presets plus per-room custom decks
 - Results summary with average, median, mode, spread, consensus, and distribution
+- Moderator-only round report exports plus participant view-only round summary
+  after reveal, both limited to the current round in the current session
 - Room settings for reveal/reset/deck-change permissions and participant controls
 - Dark/light theme support
 - Localized UI in `en`, `es`, `fr`, `de`, `pt`, `ja`, `ko`, `zh-Hans`, and `zh-Hant`
@@ -247,6 +249,54 @@ the repo.
   `zh-Hant`
 - `npm run i18n:check` is enforced in CI.
 - Terminology guidance lives in [docs/i18n-glossary.md](./docs/i18n-glossary.md).
+
+## Realtime recovery and support
+
+YASP keeps the healthy connection path quiet. Recovery UI only appears when the
+live room connection is not healthy.
+
+- `Retry` starts another normal reconnect attempt using the default realtime
+  path.
+- `Try compatibility mode` is a current-tab fallback that reconnects with the
+  more conservative polling transport. It is not a permanent mode or a global
+  preference.
+- Users should try compatibility mode when the page loads but live updates stay
+  disconnected.
+- Likely causes are described cautiously: browser extensions, proxies, VPNs, or
+  network policy can interfere with realtime transports.
+- `Connection details` exposes a small, non-sensitive diagnostics set for
+  support and troubleshooting: connection status, transport, retry count,
+  health probe result, last connected/error timestamps, and the realtime
+  endpoint. The panel intentionally avoids sensitive user or environment data.
+
+Practical manual checks for recovery/support:
+
+- landing page: failed and offline states show clear actions without cluttering
+  the connected path
+- room page: reconnecting and failed states keep `Retry`, compatibility mode,
+  and diagnostics readable on narrow screens
+- compatibility mode: helper copy stays cautious and does not promise a fix
+- diagnostics: disclosure works with keyboard navigation and wraps cleanly on
+  mobile
+
+## Round report and summary behavior
+
+Round detail access stays intentionally small and ephemeral:
+
+- moderators get `View round report` after reveal
+- participants get `View round summary` after reveal
+- participant mode is view-only and never shows export actions
+- moderator exports remain `Export CSV`, `Export JSON`, and `Print`
+- round detail is current-round-only and session-only
+- resetting or advancing the round removes the current round detail entry point
+- moderators must export before reset/next round if they need to keep a copy
+
+Practical manual checks for round detail behavior:
+
+- no report/summary trigger appears before reveal
+- the correct moderator/participant label appears after reveal
+- participants never see export actions
+- reset/next round removes access to the prior revealed round detail
 
 ## Security posture
 

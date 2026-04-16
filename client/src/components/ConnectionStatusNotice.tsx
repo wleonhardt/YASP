@@ -80,6 +80,7 @@ export function ConnectionStatusNotice({ connection, className }: Props) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const detailsId = useId();
   const titleId = useId();
+  const compatibilityHelpId = useId();
   const labels = getConnectionLabels(t, connection.status);
   const diagnostics = connection.diagnostics;
   const showOrigin = diagnostics.origin !== null && diagnostics.origin !== diagnostics.endpoint;
@@ -178,7 +179,12 @@ export function ConnectionStatusNotice({ connection, className }: Props) {
           {t("connection.retry")}
         </button>
         {showCompatibilityAction && (
-          <button type="button" className="button button--ghost" onClick={connection.enableCompatibilityMode}>
+          <button
+            type="button"
+            className="button button--ghost"
+            aria-describedby={compatibilityHelpId}
+            onClick={connection.enableCompatibilityMode}
+          >
             {t("connection.tryCompatibilityMode")}
           </button>
         )}
@@ -192,6 +198,11 @@ export function ConnectionStatusNotice({ connection, className }: Props) {
           {t("connection.connectionDetails")}
         </button>
       </div>
+      {showCompatibilityAction && (
+        <p id={compatibilityHelpId} className="connection-notice__action-help">
+          {t("connection.compatibilityModeHelp")}
+        </p>
+      )}
 
       {detailsOpen && (
         <div id={detailsId} className="connection-notice__details">
