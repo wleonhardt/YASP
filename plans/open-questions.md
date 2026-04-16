@@ -8,6 +8,11 @@
 
 ## Resolved
 
+- 2026-04-16: The red AWS deploys were not caused by an application
+  regression. `journalctl -u yasp` showed Docker failing to register a newly
+  pulled image layer with `no space left on device`, so the correct fix was
+  deploy-time Docker-state reclamation and clearer disk-pressure diagnostics,
+  not backend or health-check changes.
 - 2026-04-16: Maintenance/CI roadmap for the next slice is settled. Next
   additions stay low-noise rather than adding more scanners: a PR-time
   advisory client bundle-size report and a seven-day `client/dist/` preview

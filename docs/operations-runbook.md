@@ -110,6 +110,22 @@ What to investigate:
 - Repeated `Restart=` cycles in `journalctl -u yasp` → image is unhealthy or
   the host ran out of memory. The container is capped at 512 MiB by
   `ec2-origin-bootstrap.sh`; OOMs surface as restart loops.
+- `failed to register layer ... no space left on device` in `journalctl -u yasp`
+  during deploy → Docker storage on the EC2 host is full, not the app. The
+  deploy workflow now logs `df -h` / `docker system df` and prunes unused
+  containers, images, build cache, and volumes before pulls and before
+  rollback. If an old run hit this before the fix landed, reclaim space
+  manually with:
+
+```
+docker system df
+docker container prune -f
+docker image prune -af
+docker builder prune -af
+docker volume prune -f
+df -h / /var/lib/docker || df -h /
+```
+
 - Successful deploy but unhealthy app → the deploy workflow already does an
   in-place rollback to the previously recorded `IMAGE_IDENTIFIER` (see
   [`deploy-aws.yml`](../.github/workflows/deploy-aws.yml)). If the rollback

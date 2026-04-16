@@ -142,6 +142,30 @@ jobs:
           echo "Previous image: ${PREV_IMAGE:-<none>}"
           echo "Attempting image: ${IMAGE}"
 
+          log_disk_state() {
+            echo '--- df -h ---'
+            df -h / /var/lib/docker 2>&1 || df -h / 2>&1 || true
+            echo '--- docker system df ---'
+            docker system df 2>&1 || true
+          }
+
+          reclaim_docker_space() {
+            # The EC2 origin is a dedicated single-service host. Reclaim all
+            # Docker state that is not attached to the currently-running
+            # container before we ask Docker to register another immutable
+            # image tag. This avoids repeated deploys filling /var/lib/docker
+            # with unused layers while preserving the running container until
+            # systemd actually performs the restart.
+            echo '--- disk state before Docker reclaim ---'
+            log_disk_state
+            docker container prune -f 2>&1 || true
+            docker image prune -af 2>&1 || true
+            docker builder prune -af 2>&1 || true
+            docker volume prune -f 2>&1 || true
+            echo '--- disk state after Docker reclaim ---'
+            log_disk_state
+          }
+
           wait_for_health() {
             local n=0
             while [ $n -lt 12 ]; do
@@ -157,6 +181,7 @@ jobs:
             return 1
           }
 
+          reclaim_docker_space
           sed -i "s|^IMAGE_IDENTIFIER=.*|IMAGE_IDENTIFIER=\"${IMAGE}\"|" "$RUN_SCRIPT"
           grep IMAGE_IDENTIFIER "$RUN_SCRIPT"
           systemctl restart yasp
@@ -178,6 +203,8 @@ jobs:
           journalctl -u yasp -n 300 --no-pager 2>&1 || true
           echo '--- docker logs yasp (likely empty due to --rm) ---'
           docker logs yasp --tail 50 2>&1 || true
+          echo '--- disk state after failed start ---'
+          log_disk_state
           echo '--- docker image inspect (entrypoint/cmd/env) ---'
           docker image inspect "$IMAGE" --format '{{json .Config}}' 2>&1 || true
           echo '--- yasp-run.sh head ---'
@@ -194,6 +221,7 @@ jobs:
           fi
 
           echo "ROLLBACK: restoring previous image ${PREV_IMAGE}"
+          reclaim_docker_space
           sed -i "s|^IMAGE_IDENTIFIER=.*|IMAGE_IDENTIFIER=\"${PREV_IMAGE}\"|" "$RUN_SCRIPT"
           grep IMAGE_IDENTIFIER "$RUN_SCRIPT"
           systemctl restart yasp

@@ -14,6 +14,14 @@
 
 ## Done
 
+- 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
+  health-check timeout but was actually Docker disk exhaustion on the EC2
+  origin (`failed to register layer ... no space left on device`). The deploy
+  workflow now logs host/Docker disk usage and prunes unused containers,
+  images, build cache, and volumes before pulling a new immutable image tag
+  and again before rollback. The EC2 bootstrap run script mirrors the same
+  cleanup guard for future hosts, and the ops runbook now documents the
+  symptom and manual recovery commands.
 - 2026-04-16: Added the next layer of low-noise maintenance signals without
   growing the scanner stack. The validate CI job now appends a per-asset
   client bundle-size report to the run summary and uploads a seven-day

@@ -48,6 +48,29 @@ describe("ec2-origin-bootstrap hardening flags (PR D)", () => {
       "CloudWatch log driver flag missing — --read-only does not affect it, but someone dropped it"
     );
   });
+
+  it("reclaims unused Docker state before pulling a new image", () => {
+    const expectedCleanupCommands = [
+      "docker container prune -f",
+      "docker image prune -af",
+      "docker builder prune -af",
+      "docker volume prune -f",
+      'docker pull "$IMAGE_IDENTIFIER"',
+    ];
+
+    for (const command of expectedCleanupCommands) {
+      assert.ok(
+        source.includes(command),
+        `Expected cdk/lib/ec2-origin-bootstrap.ts to include "${command}" for deploy-time disk-pressure recovery`
+      );
+    }
+  });
+
+  it("logs host and Docker disk usage around cleanup", () => {
+    assert.ok(source.includes("log_disk_state() {"), "Expected bootstrap script to define log_disk_state()");
+    assert.ok(source.includes("--- disk state before Docker reclaim ---"), "Expected cleanup pre-state logging");
+    assert.ok(source.includes("--- disk state after Docker reclaim ---"), "Expected cleanup post-state logging");
+  });
 });
 
 describe("Dockerfile runtime posture (PR D)", () => {
