@@ -14,6 +14,12 @@
 
 ## Done
 
+- 2026-04-16: Localized the realtime recovery and diagnostics `connection`
+  namespace for the non-English locale bundles (`de`, `es`, `fr`, `pt`, `ja`,
+  `ko`, `zh-Hans`, `zh-Hant`) so the new disconnected/retry/compatibility and
+  diagnostics UI ships with real translations instead of English placeholders.
+  Also trimmed the diagnostics panel to omit `Browser origin` when it matches
+  the realtime endpoint, keeping the UI unchanged otherwise.
 - 2026-04-15: Added a calmer realtime recovery path for users who can load
   the app but fail to establish Socket.IO. Disconnected states now distinguish
   connecting/reconnecting/offline/failed, expose an on-demand compatibility

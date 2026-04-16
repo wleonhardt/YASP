@@ -84,6 +84,24 @@ describe("ConnectionStatusNotice", () => {
     expect(scope.getByText("xhr poll error")).toBeInTheDocument();
   });
 
+  it("hides browser origin when it duplicates the realtime endpoint", () => {
+    const connection = buildConnection("failed", {
+      endpoint: "https://app.yasp.team",
+      origin: "https://app.yasp.team",
+    });
+
+    render(<ConnectionStatusNotice connection={connection} />);
+
+    const details = screen.getByText("Diagnostics").closest(".connection-notice__details");
+    if (!(details instanceof HTMLElement)) {
+      throw new Error("Diagnostics panel not found");
+    }
+
+    const scope = within(details);
+    expect(scope.getByText("https://app.yasp.team")).toBeInTheDocument();
+    expect(scope.queryByText("Browser origin")).not.toBeInTheDocument();
+  });
+
   it("shows the offline recovery message without compatibility fallback noise", () => {
     const connection = buildConnection("offline", {
       online: false,

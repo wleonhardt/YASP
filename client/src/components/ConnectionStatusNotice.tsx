@@ -82,6 +82,7 @@ export function ConnectionStatusNotice({ connection, className }: Props) {
   const titleId = useId();
   const labels = getConnectionLabels(t, connection.status);
   const diagnostics = connection.diagnostics;
+  const showOrigin = diagnostics.origin !== null && diagnostics.origin !== diagnostics.endpoint;
 
   useEffect(() => {
     if (connection.status === "failed") {
@@ -122,12 +123,12 @@ export function ConnectionStatusNotice({ connection, className }: Props) {
       `${t("connection.diagnostics.realtimeEndpoint")}: ${diagnostics.endpoint}`,
     ];
 
-    if (diagnostics.origin) {
+    if (showOrigin) {
       rows.push(`${t("connection.diagnostics.browserOrigin")}: ${diagnostics.origin}`);
     }
 
     return rows.join("\n");
-  }, [diagnostics, i18n.language, labels.full, t]);
+  }, [diagnostics, i18n.language, labels.full, showOrigin, t]);
 
   if (connection.status === "connected") {
     return null;
@@ -238,7 +239,7 @@ export function ConnectionStatusNotice({ connection, className }: Props) {
               <dt>{t("connection.diagnostics.realtimeEndpoint")}</dt>
               <dd>{diagnostics.endpoint}</dd>
             </div>
-            {diagnostics.origin && (
+            {showOrigin && (
               <div className="connection-notice__grid-item--wide">
                 <dt>{t("connection.diagnostics.browserOrigin")}</dt>
                 <dd>{diagnostics.origin}</dd>
