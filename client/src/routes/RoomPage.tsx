@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { ParticipantRole, RoomSettings } from "@yasp/shared";
 import { Banner } from "../components/Banner";
 import { ConnectionBadge } from "../components/ConnectionBadge";
+import { ConnectionStatusNotice } from "../components/ConnectionStatusNotice";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ModeratorControls } from "../components/ModeratorControls";
 import { ParticipantsBoard } from "../components/ParticipantsBoard";
@@ -46,7 +47,7 @@ export function RoomPage() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { socket, status } = useSocket();
+  const connection = useSocket();
   const { sessionId, storedName } = useSession();
   const {
     roomState,
@@ -66,7 +67,7 @@ export function RoomPage() {
     resetTimer: resetSharedTimer,
     honkTimer,
     updateSettings,
-  } = useRoom(socket, sessionId);
+  } = useRoom(connection.socket, sessionId);
 
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [needsManualJoin, setNeedsManualJoin] = useState(false);
@@ -95,10 +96,10 @@ export function RoomPage() {
         ? t("documentTitle.join", { roomId })
         : t("documentTitle.joining", { roomId });
   useDocumentTitle(roomTitle);
-  const serverClockOffsetMs = useServerClockOffset(socket, Boolean(roomState));
+  const serverClockOffsetMs = useServerClockOffset(connection.socket, Boolean(roomState));
 
   const autoJoinAttempted = useRef(false);
-  const lastConnectedStatus = useRef(status);
+  const lastConnectedStatus = useRef(connection.status);
   const lastErrorKey = useRef<string | null>(null);
   const toastTimeout = useRef<number | null>(null);
   const announcementTimeout = useRef<number | null>(null);
@@ -320,12 +321,12 @@ export function RoomPage() {
   );
 
   useEffect(() => {
-    if (status !== "connected" || !roomId) {
+    if (connection.status !== "connected" || !roomId) {
       return;
     }
 
     const wasDisconnected = lastConnectedStatus.current !== "connected";
-    lastConnectedStatus.current = status;
+    lastConnectedStatus.current = connection.status;
 
     if (roomState && wasDisconnected) {
       const self = getSelf(roomState);
@@ -347,13 +348,13 @@ export function RoomPage() {
         setNeedsManualJoin(true);
       }
     }
-  }, [attemptJoinRoom, getIntendedRole, roomId, roomState, status, t]);
+  }, [attemptJoinRoom, connection.status, getIntendedRole, roomId, roomState, t]);
 
   useEffect(() => {
-    if (status !== "connected") {
-      lastConnectedStatus.current = status;
+    if (connection.status !== "connected") {
+      lastConnectedStatus.current = connection.status;
     }
-  }, [status]);
+  }, [connection.status]);
 
   useEffect(() => {
     if (!roomState) {
@@ -396,14 +397,14 @@ export function RoomPage() {
   const actionsDisabled = sessionReplaced;
 
   const handleRejoin = useCallback(async () => {
-    if (!roomId || status !== "connected") {
+    if (!roomId || connection.status !== "connected") {
       return;
     }
 
     const name = getStoredDisplayName() || storedName || t("common.anonymous");
     const role = getIntendedRole();
     await joinRoom(roomId, name, role);
-  }, [getIntendedRole, joinRoom, roomId, status, storedName, t]);
+  }, [connection.status, getIntendedRole, joinRoom, roomId, storedName, t]);
 
   const handleCloseTab = () => {
     window.close();
@@ -428,7 +429,7 @@ export function RoomPage() {
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
-      if (!roomId || !joinName.trim() || status !== "connected") {
+      if (!roomId || !joinName.trim() || connection.status !== "connected") {
         return;
       }
 
@@ -440,7 +441,7 @@ export function RoomPage() {
         setNeedsManualJoin(false);
       }
     },
-    [attemptJoinRoom, joinName, joinRole, roomId, status]
+    [attemptJoinRoom, connection.status, joinName, joinRole, roomId]
   );
 
   const handleVote = useCallback(
@@ -576,7 +577,7 @@ export function RoomPage() {
   );
 
   useEffect(() => {
-    if (!roomState || actionsDisabled || status !== "connected") {
+    if (!roomState || actionsDisabled || connection.status !== "connected") {
       return;
     }
 
@@ -603,13 +604,13 @@ export function RoomPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [actionsDisabled, handleClearVote, handleVote, roomState, selectedCard, status]);
+  }, [actionsDisabled, connection.status, handleClearVote, handleVote, roomState, selectedCard]);
 
   if (roomUnavailable) {
     return (
       <div className="page-shell page-shell--centered">
         <header className="status-corner" aria-label={t("room.sessionStatus")}>
-          <ConnectionBadge status={status} />
+          <ConnectionBadge status={connection.status} compatibilityMode={connection.compatibilityMode} />
           <LanguageSwitcher compact />
           <ThemeToggle />
         </header>
@@ -632,7 +633,7 @@ export function RoomPage() {
     return (
       <div className="page-shell page-shell--centered">
         <header className="status-corner" aria-label={t("room.sessionStatus")}>
-          <ConnectionBadge status={status} />
+          <ConnectionBadge status={connection.status} compatibilityMode={connection.compatibilityMode} />
           <LanguageSwitcher compact />
           <ThemeToggle />
         </header>
@@ -689,11 +690,12 @@ export function RoomPage() {
             <button
               className="button button--primary button--full"
               type="submit"
-              disabled={!joinName.trim() || status !== "connected"}
+              disabled={!joinName.trim() || connection.status !== "connected"}
             >
               {t("landing.joinRoom")}
             </button>
           </form>
+          <ConnectionStatusNotice connection={connection} className="empty-state__connection-notice" />
         </main>
 
         <Toast toast={toast} />
@@ -705,7 +707,7 @@ export function RoomPage() {
     return (
       <div className="page-shell page-shell--centered">
         <header className="status-corner" aria-label={t("room.sessionStatus")}>
-          <ConnectionBadge status={status} />
+          <ConnectionBadge status={connection.status} compatibilityMode={connection.compatibilityMode} />
           <LanguageSwitcher compact />
           <ThemeToggle />
         </header>
@@ -713,6 +715,7 @@ export function RoomPage() {
           <div className="section-label">{t("room.connecting")}</div>
           <h1>{t("room.joiningRoom")}</h1>
           <p>{t("room.waitingSnapshot")}</p>
+          <ConnectionStatusNotice connection={connection} className="empty-state__connection-notice" />
         </main>
       </div>
     );
@@ -724,7 +727,8 @@ export function RoomPage() {
     <div className="page-shell room-page">
       <TopBar
         state={state}
-        connectionStatus={status}
+        connectionStatus={connection.status}
+        compatibilityMode={connection.compatibilityMode}
         onLeave={handleLeave}
         onCopyFeedback={showToast}
         disabled={actionsDisabled}
@@ -732,14 +736,7 @@ export function RoomPage() {
 
       <main>
         <h1 className="sr-only">{t("room.roomHeading", { roomId })}</h1>
-        {status !== "connected" && (
-          <Banner
-            tone={status === "connecting" ? "info" : "error"}
-            title={status === "connecting" ? t("room.reconnectingTitle") : t("room.disconnectedTitle")}
-          >
-            {t("room.reconnectHint")}
-          </Banner>
-        )}
+        <ConnectionStatusNotice connection={connection} />
 
         {error?.code === "NOT_ALLOWED" && (
           <Banner tone="warning" title={t("room.actionBlocked")}>
@@ -757,7 +754,7 @@ export function RoomPage() {
                 className="button button--primary"
                 type="button"
                 onClick={handleRejoin}
-                disabled={status !== "connected"}
+                disabled={connection.status !== "connected"}
               >
                 {t("room.takeControl")}
               </button>

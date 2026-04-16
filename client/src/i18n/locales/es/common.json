@@ -34,10 +34,64 @@
   "connection": {
     "connectedFull": "Conectado",
     "connectedShort": "En línea",
-    "connectingFull": "Reconectando…",
-    "connectingShort": "Sincronizando…",
-    "disconnectedFull": "Desconectado",
-    "disconnectedShort": "Sin conexión"
+    "connectingFull": "Connecting…",
+    "connectingShort": "Connecting…",
+    "reconnectingFull": "Reconnecting…",
+    "reconnectingShort": "Retrying…",
+    "offlineFull": "Offline",
+    "offlineShort": "Offline",
+    "failedFull": "Realtime unavailable",
+    "failedShort": "Blocked",
+    "compatibilityShort": "Compat",
+    "compatibilityModeActive": "Compatibility mode active",
+    "retry": "Retry",
+    "tryCompatibilityMode": "Try compatibility mode",
+    "connectionDetails": "Connection details",
+    "copyDiagnostics": "Copy diagnostics",
+    "copyDiagnosticsCopied": "Diagnostics copied",
+    "copyDiagnosticsFailed": "Copy failed",
+    "online": "Online",
+    "browserOffline": "Offline",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "none": "None",
+    "never": "Never",
+    "transport": {
+      "websocket": "WebSocket",
+      "polling": "HTTP polling",
+      "unknown": "Unknown"
+    },
+    "health": {
+      "reachable": "Reachable",
+      "unreachable": "Unreachable",
+      "unknown": "Unknown"
+    },
+    "notice": {
+      "connectingTitle": "Connecting to realtime",
+      "reconnectingTitle": "Realtime connection lost",
+      "offlineTitle": "You're offline",
+      "failedTitle": "Realtime connection failed",
+      "connectingHint": "Trying to establish the live room connection.",
+      "reconnectingHint": "Trying to restore the live room connection.",
+      "offlineHint": "Your device appears to be offline. Reconnect to the internet, then try again.",
+      "realtimeBlockedHint": "The app loaded, but the live room connection could not be established. A browser extension or network policy may be blocking live updates.",
+      "transportFailedHint": "Compatibility mode is active, but realtime is still unavailable. Your network may be blocking Socket.IO transports.",
+      "backendUnreachableHint": "The backend is not reachable right now. Check your network, VPN, or try again in a moment.",
+      "failedHint": "The app loaded, but the live room connection could not be established."
+    },
+    "diagnostics": {
+      "title": "Diagnostics",
+      "status": "Status",
+      "transport": "Transport",
+      "network": "Network",
+      "retryCount": "Retry count",
+      "compatibilityMode": "Compatibility mode",
+      "lastError": "Last error",
+      "lastConnected": "Last connected",
+      "realtimeEndpoint": "Realtime endpoint",
+      "browserOrigin": "Browser origin",
+      "healthProbe": "Health probe"
+    }
   },
   "theme": {
     "appearance": "Apariencia",

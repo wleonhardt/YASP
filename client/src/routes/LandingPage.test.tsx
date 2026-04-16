@@ -4,10 +4,53 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
 import { LandingPage } from "./LandingPage";
 
+type MockConnectionState = {
+  socket: never;
+  status: "connected" | "connecting" | "reconnecting" | "offline" | "failed";
+  compatibilityMode: boolean;
+  diagnostics: {
+    status: "connected" | "connecting" | "reconnecting" | "offline" | "failed";
+    compatibilityMode: boolean;
+    transport: "websocket" | "polling" | "unknown";
+    online: boolean;
+    retryCount: number;
+    lastError: string | null;
+    lastConnectedAt: number | null;
+    healthStatus: "unknown" | "reachable" | "unreachable";
+    problem: "none" | "offline" | "realtime_blocked" | "transport_failed" | "backend_unreachable" | "unknown";
+    endpoint: string;
+    origin: string | null;
+  };
+  retry: ReturnType<typeof vi.fn>;
+  enableCompatibilityMode: ReturnType<typeof vi.fn>;
+};
+
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   createRoom: vi.fn(),
   joinRoom: vi.fn(),
+  retry: vi.fn(),
+  enableCompatibilityMode: vi.fn(),
+  connection: {
+    socket: {} as never,
+    status: "connected",
+    compatibilityMode: false,
+    diagnostics: {
+      status: "connected",
+      compatibilityMode: false,
+      transport: "websocket",
+      online: true,
+      retryCount: 0,
+      lastError: null,
+      lastConnectedAt: null,
+      healthStatus: "unknown",
+      problem: "none",
+      endpoint: "http://localhost:3001",
+      origin: "http://localhost:5173",
+    },
+    retry: vi.fn(),
+    enableCompatibilityMode: vi.fn(),
+  } as MockConnectionState,
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -15,10 +58,7 @@ vi.mock("react-router-dom", () => ({
 }));
 
 vi.mock("../hooks/useSocket", () => ({
-  useSocket: () => ({
-    socket: {} as never,
-    status: "connected" as const,
-  }),
+  useSocket: () => mocks.connection,
 }));
 
 vi.mock("../hooks/useSession", () => ({
@@ -41,6 +81,27 @@ describe("LandingPage create room deck behavior", () => {
     mocks.navigate.mockReset();
     mocks.createRoom.mockReset();
     mocks.joinRoom.mockReset();
+    mocks.retry.mockReset();
+    mocks.enableCompatibilityMode.mockReset();
+
+    mocks.connection.socket = {} as never;
+    mocks.connection.status = "connected";
+    mocks.connection.compatibilityMode = false;
+    mocks.connection.diagnostics = {
+      status: "connected",
+      compatibilityMode: false,
+      transport: "websocket",
+      online: true,
+      retryCount: 0,
+      lastError: null,
+      lastConnectedAt: null,
+      healthStatus: "unknown",
+      problem: "none",
+      endpoint: "http://localhost:3001",
+      origin: "http://localhost:5173",
+    };
+    mocks.connection.retry = mocks.retry;
+    mocks.connection.enableCompatibilityMode = mocks.enableCompatibilityMode;
 
     mocks.createRoom.mockResolvedValue({
       ok: true,
@@ -167,4 +228,30 @@ describe("LandingPage create room deck behavior", () => {
       expect(screen.getByText(identityTitle)).toBeInTheDocument();
     }
   );
+
+  it("keeps the happy path clean when connected", () => {
+    render(<LandingPage />);
+
+    expect(screen.queryByRole("heading", { name: "Realtime connection failed" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+  });
+
+  it("shows recovery actions when realtime is unavailable", () => {
+    mocks.connection.status = "failed";
+    mocks.connection.diagnostics = {
+      ...mocks.connection.diagnostics,
+      status: "failed",
+      retryCount: 3,
+      lastError: "xhr poll error",
+      healthStatus: "reachable",
+      problem: "realtime_blocked",
+    };
+
+    render(<LandingPage />);
+
+    expect(screen.getByRole("heading", { name: "Realtime connection failed" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try compatibility mode" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Connection details" })).toBeInTheDocument();
+  });
 });

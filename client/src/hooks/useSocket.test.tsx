@@ -1,0 +1,241 @@
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Socket } from "socket.io-client";
+import { useSocket } from "./useSocket";
+
+type Listener = (...args: unknown[]) => void;
+
+type FakeEngine = {
+  transport: { name: string };
+  on: ReturnType<typeof vi.fn>;
+  off: ReturnType<typeof vi.fn>;
+  emit: (event: string, ...args: unknown[]) => void;
+};
+
+type FakeSocket = Socket & {
+  connected: boolean;
+  connect: ReturnType<typeof vi.fn>;
+  disconnect: ReturnType<typeof vi.fn>;
+  io: {
+    engine: FakeEngine;
+    on: ReturnType<typeof vi.fn>;
+    off: ReturnType<typeof vi.fn>;
+  };
+  emitSocketEvent: (event: string, ...args: unknown[]) => void;
+  emitManagerEvent: (event: string, ...args: unknown[]) => void;
+};
+
+const mocks = vi.hoisted(() => ({
+  io: vi.fn(),
+  createdSockets: [] as FakeSocket[],
+}));
+
+vi.mock("socket.io-client", () => ({
+  io: mocks.io,
+}));
+
+function createEmitter() {
+  const listeners = new Map<string, Set<Listener>>();
+
+  return {
+    on: vi.fn((event: string, listener: Listener) => {
+      const current = listeners.get(event) ?? new Set<Listener>();
+      current.add(listener);
+      listeners.set(event, current);
+      return undefined;
+    }),
+    off: vi.fn((event: string, listener: Listener) => {
+      listeners.get(event)?.delete(listener);
+      return undefined;
+    }),
+    emit(event: string, ...args: unknown[]) {
+      for (const listener of listeners.get(event) ?? []) {
+        listener(...args);
+      }
+    },
+  };
+}
+
+function createFakeSocket(): FakeSocket {
+  const socketEmitter = createEmitter();
+  const managerEmitter = createEmitter();
+  const engineEmitter = createEmitter();
+
+  const engine: FakeEngine = {
+    transport: { name: "polling" },
+    on: engineEmitter.on,
+    off: engineEmitter.off,
+    emit: engineEmitter.emit,
+  };
+
+  const socket = {
+    connected: false,
+    connect: vi.fn(() => {
+      socket.connected = true;
+      return socket;
+    }),
+    disconnect: vi.fn(() => {
+      socket.connected = false;
+      return socket;
+    }),
+    on: vi.fn((event: string, listener: Listener) => {
+      socketEmitter.on(event, listener);
+      return socket;
+    }),
+    off: vi.fn((event: string, listener: Listener) => {
+      socketEmitter.off(event, listener);
+      return socket;
+    }),
+    io: {
+      engine,
+      on: vi.fn((event: string, listener: Listener) => {
+        managerEmitter.on(event, listener);
+        return undefined;
+      }),
+      off: vi.fn((event: string, listener: Listener) => {
+        managerEmitter.off(event, listener);
+        return undefined;
+      }),
+    },
+    emitSocketEvent(event: string, ...args: unknown[]) {
+      if (event === "connect") {
+        socket.connected = true;
+      }
+
+      if (event === "disconnect") {
+        socket.connected = false;
+      }
+
+      socketEmitter.emit(event, ...args);
+    },
+    emitManagerEvent(event: string, ...args: unknown[]) {
+      managerEmitter.emit(event, ...args);
+    },
+  };
+
+  return socket as unknown as FakeSocket;
+}
+
+describe("useSocket", () => {
+  beforeEach(() => {
+    mocks.io.mockReset();
+    mocks.createdSockets.length = 0;
+    mocks.io.mockImplementation(() => {
+      const socket = createFakeSocket();
+      mocks.createdSockets.push(socket);
+      return socket;
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+    );
+
+    Object.defineProperty(window.navigator, "onLine", {
+      configurable: true,
+      value: true,
+    });
+  });
+
+  it("keeps the default transport strategy on the happy path", async () => {
+    const { result } = renderHook(() => useSocket());
+    const socket = mocks.createdSockets[0];
+
+    expect(mocks.io).toHaveBeenNthCalledWith(
+      1,
+      "http://localhost:3001",
+      expect.objectContaining({
+        autoConnect: false,
+        transports: ["websocket", "polling"],
+        upgrade: true,
+      })
+    );
+
+    act(() => {
+      socket.io.engine.transport.name = "websocket";
+      socket.emitSocketEvent("connect");
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe("connected");
+    });
+
+    expect(result.current.compatibilityMode).toBe(false);
+    expect(result.current.diagnostics.transport).toBe("websocket");
+  });
+
+  it("retries the active socket on demand", () => {
+    const { result } = renderHook(() => useSocket());
+    const socket = mocks.createdSockets[0];
+
+    socket.connect.mockClear();
+    socket.disconnect.mockClear();
+
+    act(() => {
+      result.current.retry();
+    });
+
+    expect(socket.disconnect).toHaveBeenCalledTimes(1);
+    expect(socket.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it("recreates the socket in polling-only compatibility mode when requested", async () => {
+    const { result } = renderHook(() => useSocket());
+    const initialSocket = mocks.createdSockets[0];
+
+    act(() => {
+      result.current.enableCompatibilityMode();
+    });
+
+    await waitFor(() => {
+      expect(result.current.compatibilityMode).toBe(true);
+      expect(mocks.createdSockets).toHaveLength(2);
+    });
+
+    expect(initialSocket.disconnect).toHaveBeenCalled();
+    expect(mocks.io).toHaveBeenNthCalledWith(
+      2,
+      "http://localhost:3001",
+      expect.objectContaining({
+        autoConnect: false,
+        transports: ["polling"],
+        upgrade: false,
+      })
+    );
+  });
+
+  it("distinguishes a reachable backend from blocked realtime transport failures", async () => {
+    const fetchMock = vi.mocked(fetch);
+    const { result } = renderHook(() => useSocket());
+    const socket = mocks.createdSockets[0];
+
+    act(() => {
+      socket.emitManagerEvent("reconnect_attempt", 3);
+      socket.emitSocketEvent("connect_error", new Error("xhr poll error"));
+      socket.emitManagerEvent("reconnect_failed");
+    });
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:3001/api/health",
+        expect.objectContaining({
+          method: "GET",
+          cache: "no-store",
+          credentials: "same-origin",
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe("failed");
+      expect(result.current.diagnostics.healthStatus).toBe("reachable");
+      expect(result.current.diagnostics.problem).toBe("realtime_blocked");
+      expect(result.current.diagnostics.retryCount).toBe(3);
+    });
+  });
+});

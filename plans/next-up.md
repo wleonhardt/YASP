@@ -14,6 +14,13 @@
 
 ## Done
 
+- 2026-04-15: Added a calmer realtime recovery path for users who can load
+  the app but fail to establish Socket.IO. Disconnected states now distinguish
+  connecting/reconnecting/offline/failed, expose an on-demand compatibility
+  mode that reconnects with polling-only transport for the current tab
+  session, and show a lightweight diagnostics panel with sanitized transport,
+  retry, health-probe, and origin details without adding persistence,
+  accounts, or background analytics.
 - 2026-04-15: Polished the revealed-round Results footer so the moderator
   report entry point and participant summary entry point stay calm, balanced,
   and mobile-safe across narrow widths. Moderators also now get a

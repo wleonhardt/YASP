@@ -1,7 +1,7 @@
 import type { PublicRoomState } from "@yasp/shared";
 import { useTranslation } from "react-i18next";
-import type { ConnectionStatus } from "../hooks/useSocket";
 import { getDeckLabel } from "../i18n/decks";
+import type { ConnectionStatus } from "../lib/connectionRecovery";
 import { RoomCodeShare } from "./RoomCodeShare";
 import { RoomStatus } from "./RoomStatus";
 import { RoomUtilityMenu } from "./RoomUtilityMenu";
@@ -9,12 +9,20 @@ import { RoomUtilityMenu } from "./RoomUtilityMenu";
 type Props = {
   state: PublicRoomState;
   connectionStatus: ConnectionStatus;
+  compatibilityMode: boolean;
   onLeave: () => void;
   onCopyFeedback: (intent: "success" | "error", message: string) => void;
   disabled?: boolean;
 };
 
-export function TopBar({ state, connectionStatus, onLeave, onCopyFeedback, disabled = false }: Props) {
+export function TopBar({
+  state,
+  connectionStatus,
+  compatibilityMode,
+  onLeave,
+  onCopyFeedback,
+  disabled = false,
+}: Props) {
   const { t } = useTranslation();
 
   return (
@@ -49,7 +57,7 @@ export function TopBar({ state, connectionStatus, onLeave, onCopyFeedback, disab
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
         </button>
-        <RoomUtilityMenu status={connectionStatus} />
+        <RoomUtilityMenu status={connectionStatus} compatibilityMode={compatibilityMode} />
       </div>
     </header>
   );

@@ -7,6 +7,7 @@ import type { DeckInput, DeckType, ParticipantRole } from "@yasp/shared";
 import { DEFAULT_DECKS } from "@yasp/shared";
 import { Banner } from "../components/Banner";
 import { ConnectionBadge } from "../components/ConnectionBadge";
+import { ConnectionStatusNotice } from "../components/ConnectionStatusNotice";
 import { DeckToken } from "../components/DeckToken";
 import { DeckCustomizeModal } from "../components/DeckCustomizeModal";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
@@ -42,9 +43,9 @@ function formatDeckOverrideSummary(deckOverride: DeckInput | null, t: TFunction)
 export function LandingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { socket, status } = useSocket();
+  const connection = useSocket();
   const { sessionId, storedName } = useSession();
-  const { createRoom, joinRoom, error } = useRoom(socket, sessionId);
+  const { createRoom, joinRoom, error } = useRoom(connection.socket, sessionId);
 
   const [name, setName] = useState(storedName || "");
   const [role, setRole] = useState<ParticipantRole>("voter");
@@ -57,7 +58,7 @@ export function LandingPage() {
 
   useDocumentTitle(t("documentTitle.landing"));
 
-  const connected = status === "connected";
+  const connected = connection.status === "connected";
   const canSubmitIdentity = name.trim().length > 0 && connected;
   const deckOptions = Object.values(DEFAULT_DECKS);
   const deckOverrideSummary = formatDeckOverrideSummary(deckOverride, t);
@@ -142,7 +143,7 @@ export function LandingPage() {
     <div className="page-shell page-shell--centered">
       <main className="landing-page">
         <div className="landing-page__status">
-          <ConnectionBadge status={status} />
+          <ConnectionBadge status={connection.status} compatibilityMode={connection.compatibilityMode} />
           <LanguageSwitcher compact />
           <ThemeToggle />
         </div>
@@ -153,11 +154,7 @@ export function LandingPage() {
           <p>{t("landing.description")}</p>
         </header>
 
-        {!connected && (
-          <Banner tone={status === "connecting" ? "info" : "warning"}>
-            {status === "connecting" ? t("landing.connecting") : t("landing.disconnected")}
-          </Banner>
-        )}
+        {!connected && <ConnectionStatusNotice connection={connection} />}
 
         {error && (
           <Banner tone="error" title={t("landing.errorTitle")}>

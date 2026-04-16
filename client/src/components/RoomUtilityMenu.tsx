@@ -1,16 +1,17 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import type { ConnectionStatus } from "../hooks/useSocket";
+import type { ConnectionStatus } from "../lib/connectionRecovery";
 import { ConnectionBadge, getConnectionLabels } from "./ConnectionBadge";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
 type Props = {
   status: ConnectionStatus;
+  compatibilityMode?: boolean;
 };
 
-export function RoomUtilityMenu({ status }: Props) {
+export function RoomUtilityMenu({ status, compatibilityMode = false }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -123,7 +124,11 @@ export function RoomUtilityMenu({ status }: Props) {
       <button
         ref={triggerRef}
         type="button"
-        className={["room-utility__trigger", `room-utility__trigger--${status}`].join(" ")}
+        className={[
+          "room-utility__trigger",
+          `room-utility__trigger--${status}`,
+          compatibilityMode ? "room-utility__trigger--compatibility" : "",
+        ].join(" ")}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={panelId}
@@ -138,6 +143,11 @@ export function RoomUtilityMenu({ status }: Props) {
         <span className="room-utility__trigger-label room-utility__trigger-label--short" aria-hidden="true">
           {labels.short}
         </span>
+        {compatibilityMode && (
+          <span className="room-utility__mode" aria-label={t("connection.compatibilityModeActive")}>
+            {t("connection.compatibilityShort")}
+          </span>
+        )}
         <svg
           className="room-utility__preferences-icon"
           width="14"
@@ -210,8 +220,15 @@ export function RoomUtilityMenu({ status }: Props) {
 
               <div className="room-utility__section">
                 <div className="section-label">{t("room.sessionStatus")}</div>
-                <ConnectionBadge status={status} labelMode="full" announce={false} />
-                {status !== "connected" && <p className="room-utility__hint">{t("room.reconnectHint")}</p>}
+                <ConnectionBadge
+                  status={status}
+                  labelMode="full"
+                  announce={false}
+                  compatibilityMode={compatibilityMode}
+                />
+                {compatibilityMode && (
+                  <p className="room-utility__hint">{t("connection.compatibilityModeActive")}</p>
+                )}
               </div>
 
               <div className="room-utility__section">

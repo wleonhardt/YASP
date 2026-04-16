@@ -8,6 +8,13 @@
 
 ## Resolved
 
+- 2026-04-15: Realtime recovery for "page loads but room never connects"
+  cases now stays intentionally lightweight. YASP keeps the normal
+  websocket-capable Socket.IO path on the happy path, exposes compatibility
+  mode only as a user-invoked current-tab fallback, and reuses the existing
+  `/api/health` probe to distinguish backend reachability from blocked
+  realtime transport without adding persistence, auth, analytics, or a second
+  connection subsystem.
 - 2026-04-15: The revealed-round footer entry points now keep role separation
   without crowding the Results panel on narrow layouts. Moderators retain the
   report entry point and gain a clipboard-only "Copy summary" helper, while

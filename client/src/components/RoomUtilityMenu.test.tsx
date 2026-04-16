@@ -60,7 +60,7 @@ describe("RoomUtilityMenu", () => {
   it("toggles closed when the trigger is pressed again", async () => {
     const user = userEvent.setup();
 
-    render(<RoomUtilityMenu status="disconnected" />);
+    render(<RoomUtilityMenu status="failed" />);
 
     const trigger = screen.getByRole("button", { name: /open session preferences/i });
     await user.click(trigger);
@@ -158,5 +158,19 @@ describe("RoomUtilityMenu", () => {
     render(<RoomUtilityMenu status="connected" />);
 
     expect(screen.getByRole("button", { name: "Open session preferences — Live" })).toBeInTheDocument();
+  });
+
+  it("shows compatibility mode messaging when fallback transport is active", async () => {
+    const user = userEvent.setup();
+
+    render(<RoomUtilityMenu status="reconnecting" compatibilityMode />);
+
+    const trigger = screen.getByRole("button", { name: /open session preferences/i });
+    expect(screen.getByLabelText("Compatibility mode active")).toBeInTheDocument();
+
+    await user.click(trigger);
+
+    const dialog = screen.getByRole("dialog", { name: /session preferences/i });
+    expect(within(dialog).getByText("Compatibility mode active")).toBeInTheDocument();
   });
 });
