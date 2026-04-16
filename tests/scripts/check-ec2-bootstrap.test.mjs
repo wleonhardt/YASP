@@ -68,8 +68,14 @@ describe("ec2-origin-bootstrap hardening flags (PR D)", () => {
 
   it("logs host and Docker disk usage around cleanup", () => {
     assert.ok(source.includes("log_disk_state() {"), "Expected bootstrap script to define log_disk_state()");
-    assert.ok(source.includes("--- disk state before Docker reclaim ---"), "Expected cleanup pre-state logging");
-    assert.ok(source.includes("--- disk state after Docker reclaim ---"), "Expected cleanup post-state logging");
+    assert.ok(
+      source.includes("--- disk state before Docker reclaim ---"),
+      "Expected cleanup pre-state logging"
+    );
+    assert.ok(
+      source.includes("--- disk state after Docker reclaim ---"),
+      "Expected cleanup post-state logging"
+    );
   });
 });
 
