@@ -53,6 +53,8 @@ describe("ec2-origin-bootstrap hardening flags (PR D)", () => {
 describe("Dockerfile runtime posture (PR D)", () => {
   const dockerfilePath = fileURLToPath(new URL("../../Dockerfile", import.meta.url));
   const dockerfile = readFileSync(dockerfilePath, "utf8");
+  const expectedNodeBaseImage =
+    "node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293";
 
   it("runs the production stage as the non-root `node` user (F-14)", () => {
     assert.ok(/\nUSER node\b/.test(dockerfile), "Expected `USER node` in the Dockerfile production stage");
@@ -60,5 +62,27 @@ describe("Dockerfile runtime posture (PR D)", () => {
 
   it("declares a HEALTHCHECK hitting /api/health (F-15)", () => {
     assert.ok(/HEALTHCHECK[\s\S]*?\/api\/health/.test(dockerfile), "Expected a HEALTHCHECK for /api/health");
+  });
+
+  it("pins both Docker stages to the approved Node base-image digest", () => {
+    const fromLines = dockerfile
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith("FROM "));
+
+    assert.deepEqual(
+      fromLines,
+      [`FROM ${expectedNodeBaseImage} AS base`, `FROM ${expectedNodeBaseImage}`],
+      "Expected both Docker stages to stay pinned to the approved Node base-image digest"
+    );
+  });
+
+  it("removes npm, npx, and corepack from the runtime image", () => {
+    assert.ok(
+      /RUN rm -rf \/usr\/local\/lib\/node_modules\/npm[\s\S]*?rm -f \/usr\/local\/bin\/npm \/usr\/local\/bin\/npx \/usr\/local\/bin\/corepack/.test(
+        dockerfile
+      ),
+      "Expected the Dockerfile runtime stage to remove the unused npm toolchain"
+    );
   });
 });
