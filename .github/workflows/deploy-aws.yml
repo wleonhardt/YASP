@@ -166,8 +166,22 @@ jobs:
           fi
 
           echo "HEALTH CHECK FAILED after 60s for image ${IMAGE}"
+          echo '--- systemctl status yasp ---'
           systemctl status yasp --no-pager 2>&1 || true
+          echo '--- journalctl -u yasp (last 300 lines) ---'
+          # `docker run --rm` deletes the container on exit, so
+          # `docker logs yasp` returns "No such container" once the
+          # process has crashed. The container's stdout/stderr is still
+          # captured by the systemd unit (yasp.service runs yasp-run.sh
+          # in the foreground), so journalctl is the only reliable
+          # source of the actual crash output.
+          journalctl -u yasp -n 300 --no-pager 2>&1 || true
+          echo '--- docker logs yasp (likely empty due to --rm) ---'
           docker logs yasp --tail 50 2>&1 || true
+          echo '--- docker image inspect (entrypoint/cmd/env) ---'
+          docker image inspect "$IMAGE" --format '{{json .Config}}' 2>&1 || true
+          echo '--- yasp-run.sh head ---'
+          head -60 "$RUN_SCRIPT" 2>&1 || true
 
           # Rollback: only if we have a previous image recorded AND it is
           # different from the one we just failed on. If PREV_IMAGE is
@@ -192,7 +206,11 @@ jobs:
           fi
 
           echo "ROLLBACK FAILED — previous image ${PREV_IMAGE} also unhealthy"
+          echo '--- systemctl status yasp ---'
           systemctl status yasp --no-pager 2>&1 || true
+          echo '--- journalctl -u yasp (last 300 lines) ---'
+          journalctl -u yasp -n 300 --no-pager 2>&1 || true
+          echo '--- docker logs yasp (likely empty due to --rm) ---'
           docker logs yasp --tail 50 2>&1 || true
           exit 1
           SCRIPT
