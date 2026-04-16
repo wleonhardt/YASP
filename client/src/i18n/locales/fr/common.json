@@ -46,6 +46,7 @@
     "compatibilityModeActive": "Mode de compatibilité actif",
     "retry": "Réessayer",
     "tryCompatibilityMode": "Essayer le mode de compatibilité",
+    "useDefaultMode": "Utiliser le mode par défaut",
     "compatibilityModeHelp": "Utilisez ceci si la page se charge mais que les mises à jour en direct restent déconnectées. Certains réseaux ou extensions de navigateur peuvent bloquer les connexions temps réel.",
     "connectionDetails": "Détails de la connexion",
     "copyDiagnostics": "Copier le diagnostic",

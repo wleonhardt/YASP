@@ -9,7 +9,12 @@ import { ConnectionBadge, getConnectionLabels } from "./ConnectionBadge";
 type Props = {
   connection: Pick<
     SocketConnectionState,
-    "status" | "compatibilityMode" | "diagnostics" | "retry" | "enableCompatibilityMode"
+    | "status"
+    | "compatibilityMode"
+    | "diagnostics"
+    | "retry"
+    | "enableCompatibilityMode"
+    | "disableCompatibilityMode"
   >;
   className?: string;
 };
@@ -178,6 +183,15 @@ export function ConnectionStatusNotice({ connection, className }: Props) {
         <button type="button" className="button button--primary" onClick={connection.retry}>
           {t("connection.retry")}
         </button>
+        {connection.compatibilityMode && (
+          <button
+            type="button"
+            className="button button--ghost"
+            onClick={connection.disableCompatibilityMode}
+          >
+            {t("connection.useDefaultMode")}
+          </button>
+        )}
         {showCompatibilityAction && (
           <button
             type="button"

@@ -14,6 +14,13 @@
 
 ## Done
 
+- 2026-04-16: Smoothed the realtime recovery UX so the full recovery notice
+  no longer flashes during initial bootstrap before a real failure signal, and
+  compatibility mode now persists for the current browser session via
+  `sessionStorage`. Recovery diagnostics/retry behavior remain intact, no
+  backend changes were required, and a recovery-only "Use default mode"
+  action now clears the session-scoped compatibility preference when users are
+  actively troubleshooting.
 - 2026-04-16: Post-remediation verification confirmed the code-fixable GitHub
   code scanning backlog is closed on commit `73babea`. The remaining open
   alerts are governance/settings/process items (`BranchProtectionID`,

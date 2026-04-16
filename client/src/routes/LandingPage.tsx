@@ -154,7 +154,7 @@ export function LandingPage() {
           <p>{t("landing.description")}</p>
         </header>
 
-        {!connected && <ConnectionStatusNotice connection={connection} />}
+        {connection.showRecoveryNotice && <ConnectionStatusNotice connection={connection} />}
 
         {error && (
           <Banner tone="error" title={t("landing.errorTitle")}>

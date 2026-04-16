@@ -46,6 +46,7 @@
     "compatibilityModeActive": "Compatibility mode active",
     "retry": "Retry",
     "tryCompatibilityMode": "Try compatibility mode",
+    "useDefaultMode": "Use default mode",
     "compatibilityModeHelp": "Use this if the page loads but live updates stay disconnected. Some networks or browser extensions can block realtime connections.",
     "connectionDetails": "Connection details",
     "copyDiagnostics": "Copy diagnostics",

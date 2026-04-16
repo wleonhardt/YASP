@@ -8,6 +8,9 @@ function resetBrowserTestState(): void {
   if (typeof window !== "undefined" && typeof window.localStorage?.clear === "function") {
     window.localStorage.clear();
   }
+  if (typeof window !== "undefined" && typeof window.sessionStorage?.clear === "function") {
+    window.sessionStorage.clear();
+  }
   document.documentElement.removeAttribute("data-theme");
   document.documentElement.lang = "en";
 }

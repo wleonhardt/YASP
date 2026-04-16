@@ -46,6 +46,7 @@
     "compatibilityModeActive": "Modo de compatibilidad activo",
     "retry": "Reintentar",
     "tryCompatibilityMode": "Probar modo de compatibilidad",
+    "useDefaultMode": "Usar el modo predeterminado",
     "compatibilityModeHelp": "Usa esto si la página carga pero las actualizaciones en vivo siguen desconectadas. Algunas redes o extensiones del navegador pueden bloquear las conexiones en tiempo real.",
     "connectionDetails": "Detalles de la conexión",
     "copyDiagnostics": "Copiar diagnóstico",

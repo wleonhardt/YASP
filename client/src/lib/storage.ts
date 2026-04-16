@@ -4,8 +4,9 @@ const SESSION_KEY = "yasp.sessionId";
 const NAME_KEY = "yasp.displayName";
 const ROLE_KEY = "yasp.role";
 const TIMER_SOUND_KEY = "yasp.timerSoundEnabled";
+const COMPATIBILITY_MODE_KEY = "yasp.compatibilityMode";
 
-type StorageLike = Pick<Storage, "getItem" | "setItem">;
+type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 /**
  * Generate a UUID v4 session ID.
@@ -26,7 +27,7 @@ function generateSessionId(): string {
 }
 
 /** Safe localStorage wrapper — returns null if storage is unavailable (private browsing, etc.) */
-function getStorage(): StorageLike | null {
+function getLocalStorage(): StorageLike | null {
   if (typeof window === "undefined") {
     return null;
   }
@@ -34,9 +35,17 @@ function getStorage(): StorageLike | null {
   return window.localStorage;
 }
 
+function getSessionStorage(): StorageLike | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.sessionStorage;
+}
+
 export function safeGetStoredValue(key: string): string | null {
   try {
-    return getStorage()?.getItem(key) ?? null;
+    return getLocalStorage()?.getItem(key) ?? null;
   } catch {
     return null;
   }
@@ -44,9 +53,33 @@ export function safeGetStoredValue(key: string): string | null {
 
 export function safeSetStoredValue(key: string, value: string): void {
   try {
-    getStorage()?.setItem(key, value);
+    getLocalStorage()?.setItem(key, value);
   } catch {
     // Storage full or unavailable — silently ignore
+  }
+}
+
+export function safeGetSessionStoredValue(key: string): string | null {
+  try {
+    return getSessionStorage()?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function safeSetSessionStoredValue(key: string, value: string): void {
+  try {
+    getSessionStorage()?.setItem(key, value);
+  } catch {
+    // Storage full or unavailable — silently ignore
+  }
+}
+
+export function safeRemoveSessionStoredValue(key: string): void {
+  try {
+    getSessionStorage()?.removeItem(key);
+  } catch {
+    // Storage unavailable — silently ignore
   }
 }
 
@@ -90,4 +123,17 @@ export function getStoredTimerSoundEnabled(): boolean {
 
 export function setStoredTimerSoundEnabled(enabled: boolean): void {
   safeSetStoredValue(TIMER_SOUND_KEY, enabled ? "1" : "0");
+}
+
+export function getStoredCompatibilityModeEnabled(): boolean {
+  return safeGetSessionStoredValue(COMPATIBILITY_MODE_KEY) === "1";
+}
+
+export function setStoredCompatibilityModeEnabled(enabled: boolean): void {
+  if (enabled) {
+    safeSetSessionStoredValue(COMPATIBILITY_MODE_KEY, "1");
+    return;
+  }
+
+  safeRemoveSessionStoredValue(COMPATIBILITY_MODE_KEY);
 }

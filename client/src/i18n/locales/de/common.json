@@ -46,6 +46,7 @@
     "compatibilityModeActive": "Kompatibilitätsmodus aktiv",
     "retry": "Erneut versuchen",
     "tryCompatibilityMode": "Kompatibilitätsmodus versuchen",
+    "useDefaultMode": "Standardmodus verwenden",
     "compatibilityModeHelp": "Nutze dies, wenn die Seite lädt, Live-Updates aber getrennt bleiben. Manche Netzwerke oder Browser-Erweiterungen blockieren Realtime-Verbindungen.",
     "connectionDetails": "Verbindungsdetails",
     "copyDiagnostics": "Diagnose kopieren",

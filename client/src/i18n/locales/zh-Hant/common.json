@@ -46,6 +46,7 @@
     "compatibilityModeActive": "相容模式已啟用",
     "retry": "重試",
     "tryCompatibilityMode": "嘗試相容模式",
+    "useDefaultMode": "使用預設模式",
     "compatibilityModeHelp": "如果頁面能開啟，但即時更新一直斷線，可以試試這個。有些網路或瀏覽器擴充功能可能會阻擋即時連線。",
     "connectionDetails": "連線詳細資訊",
     "copyDiagnostics": "複製診斷資訊",

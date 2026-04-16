@@ -46,6 +46,7 @@
     "compatibilityModeActive": "互換モードが有効です",
     "retry": "再試行",
     "tryCompatibilityMode": "互換モードを試す",
+    "useDefaultMode": "通常モードを使う",
     "compatibilityModeHelp": "ページは開くのにライブ更新だけ切断されたままなら、これを試してください。ネットワークやブラウザー拡張がリアルタイム接続を妨げることがあります。",
     "connectionDetails": "接続の詳細",
     "copyDiagnostics": "診断情報をコピー",

@@ -8,6 +8,14 @@
 
 ## Resolved
 
+- 2026-04-16: Realtime recovery bootstrap stays intentionally quiet until
+  YASP has an actual recovery problem to show. The client hook now exports an
+  explicit recovery-notice flag so landing and room routes keep first-load
+  connecting states calm, only surfacing the full retry/compatibility
+  diagnostics notice after offline/reconnecting/failed conditions or a
+  confirmed initial failure. Compatibility mode now persists only for the
+  current browser session through `sessionStorage`, not across future browser
+  sessions.
 - 2026-04-16: Post-remediation verification left no unresolved runtime-code
   security findings. The remaining GitHub code scanning alerts are either
   governance/settings follow-up (`BranchProtectionID`, `CodeReviewID`,

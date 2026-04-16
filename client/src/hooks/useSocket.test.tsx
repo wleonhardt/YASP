@@ -166,7 +166,26 @@ describe("useSocket", () => {
     });
 
     expect(result.current.compatibilityMode).toBe(false);
+    expect(result.current.showRecoveryNotice).toBe(false);
     expect(result.current.diagnostics.transport).toBe("websocket");
+  });
+
+  it("keeps the initial bootstrap quiet until there is a real recovery failure", async () => {
+    const { result } = renderHook(() => useSocket());
+    const socket = mocks.createdSockets[0];
+
+    expect(result.current.status).toBe("connecting");
+    expect(result.current.showRecoveryNotice).toBe(false);
+
+    act(() => {
+      socket.emitManagerEvent("reconnect_attempt", 3);
+      socket.emitSocketEvent("connect_error", new Error("xhr poll error"));
+    });
+
+    await waitFor(() => {
+      expect(result.current.status).toBe("failed");
+      expect(result.current.showRecoveryNotice).toBe(true);
+    });
   });
 
   it("retries the active socket on demand", () => {
@@ -198,6 +217,7 @@ describe("useSocket", () => {
     });
 
     expect(initialSocket.disconnect).toHaveBeenCalled();
+    expect(window.sessionStorage.getItem("yasp.compatibilityMode")).toBe("1");
     expect(mocks.io).toHaveBeenNthCalledWith(
       2,
       "http://localhost:3001",
@@ -205,6 +225,66 @@ describe("useSocket", () => {
         autoConnect: false,
         transports: ["polling"],
         upgrade: false,
+      })
+    );
+  });
+
+  it("reuses compatibility mode for the rest of the current browser session", async () => {
+    const { result, unmount } = renderHook(() => useSocket());
+
+    act(() => {
+      result.current.enableCompatibilityMode();
+    });
+
+    await waitFor(() => {
+      expect(window.sessionStorage.getItem("yasp.compatibilityMode")).toBe("1");
+      expect(result.current.compatibilityMode).toBe(true);
+    });
+
+    unmount();
+
+    const initialSocketCount = mocks.createdSockets.length;
+    const { result: remountedResult } = renderHook(() => useSocket());
+
+    expect(mocks.createdSockets).toHaveLength(initialSocketCount + 1);
+    expect(remountedResult.current.compatibilityMode).toBe(true);
+    expect(remountedResult.current.showRecoveryNotice).toBe(false);
+    expect(mocks.io).toHaveBeenLastCalledWith(
+      "http://localhost:3001",
+      expect.objectContaining({
+        autoConnect: false,
+        transports: ["polling"],
+        upgrade: false,
+      })
+    );
+  });
+
+  it("can clear the compatibility preference and rebuild the default socket transport", async () => {
+    window.sessionStorage.setItem("yasp.compatibilityMode", "1");
+
+    const { result } = renderHook(() => useSocket());
+    const compatibilitySocket = mocks.createdSockets[0];
+
+    expect(result.current.compatibilityMode).toBe(true);
+
+    act(() => {
+      result.current.disableCompatibilityMode();
+    });
+
+    await waitFor(() => {
+      expect(result.current.compatibilityMode).toBe(false);
+      expect(window.sessionStorage.getItem("yasp.compatibilityMode")).toBeNull();
+      expect(mocks.createdSockets).toHaveLength(2);
+    });
+
+    expect(compatibilitySocket.disconnect).toHaveBeenCalled();
+    expect(mocks.io).toHaveBeenNthCalledWith(
+      2,
+      "http://localhost:3001",
+      expect.objectContaining({
+        autoConnect: false,
+        transports: ["websocket", "polling"],
+        upgrade: true,
       })
     );
   });
@@ -233,6 +313,7 @@ describe("useSocket", () => {
 
     await waitFor(() => {
       expect(result.current.status).toBe("failed");
+      expect(result.current.showRecoveryNotice).toBe(true);
       expect(result.current.diagnostics.healthStatus).toBe("reachable");
       expect(result.current.diagnostics.problem).toBe("realtime_blocked");
       expect(result.current.diagnostics.retryCount).toBe(3);

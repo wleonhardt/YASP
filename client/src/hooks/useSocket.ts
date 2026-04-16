@@ -9,6 +9,7 @@ import {
   type ConnectionTransport,
   type HealthProbeStatus,
 } from "../lib/connectionRecovery";
+import { getStoredCompatibilityModeEnabled, setStoredCompatibilityModeEnabled } from "../lib/storage";
 import { createSocket, getHealthProbeUrl, getRealtimeBaseUrl } from "../lib/socket";
 
 const FAILURE_RETRY_THRESHOLD = 2;
@@ -19,9 +20,11 @@ export type SocketConnectionState = {
   socket: Socket;
   status: ConnectionStatus;
   compatibilityMode: boolean;
+  showRecoveryNotice: boolean;
   diagnostics: ConnectionDiagnostics;
   retry: () => void;
   enableCompatibilityMode: () => void;
+  disableCompatibilityMode: () => void;
 };
 
 function getBrowserOnlineState(): boolean {
@@ -41,11 +44,15 @@ function getBrowserOrigin(): string | null {
 }
 
 export function useSocket(): SocketConnectionState {
-  const [compatibilityMode, setCompatibilityMode] = useState(false);
-  const [socket, setSocket] = useState<Socket>(() => createSocket());
+  const initialCompatibilityMode = getStoredCompatibilityModeEnabled();
+  const [compatibilityMode, setCompatibilityMode] = useState(initialCompatibilityMode);
+  const [socket, setSocket] = useState<Socket>(() =>
+    createSocket({ compatibilityMode: initialCompatibilityMode })
+  );
   const [status, setStatus] = useState<ConnectionStatus>(() =>
     getBrowserOnlineState() ? "connecting" : "offline"
   );
+  const [showRecoveryNotice, setShowRecoveryNotice] = useState(() => !getBrowserOnlineState());
   const [transport, setTransport] = useState<ConnectionTransport>("unknown");
   const [online, setOnline] = useState(getBrowserOnlineState);
   const [retryCount, setRetryCount] = useState(0);
@@ -61,6 +68,10 @@ export function useSocket(): SocketConnectionState {
   useEffect(() => {
     onlineRef.current = online;
   }, [online]);
+
+  useEffect(() => {
+    setStoredCompatibilityModeEnabled(compatibilityMode);
+  }, [compatibilityMode]);
 
   useEffect(() => {
     const manager = socket.io;
@@ -91,6 +102,7 @@ export function useSocket(): SocketConnectionState {
       setLastError(null);
       setHealthStatus("unknown");
       setStatus("connected");
+      setShowRecoveryNotice(false);
       setLastConnectedAt(Date.now());
       bindEngineEvents();
       syncTransport();
@@ -102,6 +114,7 @@ export function useSocket(): SocketConnectionState {
       if (!onlineRef.current) {
         setStatus("offline");
         setHealthStatus("unknown");
+        setShowRecoveryNotice(true);
         return;
       }
 
@@ -111,6 +124,9 @@ export function useSocket(): SocketConnectionState {
 
       setHealthStatus("unknown");
       setStatus(hasConnectedRef.current ? "reconnecting" : "connecting");
+      if (hasConnectedRef.current) {
+        setShowRecoveryNotice(true);
+      }
     };
 
     const handleConnectError = (error: unknown) => {
@@ -120,10 +136,15 @@ export function useSocket(): SocketConnectionState {
 
       if (!onlineRef.current) {
         setStatus("offline");
+        setShowRecoveryNotice(true);
         return;
       }
 
-      setStatus(retryCountRef.current > FAILURE_RETRY_THRESHOLD ? "failed" : "connecting");
+      const nextStatus = retryCountRef.current > FAILURE_RETRY_THRESHOLD ? "failed" : "connecting";
+      setStatus(nextStatus);
+      if (nextStatus === "failed") {
+        setShowRecoveryNotice(true);
+      }
     };
 
     const handleReconnectAttempt = (attempt: number) => {
@@ -131,6 +152,9 @@ export function useSocket(): SocketConnectionState {
       setRetryCount(attempt);
       setHealthStatus("unknown");
       setStatus(hasConnectedRef.current ? "reconnecting" : "connecting");
+      if (hasConnectedRef.current) {
+        setShowRecoveryNotice(true);
+      }
       syncTransport();
     };
 
@@ -141,10 +165,12 @@ export function useSocket(): SocketConnectionState {
     const handleReconnectFailed = () => {
       if (!onlineRef.current) {
         setStatus("offline");
+        setShowRecoveryNotice(true);
         return;
       }
 
       setStatus("failed");
+      setShowRecoveryNotice(true);
     };
 
     socket.on("connect", handleConnect);
@@ -175,12 +201,16 @@ export function useSocket(): SocketConnectionState {
     if (!online) {
       setStatus("offline");
       setHealthStatus("unknown");
+      setShowRecoveryNotice(true);
       socket.disconnect();
       return;
     }
 
     if (!socket.connected) {
       setStatus(hasConnectedRef.current ? "reconnecting" : "connecting");
+      if (hasConnectedRef.current) {
+        setShowRecoveryNotice(true);
+      }
       socket.connect();
     }
   }, [online, socket]);
@@ -197,6 +227,9 @@ export function useSocket(): SocketConnectionState {
       setLastError(null);
       setHealthStatus("unknown");
       setStatus(hasConnectedRef.current ? "reconnecting" : "connecting");
+      if (hasConnectedRef.current || showRecoveryNotice) {
+        setShowRecoveryNotice(true);
+      }
       socket.connect();
     };
 
@@ -204,6 +237,7 @@ export function useSocket(): SocketConnectionState {
       setOnline(false);
       setHealthStatus("unknown");
       setStatus("offline");
+      setShowRecoveryNotice(true);
     };
 
     window.addEventListener("online", handleOnline);
@@ -213,7 +247,7 @@ export function useSocket(): SocketConnectionState {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [socket]);
+  }, [showRecoveryNotice, socket]);
 
   useEffect(() => {
     if (!online || (status !== "reconnecting" && status !== "failed")) {
@@ -274,10 +308,12 @@ export function useSocket(): SocketConnectionState {
 
     if (!onlineRef.current) {
       setStatus("offline");
+      setShowRecoveryNotice(true);
       return;
     }
 
     setStatus(hasConnectedRef.current ? "reconnecting" : "connecting");
+    setShowRecoveryNotice(true);
     socket.disconnect();
     socket.connect();
   }, [socket]);
@@ -295,9 +331,30 @@ export function useSocket(): SocketConnectionState {
     setHealthStatus("unknown");
     setTransport("unknown");
     setStatus(onlineRef.current ? "connecting" : "offline");
+    setShowRecoveryNotice(true);
     setSocket((currentSocket) => {
       currentSocket.disconnect();
       return createSocket({ compatibilityMode: true });
+    });
+  }, [compatibilityMode, retry]);
+
+  const disableCompatibilityMode = useCallback(() => {
+    if (!compatibilityMode) {
+      retry();
+      return;
+    }
+
+    setCompatibilityMode(false);
+    retryCountRef.current = 0;
+    setRetryCount(0);
+    setLastError(null);
+    setHealthStatus("unknown");
+    setTransport("unknown");
+    setStatus(onlineRef.current ? "connecting" : "offline");
+    setShowRecoveryNotice(true);
+    setSocket((currentSocket) => {
+      currentSocket.disconnect();
+      return createSocket();
     });
   }, [compatibilityMode, retry]);
 
@@ -328,8 +385,10 @@ export function useSocket(): SocketConnectionState {
     socket,
     status,
     compatibilityMode,
+    showRecoveryNotice,
     diagnostics,
     retry,
     enableCompatibilityMode,
+    disableCompatibilityMode,
   };
 }

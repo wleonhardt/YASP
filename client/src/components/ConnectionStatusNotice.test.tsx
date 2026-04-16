@@ -45,6 +45,7 @@ function buildConnection(status: ConnectionStatus, overrides: Partial<Connection
     diagnostics: buildDiagnostics(status, overrides),
     retry: vi.fn(),
     enableCompatibilityMode: vi.fn(),
+    disableCompatibilityMode: vi.fn(),
   };
 }
 
@@ -180,8 +181,25 @@ describe("ConnectionStatusNotice", () => {
 
     expect(screen.getAllByText("Compatibility mode active").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Try compatibility mode" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Use default mode" })).toBeInTheDocument();
     expect(
       screen.queryByText(/Use this if the page loads but live updates stay disconnected/i)
     ).not.toBeInTheDocument();
+  });
+
+  it("lets users switch back to the default transport while troubleshooting", async () => {
+    const user = userEvent.setup();
+    const connection = buildConnection("failed", {
+      compatibilityMode: true,
+      transport: "polling",
+      problem: "transport_failed",
+    });
+    connection.compatibilityMode = true;
+
+    render(<ConnectionStatusNotice connection={connection} />);
+
+    await user.click(screen.getByRole("button", { name: "Use default mode" }));
+
+    expect(connection.disableCompatibilityMode).toHaveBeenCalledTimes(1);
   });
 });

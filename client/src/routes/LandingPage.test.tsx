@@ -8,6 +8,7 @@ type MockConnectionState = {
   socket: never;
   status: "connected" | "connecting" | "reconnecting" | "offline" | "failed";
   compatibilityMode: boolean;
+  showRecoveryNotice: boolean;
   diagnostics: {
     status: "connected" | "connecting" | "reconnecting" | "offline" | "failed";
     compatibilityMode: boolean;
@@ -23,6 +24,7 @@ type MockConnectionState = {
   };
   retry: ReturnType<typeof vi.fn>;
   enableCompatibilityMode: ReturnType<typeof vi.fn>;
+  disableCompatibilityMode: ReturnType<typeof vi.fn>;
 };
 
 const mocks = vi.hoisted(() => ({
@@ -31,10 +33,12 @@ const mocks = vi.hoisted(() => ({
   joinRoom: vi.fn(),
   retry: vi.fn(),
   enableCompatibilityMode: vi.fn(),
+  disableCompatibilityMode: vi.fn(),
   connection: {
     socket: {} as never,
     status: "connected",
     compatibilityMode: false,
+    showRecoveryNotice: false,
     diagnostics: {
       status: "connected",
       compatibilityMode: false,
@@ -50,6 +54,7 @@ const mocks = vi.hoisted(() => ({
     },
     retry: vi.fn(),
     enableCompatibilityMode: vi.fn(),
+    disableCompatibilityMode: vi.fn(),
   } as MockConnectionState,
 }));
 
@@ -83,10 +88,12 @@ describe("LandingPage create room deck behavior", () => {
     mocks.joinRoom.mockReset();
     mocks.retry.mockReset();
     mocks.enableCompatibilityMode.mockReset();
+    mocks.disableCompatibilityMode.mockReset();
 
     mocks.connection.socket = {} as never;
     mocks.connection.status = "connected";
     mocks.connection.compatibilityMode = false;
+    mocks.connection.showRecoveryNotice = false;
     mocks.connection.diagnostics = {
       status: "connected",
       compatibilityMode: false,
@@ -102,6 +109,7 @@ describe("LandingPage create room deck behavior", () => {
     };
     mocks.connection.retry = mocks.retry;
     mocks.connection.enableCompatibilityMode = mocks.enableCompatibilityMode;
+    mocks.connection.disableCompatibilityMode = mocks.disableCompatibilityMode;
 
     mocks.createRoom.mockResolvedValue({
       ok: true,
@@ -238,6 +246,7 @@ describe("LandingPage create room deck behavior", () => {
 
   it("shows recovery actions when realtime is unavailable", () => {
     mocks.connection.status = "failed";
+    mocks.connection.showRecoveryNotice = true;
     mocks.connection.diagnostics = {
       ...mocks.connection.diagnostics,
       status: "failed",
@@ -258,5 +267,20 @@ describe("LandingPage create room deck behavior", () => {
         "Use this if the page loads but live updates stay disconnected. Some networks or browser extensions can block realtime connections."
       )
     ).toBeInTheDocument();
+  });
+
+  it("keeps the first bootstrap render quiet while the connection is still initializing", () => {
+    mocks.connection.status = "connecting";
+    mocks.connection.showRecoveryNotice = false;
+    mocks.connection.diagnostics = {
+      ...mocks.connection.diagnostics,
+      status: "connecting",
+    };
+
+    render(<LandingPage />);
+
+    expect(screen.queryByRole("heading", { name: "Connecting to realtime" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Try compatibility mode" })).not.toBeInTheDocument();
   });
 });

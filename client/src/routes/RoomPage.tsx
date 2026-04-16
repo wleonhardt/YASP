@@ -719,7 +719,9 @@ export function RoomPage() {
               {t("landing.joinRoom")}
             </button>
           </form>
-          <ConnectionStatusNotice connection={connection} className="empty-state__connection-notice" />
+          {connection.showRecoveryNotice && (
+            <ConnectionStatusNotice connection={connection} className="empty-state__connection-notice" />
+          )}
         </main>
 
         <Toast toast={toast} />
@@ -739,7 +741,9 @@ export function RoomPage() {
           <div className="section-label">{t("room.connecting")}</div>
           <h1>{t("room.joiningRoom")}</h1>
           <p>{t("room.waitingSnapshot")}</p>
-          <ConnectionStatusNotice connection={connection} className="empty-state__connection-notice" />
+          {connection.showRecoveryNotice && (
+            <ConnectionStatusNotice connection={connection} className="empty-state__connection-notice" />
+          )}
         </main>
       </div>
     );
@@ -760,7 +764,7 @@ export function RoomPage() {
 
       <main>
         <h1 className="sr-only">{t("room.roomHeading", { roomId })}</h1>
-        <ConnectionStatusNotice connection={connection} />
+        {connection.showRecoveryNotice && <ConnectionStatusNotice connection={connection} />}
 
         {error?.code === "NOT_ALLOWED" && (
           <Banner tone="warning" title={t("room.actionBlocked")}>
