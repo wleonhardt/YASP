@@ -14,6 +14,13 @@
 
 ## Done
 
+- 2026-04-16: Post-remediation verification confirmed the code-fixable GitHub
+  code scanning backlog is closed on commit `73babea`. The remaining open
+  alerts are governance/settings/process items (`BranchProtectionID`,
+  `CodeReviewID`, `FuzzingID`, `CIIBestPracticesID`) plus two dismissal
+  candidates (`MaintainedID` age heuristic and the `js/biased-cryptographic-random`
+  false positive). Maintainer follow-up and exact dismissal text now live in
+  `docs/security-scanning.md`; runtime behavior stayed unchanged.
 - 2026-04-16: Hardened the repository against the current GitHub code
   scanning backlog by pinning GitHub Action usages to immutable commits,
   narrowing the Dependabot auto-merge workflow token scope, replacing the

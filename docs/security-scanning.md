@@ -5,6 +5,54 @@ features and a few low-maintenance open-source tools. Everything here
 is either part of free GitHub Advanced Security for public repos or
 self-hosted in CI — no paid SaaS, no external tokens to rotate.
 
+## Post-remediation status
+
+As of commit `73babea`, the code-fixable GitHub code scanning backlog from the
+2026-04-16 remediation pass is complete. The remaining open alerts are not
+runtime-code defects in the shipped app; they are repo settings, maintainer
+process, or dismissal candidates.
+
+| Alert | Rule | Classification | Action |
+|---|---|---|---|
+| `#1` | `BranchProtectionID` | repo/settings issue | enable a `main` branch ruleset |
+| `#44` | `CodeReviewID` | process/policy issue | require PR review and stop direct pushes |
+| `#45` | `FuzzingID` | process/policy issue | optional future work; not a current code defect |
+| `#43` | `CIIBestPracticesID` | process/policy issue | optional posture work; not a runtime defect |
+| `#46` | `MaintainedID` | acceptable risk / heuristic-only | dismiss with recorded rationale below |
+| `#52` | `js/biased-cryptographic-random` | false positive | dismiss with recorded rationale below |
+
+### Maintainer checklist for remaining governance alerts
+
+- Open GitHub **Settings → Rules → Rulesets → New branch ruleset** and target
+  `refs/heads/main`.
+- Enable **Block force pushes** and **Restrict deletions** for `main`.
+- Enable **Require a pull request before merging**.
+- Set **Required approvals** to at least `1`.
+- Enable **Dismiss stale approvals when new commits are pushed**.
+- Enable **Require approval of the most recent reviewable push**.
+- Enable **Require status checks to pass before merging** and select the normal
+  required checks for this repo (at minimum the main validation workflow).
+- Apply the ruleset to administrators too unless there is a deliberate,
+  documented bypass policy.
+- Stop pushing human changes directly to `main`; merge through reviewed pull
+  requests only.
+
+### Recorded dismissal rationale text
+
+Use the exact text below if those alerts remain open after rescans.
+
+#### `#52` `js/biased-cryptographic-random`
+
+```text
+False positive. server/src/utils/id.ts maps randomBytes() output into a 32-character alphabet (ABCDEFGHJKLMNPQRSTUVWXYZ23456789). Because 256 is evenly divisible by 32, byte % 32 is uniform here and does not introduce modulo bias. The current implementation does not have the reported cryptographic bias issue.
+```
+
+#### `#46` `MaintainedID`
+
+```text
+Acceptable risk / heuristic-only finding. This repository was created on 2026-03-25 and is still within Scorecard's first-90-days window, so the alert is driven solely by repository age rather than an outstanding code or configuration defect. The project is actively maintained, and this check should age out automatically once the repository is older than 90 days.
+```
+
 ## Merge blockers today
 
 These checks currently fail the PR when they fail.

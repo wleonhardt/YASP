@@ -28,3 +28,12 @@ credential material, or reproduction steps for live vulnerabilities in public.
   product boundaries.
 - Credit reporters in release notes or follow-up documentation when they want
   public attribution.
+
+## Repository Governance Follow-up
+
+Some remaining GitHub code scanning alerts after the 2026-04-16 remediation
+pass are governance-level rather than runtime-code defects. Branch protection,
+required reviews, and similar maintainer settings are tracked in
+[`docs/security-scanning.md`](./docs/security-scanning.md) alongside the
+recorded dismissal rationale for the remaining false-positive or
+heuristic-only alerts.

@@ -8,6 +8,13 @@
 
 ## Resolved
 
+- 2026-04-16: Post-remediation verification left no unresolved runtime-code
+  security findings. The remaining GitHub code scanning alerts are either
+  governance/settings follow-up (`BranchProtectionID`, `CodeReviewID`,
+  `FuzzingID`, `CIIBestPracticesID`) or dismissal candidates (`MaintainedID`
+  as a repository-age heuristic and `js/biased-cryptographic-random` as a
+  false positive). The maintainer checklist and exact dismissal text are
+  recorded in `docs/security-scanning.md`.
 - 2026-04-16: The open CodeQL `js/biased-cryptographic-random` finding for
   room IDs is a false positive, not a code bug. YASP's room ID alphabet is 32
   characters wide (`ABCDEFGHJKLMNPQRSTUVWXYZ23456789`), and `randomBytes()`
