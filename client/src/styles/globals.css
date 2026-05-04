@@ -43,6 +43,7 @@ body {
   background-image:
     radial-gradient(ellipse 80% 60% at 10% 0%, var(--gradient-accent-1), transparent),
     radial-gradient(ellipse 60% 50% at 90% 100%, var(--gradient-accent-2), transparent), var(--gradient-body);
+  background-attachment: fixed;
   line-height: 1.55;
   font-size: var(--text-body);
   letter-spacing: -0.006em;
@@ -1570,8 +1571,10 @@ select.input {
 .room-timer__value {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-size: clamp(2.4rem, 5vw, 3.2rem);
   letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .room-timer__duration {
@@ -2655,14 +2658,15 @@ select.input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.75rem;
-  padding: 0.15rem 0.45rem;
+  min-width: 2rem;
+  padding: 0.2rem 0.55rem;
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-border);
-  background: rgba(148, 172, 204, 0.08);
-  color: var(--color-text-secondary);
-  font-size: var(--text-tiny);
-  font-weight: 600;
+  background: rgba(106, 173, 255, 0.12);
+  color: var(--color-text);
+  font-size: var(--text-meta);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .distribution-row__label {
@@ -3333,7 +3337,10 @@ select.input {
   background: rgba(255, 255, 255, 0.5);
 }
 
-[data-theme="light"] .distribution-row__count,
+[data-theme="light"] .distribution-row__count {
+  background: rgba(79, 150, 255, 0.1);
+}
+
 [data-theme="light"] .distribution-row__bar {
   background: rgba(0, 0, 0, 0.04);
 }
