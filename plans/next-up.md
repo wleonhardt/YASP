@@ -2,6 +2,10 @@
 
 ## Queue
 
+- **UI upgrade** — staged plan to make the phase action the centerpiece,
+  shrink moderator chrome, and improve results presentation. See
+  [ui-upgrade.md](ui-upgrade.md). Status: `proposed`. Start with Phase 1
+  (quick wins) when prioritised.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
