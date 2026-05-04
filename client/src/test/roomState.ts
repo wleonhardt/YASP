@@ -1,11 +1,10 @@
 import {
   DEFAULT_DECKS,
   DEFAULT_ROOM_SETTINGS,
-  ROOM_TIMER_PRESET_SECONDS,
   type PublicRoomState,
 } from "@yasp/shared";
 
-const DEFAULT_TIMER_SECONDS = ROOM_TIMER_PRESET_SECONDS[0] ?? 10;
+const DEFAULT_TIMER_SECONDS = 60;
 
 export function makePublicRoomState(overrides: Partial<PublicRoomState> = {}): PublicRoomState {
   return {

@@ -1,7 +1,8 @@
 import {
   DEFAULT_ROOM_SETTINGS,
   ROOM_TIMER_HONK_COOLDOWN_MS,
-  ROOM_TIMER_PRESET_SECONDS,
+  ROOM_TIMER_MIN_SECONDS,
+  ROOM_TIMER_MAX_SECONDS,
   type AckResult,
   type DeckInput,
   type ParticipantRole,
@@ -105,9 +106,6 @@ function stopRoomTimer(room: Room): void {
   room.timer.endsAt = null;
 }
 
-const ROOM_TIMER_PRESETS = Array.isArray(ROOM_TIMER_PRESET_SECONDS)
-  ? ROOM_TIMER_PRESET_SECONDS
-  : ([10, 30, 60, 120, 300] as const);
 
 export class RoomService {
   constructor(private store: RoomStore) {}
@@ -507,7 +505,11 @@ export class RoomService {
     if (!permissions.isModerator(room, participant.id)) {
       return fail({ code: "NOT_ALLOWED", message: "Only the moderator can change the timer" });
     }
-    if (!ROOM_TIMER_PRESETS.includes(durationSeconds as (typeof ROOM_TIMER_PRESETS)[number])) {
+    if (
+      !Number.isInteger(durationSeconds) ||
+      durationSeconds < ROOM_TIMER_MIN_SECONDS ||
+      durationSeconds > ROOM_TIMER_MAX_SECONDS
+    ) {
       return fail({ code: "NOT_ALLOWED", message: "Timer duration is not allowed" });
     }
     if (room.timer.running) {

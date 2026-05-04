@@ -159,5 +159,6 @@ export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
   autoRevealDelayMs: 1500,
 };
 
-export const ROOM_TIMER_PRESET_SECONDS = [10, 30, 60, 120, 300] as const;
+export const ROOM_TIMER_MIN_SECONDS = 5;
+export const ROOM_TIMER_MAX_SECONDS = 1800;
 export const ROOM_TIMER_HONK_COOLDOWN_MS = 5000;

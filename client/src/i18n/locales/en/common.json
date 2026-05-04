@@ -323,6 +323,8 @@
     "timer": "Timer",
     "timerSettings": "Timer & pacing",
     "timerDuration": "Duration",
+    "timerMinutes": "Minutes",
+    "timerSeconds": "Seconds",
     "timerStart": "Start",
     "timerPause": "Pause",
     "timerReset": "Reset",

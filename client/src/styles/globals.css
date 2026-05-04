@@ -1577,8 +1577,47 @@ select.input {
   line-height: 1;
 }
 
-.room-timer__duration {
-  width: min(9rem, 100%);
+.room-timer__duration-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.room-timer__duration-fieldset .field__label {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.room-timer__duration-fieldset:disabled .field__label,
+.room-timer__duration-fieldset:disabled .room-timer__duration-unit {
+  opacity: 0.45;
+}
+
+.room-timer__duration-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.room-timer__duration-field {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.room-timer__duration-input {
+  width: 4.5rem;
+  padding: 0.5rem 0.6rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-timer__duration-unit {
+  font-size: var(--text-meta);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  flex: 0 0 auto;
 }
 
 .room-timer__actions {

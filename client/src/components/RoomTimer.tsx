@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { ROOM_TIMER_PRESET_SECONDS, type PublicRoomState } from "@yasp/shared";
+import { ROOM_TIMER_MIN_SECONDS, ROOM_TIMER_MAX_SECONDS, type PublicRoomState } from "@yasp/shared";
 import {
   isRoomAudioPrimed,
   playTimerComplete,
@@ -158,9 +158,8 @@ export function useRoomTimerCountdown(
   return { remainingSeconds, honkCooldownSeconds };
 }
 
-const ROOM_TIMER_PRESETS = Array.isArray(ROOM_TIMER_PRESET_SECONDS)
-  ? ROOM_TIMER_PRESET_SECONDS
-  : ([10, 30, 60, 120, 300] as const);
+const TIMER_MIN = ROOM_TIMER_MIN_SECONDS;
+const TIMER_MAX = ROOM_TIMER_MAX_SECONDS;
 
 function PlayIcon() {
   return (
@@ -436,25 +435,53 @@ export function RoomTimer({
     </div>
   );
 
+  const durationMinutes = Math.floor(state.timer.durationSeconds / 60);
+  const durationSecondsRemainder = state.timer.durationSeconds % 60;
+  const durationDisabled = disabled || !moderator || state.timer.running;
+
+  const commitDuration = (minutes: number, seconds: number) => {
+    const total = Math.max(TIMER_MIN, Math.min(TIMER_MAX, minutes * 60 + seconds));
+    void prepareAudioAndRun(() => onSetDuration(total));
+  };
+
   const durationField = (
-    <label className="field room-timer__duration">
-      <span className="field__label">{t("room.timerDuration")}</span>
-      <select
-        className="input"
-        value={state.timer.durationSeconds}
-        onChange={(event) => {
-          const nextDuration = Number(event.target.value);
-          void prepareAudioAndRun(() => onSetDuration(nextDuration));
-        }}
-        disabled={disabled || !moderator || state.timer.running}
-      >
-        {ROOM_TIMER_PRESETS.map((value) => (
-          <option key={value} value={value}>
-            {formatTimerDuration(value)}
-          </option>
-        ))}
-      </select>
-    </label>
+    <fieldset className="room-timer__duration-fieldset" disabled={durationDisabled}>
+      <legend className="field__label">{t("room.timerDuration")}</legend>
+      <div className="room-timer__duration-inputs">
+        <label className="room-timer__duration-field">
+          <input
+            className="input room-timer__duration-input"
+            type="number"
+            min={0}
+            max={Math.floor(TIMER_MAX / 60)}
+            step={1}
+            value={durationMinutes}
+            onChange={(e) => {
+              const m = Math.max(0, Math.min(Math.floor(TIMER_MAX / 60), Number(e.target.value) | 0));
+              commitDuration(m, durationSecondsRemainder);
+            }}
+            aria-label={t("room.timerMinutes")}
+          />
+          <span className="room-timer__duration-unit" aria-hidden="true">m</span>
+        </label>
+        <label className="room-timer__duration-field">
+          <input
+            className="input room-timer__duration-input"
+            type="number"
+            min={0}
+            max={59}
+            step={5}
+            value={durationSecondsRemainder}
+            onChange={(e) => {
+              const s = Math.max(0, Math.min(59, Number(e.target.value) | 0));
+              commitDuration(durationMinutes, s);
+            }}
+            aria-label={t("room.timerSeconds")}
+          />
+          <span className="room-timer__duration-unit" aria-hidden="true">s</span>
+        </label>
+      </div>
+    </fieldset>
   );
 
   const moderatorActionButtons = moderator ? (

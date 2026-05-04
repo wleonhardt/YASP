@@ -1,12 +1,7 @@
 import type { RoomTimerState } from "@yasp/shared";
-import { ROOM_TIMER_PRESET_SECONDS } from "@yasp/shared";
-
-const ROOM_TIMER_PRESETS = Array.isArray(ROOM_TIMER_PRESET_SECONDS)
-  ? ROOM_TIMER_PRESET_SECONDS
-  : ([10, 30, 60, 120, 300] as const);
 
 export function createRoomTimerState(): RoomTimerState {
-  const defaultDurationSeconds = ROOM_TIMER_PRESETS[0] ?? 10;
+  const defaultDurationSeconds = 60;
   return {
     durationSeconds: defaultDurationSeconds,
     remainingSeconds: defaultDurationSeconds,
