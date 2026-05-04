@@ -323,6 +323,8 @@
     "timer": "Minuteur",
     "timerSettings": "Minuteur et rythme",
     "timerDuration": "Durée",
+    "timerMinutes": "Minutes",
+    "timerSeconds": "Seconds",
     "timerStart": "Démarrer",
     "timerPause": "Mettre en pause",
     "timerReset": "Réinitialiser",

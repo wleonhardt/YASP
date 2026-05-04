@@ -323,6 +323,8 @@
     "timer": "计时器",
     "timerSettings": "计时器与节奏",
     "timerDuration": "时长",
+    "timerMinutes": "Minutes",
+    "timerSeconds": "Seconds",
     "timerStart": "开始",
     "timerPause": "暂停",
     "timerReset": "重置",

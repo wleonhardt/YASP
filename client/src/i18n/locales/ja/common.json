@@ -323,6 +323,8 @@
     "timer": "タイマー",
     "timerSettings": "タイマーとペーシング",
     "timerDuration": "時間",
+    "timerMinutes": "Minutes",
+    "timerSeconds": "Seconds",
     "timerStart": "開始",
     "timerPause": "一時停止",
     "timerReset": "リセット",

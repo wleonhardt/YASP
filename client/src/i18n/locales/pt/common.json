@@ -323,6 +323,8 @@
     "timer": "Temporizador",
     "timerSettings": "Temporizador e ritmo",
     "timerDuration": "Duração",
+    "timerMinutes": "Minutes",
+    "timerSeconds": "Seconds",
     "timerStart": "Iniciar",
     "timerPause": "Pausar",
     "timerReset": "Repor",

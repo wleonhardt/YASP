@@ -323,6 +323,8 @@
     "timer": "타이머",
     "timerSettings": "타이머 및 진행 속도",
     "timerDuration": "시간",
+    "timerMinutes": "Minutes",
+    "timerSeconds": "Seconds",
     "timerStart": "시작",
     "timerPause": "일시정지",
     "timerReset": "초기화",
