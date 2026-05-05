@@ -91,6 +91,12 @@ for the audit that motivated each change.
   reorder, remove, and start the next queued story as a new round; other
   participants see the current story and queue read-only. Round and session
   reports include story labels.
+- 2026-05-05: Started Phase 10 with P10.1/P10.2/P10.3. The story agenda is
+  now hidden until a story exists or the moderator opts into "Track stories"
+  from the drawer, the shared timer strip lazy-mounts only after timer use or
+  non-default configuration, and the topbar room code becomes code-only while
+  InviteHero owns the share action. Next implementation slice is P10.4/P10.5:
+  trim the action bar.
 
 ---
 

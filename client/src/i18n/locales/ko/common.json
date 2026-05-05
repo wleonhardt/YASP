@@ -282,7 +282,9 @@
       "remove": "제거",
       "moveUp": "{{label}} 위로 이동",
       "moveDown": "{{label}} 아래로 이동",
-      "removeLabel": "{{label}} 제거"
+      "removeLabel": "{{label}} 제거",
+      "track": "스토리 추적",
+      "trackHint": "이 방에 스토리 안건을 표시합니다."
     },
     "revealPolicyHint": "누가 투표를 공개할 수 있는지 정합니다.",
     "resetPolicyHint": "누가 라운드를 초기화하고 다음 라운드를 시작할 수 있는지 정합니다.",

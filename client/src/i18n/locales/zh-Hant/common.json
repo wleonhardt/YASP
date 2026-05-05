@@ -282,7 +282,9 @@
       "remove": "移除",
       "moveUp": "上移 {{label}}",
       "moveDown": "下移 {{label}}",
-      "removeLabel": "移除 {{label}}"
+      "removeLabel": "移除 {{label}}",
+      "track": "追蹤故事",
+      "trackHint": "在此房間顯示故事議程。"
     },
     "revealPolicyHint": "誰可以公開投票結果。",
     "resetPolicyHint": "誰可以重設目前回合並開始下一回合。",

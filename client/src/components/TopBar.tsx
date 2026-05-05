@@ -14,6 +14,7 @@ type Props = {
   onLeave: () => void;
   onCopyFeedback: (intent: "success" | "error", message: string) => void;
   moderatorControls?: ReactNode;
+  roomCodeCopyEnabled?: boolean;
   disabled?: boolean;
 };
 
@@ -24,6 +25,7 @@ export function TopBar({
   onLeave,
   onCopyFeedback,
   moderatorControls = null,
+  roomCodeCopyEnabled = true,
   disabled = false,
 }: Props) {
   const { t } = useTranslation();
@@ -31,7 +33,7 @@ export function TopBar({
 
   return (
     <header className="topbar app-panel">
-      <RoomCodeShare roomId={state.id} onCopyError={onCopyFeedback} />
+      <RoomCodeShare roomId={state.id} onCopyError={onCopyFeedback} copyEnabled={roomCodeCopyEnabled} />
 
       <div className="topbar__actions">
         {showModeratorDrawer ? (

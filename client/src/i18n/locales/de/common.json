@@ -282,7 +282,9 @@
       "remove": "Entfernen",
       "moveUp": "{{label}} nach oben verschieben",
       "moveDown": "{{label}} nach unten verschieben",
-      "removeLabel": "{{label}} entfernen"
+      "removeLabel": "{{label}} entfernen",
+      "track": "Storys verfolgen",
+      "trackHint": "Zeigt die Story-Agenda für diesen Raum."
     },
     "revealPolicyHint": "Wer die Stimmen aufdecken darf.",
     "resetPolicyHint": "Wer die Runde zurücksetzen und die nächste starten darf.",

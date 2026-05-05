@@ -282,7 +282,9 @@
       "remove": "Retirer",
       "moveUp": "Monter {{label}}",
       "moveDown": "Descendre {{label}}",
-      "removeLabel": "Retirer {{label}}"
+      "removeLabel": "Retirer {{label}}",
+      "track": "Suivre les stories",
+      "trackHint": "Affiche l’agenda des stories pour cette salle."
     },
     "revealPolicyHint": "Qui peut révéler les votes.",
     "resetPolicyHint": "Qui peut réinitialiser la manche et lancer la suivante.",

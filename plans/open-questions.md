@@ -10,24 +10,18 @@
   tablet ~20% based on intuition, not data. Worth verifying via analytics
   if/when added — Phase 4 (drawer) and tablet-breakpoint priorities should
   follow real numbers, not guesses.
-- **UI: post-implementation QA findings (Q1–Q20).** A 2026-05-05 QA pass
-  on the post-Phase-5 build surfaced 26 findings — 4 high/medium severity
-  (drawer-icon collision with theme toggle, duplicated drawer heading,
-  stale "Sound on" copy in drawer summary, redundant topbar copy-link
-  while InviteHero is mounted) plus structural impressions about drawer
-  discoverability and story-agenda visibility default. Full list in
+- **UI: post-implementation QA findings (Q1–Q20).** A 2026-05-05 QA pass on
+  the post-Phase-5 build surfaced 26 findings. Remaining high/medium items are
+  drawer-icon collision with theme toggle, duplicated drawer heading, and stale
+  "Sound on" copy in drawer summary, plus the structural drawer-discoverability
+  impression. The redundant topbar copy-link and story-agenda default
+  visibility items were addressed by Phase 10 P10.1/P10.3. Full list in
   [`ui-upgrade.md`](ui-upgrade.md) under "Post-implementation QA review."
-  Decision needed: schedule a Phase 7.5 cleanup pass before Phase 6, or
-  fold fixes into Phase 7 polish.
+  Continue folding fixes into Phase 10 subtraction slices.
 - **UI: moderator drawer discoverability.** Beyond the icon swap (Q1),
   do new moderators find the gear on their own? A brief one-time
   highlight on first room creation OR a real moderator user-test would
   inform whether the drawer pattern survives long-term.
-- **UI: story-agenda default visibility.** Phase 9 P9.5 shipped early
-  but the story-agenda panel is permanently mounted at the top of the
-  stage even for teams that don't use story labels. Decision needed:
-  hide entirely when agenda is empty + no current story, or expose a
-  "Track stories" toggle in the moderator drawer.
 - 2026-05-05 review: Phase 8 foundation work did not create new open
   questions. The existing discussion-phase and viewport-mix questions remain
   the active UI uncertainties.
@@ -91,9 +85,15 @@
   ephemeral active room state only. The current story label and optional queue
   are covered by the existing room TTL model; no durable backlog, account,
   integration, or history scope was added.
-- No other active open questions right now. The current scaling and deployment
-  posture is recorded in ADR 0004, and the remaining multi-instance Redis work
-  is intentionally deferred until operator requirements justify Phase 4.
+- 2026-05-05 review: Phase 10 P10.1 resolved the story-agenda default
+  visibility question by hiding the empty agenda and exposing a local
+  moderator-only "Track stories" opt-in from the drawer. P10.2/P10.3 did not
+  create new product or architecture questions because they only subtract
+  client chrome around existing state.
+- No new backend/state open questions are active right now. The current scaling
+  and deployment posture is recorded in ADR 0004, and the remaining
+  multi-instance Redis work is intentionally deferred until operator
+  requirements justify Phase 4.
 
 ## Resolved
 

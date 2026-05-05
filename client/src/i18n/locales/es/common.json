@@ -282,7 +282,9 @@
       "remove": "Quitar",
       "moveUp": "Subir {{label}}",
       "moveDown": "Bajar {{label}}",
-      "removeLabel": "Quitar {{label}}"
+      "removeLabel": "Quitar {{label}}",
+      "track": "Seguir historias",
+      "trackHint": "Muestra la agenda de historias en esta sala."
     },
     "revealPolicyHint": "Quién puede mostrar los votos.",
     "resetPolicyHint": "Quién puede reiniciar la ronda y comenzar la siguiente.",

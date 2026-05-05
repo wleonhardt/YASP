@@ -13,7 +13,7 @@
   eyebrows. Eight focused commits; each independently revertable.
   Full spec under "Phase 10 — Subtraction pass" in
   [`ui-upgrade.md`](ui-upgrade.md). Recommended next slice:
-  P10.1+P10.2+P10.3 ("Reclaim the deck's space").
+  P10.4+P10.5 ("Trim the action bar").
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -101,6 +101,12 @@
   agenda queue; moderators can add, bulk-paste, reorder, remove, and start
   the next queued story as a new round. Participants see the current story
   and queued agenda read-only, and round/session reports include story labels.
+- 2026-05-05: Started Phase 10 with P10.1/P10.2/P10.3, reclaiming deck
+  space without new product scope. Empty rooms now hide the story agenda until
+  a story exists or the moderator opts into "Track stories"; the timer strip
+  stays hidden until the timer is used or configured away from the default;
+  and the topbar room code becomes a code-only chip while InviteHero owns
+  sharing.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

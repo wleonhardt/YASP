@@ -1,6 +1,7 @@
 import type { PublicRoomState, PublicParticipant } from "@yasp/shared";
 
 export type RoomPhase = "waiting" | "voting" | "revealed";
+export const DEFAULT_TIMER_DURATION_SECONDS = 60;
 
 export type RoundSpotlightKind = "almostConsensus" | "outlier";
 
@@ -145,6 +146,21 @@ export function getAlmostConsensusCallout(state: PublicRoomState): RoundSpotligh
 export function shouldShowInviteHero(state: PublicRoomState): boolean {
   return !state.participants.some(
     (participant) => participant.role === "voter" && participant.connected && !participant.isModerator
+  );
+}
+
+export function shouldShowStoryAgenda(state: PublicRoomState, trackStories: boolean): boolean {
+  return Boolean(
+    state.currentStoryLabel || state.storyQueue.length > 0 || (isMeModerator(state) && trackStories)
+  );
+}
+
+export function isTimerStripRelevant(state: PublicRoomState): boolean {
+  return (
+    state.timer.running ||
+    state.timer.completedAt !== null ||
+    state.timer.remainingSeconds !== state.timer.durationSeconds ||
+    state.timer.durationSeconds !== DEFAULT_TIMER_DURATION_SECONDS
   );
 }
 

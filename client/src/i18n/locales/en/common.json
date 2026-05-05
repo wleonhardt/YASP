@@ -282,7 +282,9 @@
       "remove": "Remove",
       "moveUp": "Move {{label}} up",
       "moveDown": "Move {{label}} down",
-      "removeLabel": "Remove {{label}}"
+      "removeLabel": "Remove {{label}}",
+      "track": "Track stories",
+      "trackHint": "Show the story agenda for this room."
     },
     "revealPolicyHint": "Who can reveal votes.",
     "resetPolicyHint": "Who can reset the round and start the next one.",

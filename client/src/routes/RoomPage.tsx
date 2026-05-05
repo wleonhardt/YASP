@@ -32,7 +32,14 @@ import {
   toPlainTextSummary,
   writeTextToClipboard,
 } from "../lib/roundReport";
-import { getConnectedVoterCounts, getSelf, isMeModerator, shouldShowInviteHero } from "../lib/room";
+import {
+  getConnectedVoterCounts,
+  getSelf,
+  isMeModerator,
+  isTimerStripRelevant,
+  shouldShowInviteHero,
+  shouldShowStoryAgenda,
+} from "../lib/room";
 import { getRoomShortcutAction } from "../lib/roomShortcuts";
 import { getStoredDisplayName, getStoredRole, setStoredDisplayName, setStoredRole } from "../lib/storage";
 
@@ -91,6 +98,8 @@ export function RoomPage() {
   const roundReportButtonRef = useRef<HTMLButtonElement | null>(null);
   const [sessionReportOpen, setSessionReportOpen] = useState(false);
   const sessionReportButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [trackStories, setTrackStories] = useState(false);
+  const [timerStripActivated, setTimerStripActivated] = useState(false);
 
   const roomTitle = roomUnavailable
     ? t("documentTitle.roomUnavailable")
@@ -141,6 +150,8 @@ export function RoomPage() {
       prevVoteProgressRef.current = null;
       prevModeratorRef.current = null;
       prevTimerCompletedRef.current = null;
+      setTrackStories(false);
+      setTimerStripActivated(false);
       return;
     }
 
@@ -186,6 +197,16 @@ export function RoomPage() {
     prevModeratorRef.current = moderator?.id ?? null;
     prevTimerCompletedRef.current = roomState.timer.completedAt;
   }, [announce, roomState, t]);
+
+  useEffect(() => {
+    if (!roomState) {
+      return;
+    }
+
+    if (isTimerStripRelevant(roomState)) {
+      setTimerStripActivated(true);
+    }
+  }, [roomState]);
 
   // Capture a client-side `revealedAt` when the room transitions into
   // the revealed phase. The server does not expose this on
@@ -823,6 +844,9 @@ export function RoomPage() {
   }
 
   const state = roomState;
+  const inviteHeroVisible = shouldShowInviteHero(state);
+  const storyAgendaVisible = shouldShowStoryAgenda(state, trackStories);
+  const timerStripVisible = timerStripActivated || isTimerStripRelevant(state);
 
   return (
     <div className="page-shell room-page">
@@ -835,6 +859,7 @@ export function RoomPage() {
         compatibilityMode={connection.compatibilityMode}
         onLeave={handleLeave}
         onCopyFeedback={showToast}
+        roomCodeCopyEnabled={!inviteHeroVisible}
         moderatorControls={
           <ModeratorControls
             compact
@@ -848,6 +873,8 @@ export function RoomPage() {
             onHonkTimer={handleHonkTimer}
             onUpdateSettings={handleUpdateSettings}
             onTransferModerator={handleTransferModerator}
+            trackStories={trackStories}
+            onTrackStoriesChange={setTrackStories}
             disabled={actionsDisabled}
           />
         }
@@ -887,16 +914,20 @@ export function RoomPage() {
 
         <div className="room-layout">
           <div className="room-layout__main room-layout__stage">
-            <StoryAgenda
-              state={state}
-              disabled={actionsDisabled}
-              onUpdateStoryLabel={handleUpdateStoryLabel}
-              onAddStoryAgendaItems={handleAddStoryAgendaItems}
-              onRemoveStoryAgendaItem={handleRemoveStoryAgendaItem}
-              onMoveStoryAgendaItem={handleMoveStoryAgendaItem}
-              onStartNextStory={handleStartNextStory}
-            />
-            <TimerStrip state={state} serverClockOffsetMs={serverClockOffsetMs} />
+            {storyAgendaVisible ? (
+              <StoryAgenda
+                state={state}
+                disabled={actionsDisabled}
+                onUpdateStoryLabel={handleUpdateStoryLabel}
+                onAddStoryAgendaItems={handleAddStoryAgendaItems}
+                onRemoveStoryAgendaItem={handleRemoveStoryAgendaItem}
+                onMoveStoryAgendaItem={handleMoveStoryAgendaItem}
+                onStartNextStory={handleStartNextStory}
+              />
+            ) : null}
+            {timerStripVisible ? (
+              <TimerStrip state={state} serverClockOffsetMs={serverClockOffsetMs} />
+            ) : null}
             <RoundActionBar
               state={state}
               onReveal={handleReveal}
@@ -933,7 +964,7 @@ export function RoomPage() {
           </div>
 
           <aside className="room-layout__aside room-layout__participants">
-            {shouldShowInviteHero(state) ? (
+            {inviteHeroVisible ? (
               <InviteHero roomId={state.id} onCopyError={showToast} />
             ) : (
               <ParticipantsBoard state={state} variant="rail" />

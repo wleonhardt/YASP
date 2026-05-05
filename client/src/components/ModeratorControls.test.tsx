@@ -319,6 +319,25 @@ describe("ModeratorControls", () => {
     expect(props.onUpdateSettings).toHaveBeenNthCalledWith(2, { allowSpectators: false });
   });
 
+  it("lets moderators opt into tracking stories from the drawer controls", async () => {
+    const user = userEvent.setup();
+    const onTrackStoriesChange = vi.fn();
+
+    render(
+      <ModeratorControls
+        compact={false}
+        state={makeState()}
+        onTrackStoriesChange={onTrackStoriesChange}
+        {...handlers()}
+      />
+    );
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+    await user.click(within(panel).getByRole("checkbox", { name: /track stories/i }));
+
+    expect(onTrackStoriesChange).toHaveBeenCalledWith(true);
+  });
+
   it("sends the expected payload for every exposed room setting control", async () => {
     const user = userEvent.setup();
     const props = handlers();

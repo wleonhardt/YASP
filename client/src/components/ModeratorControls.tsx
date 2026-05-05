@@ -24,6 +24,8 @@ type Props = {
   onResetTimer: () => Promise<unknown> | unknown;
   onHonkTimer: () => Promise<boolean> | boolean;
   onTransferModerator: (targetParticipantId: string) => Promise<boolean> | boolean;
+  trackStories?: boolean;
+  onTrackStoriesChange?: (enabled: boolean) => void;
   disabled?: boolean;
 };
 
@@ -317,6 +319,8 @@ export function ModeratorControls({
   onResetTimer,
   onHonkTimer,
   onTransferModerator,
+  trackStories = false,
+  onTrackStoriesChange,
   disabled = false,
 }: Props) {
   const { t } = useTranslation();
@@ -335,6 +339,9 @@ export function ModeratorControls({
   const headingId = useId();
   const transferPanelId = useId();
   const timerPanelId = useId();
+  const trackStoriesId = useId();
+  const trackStoriesLabelId = useId();
+  const trackStoriesDescriptionId = useId();
   const transferSelectRef = useRef<HTMLSelectElement | null>(null);
   const [soundEnabled] = useTimerSoundPreference();
   const { remainingSeconds } = useRoomTimerCountdown(state.timer, serverClockOffsetMs);
@@ -486,6 +493,31 @@ export function ModeratorControls({
       </div>
 
       <RoomSettingsPanel state={state} onUpdateSettings={onUpdateSettings} disabled={disabled} />
+
+      {isModerator && onTrackStoriesChange ? (
+        <div className="controls-panel__section controls-panel__section--story">
+          <label
+            htmlFor={trackStoriesId}
+            className={["deck-modal__toggle", disabled ? "deck-modal__toggle--disabled" : ""]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            <input
+              id={trackStoriesId}
+              type="checkbox"
+              checked={trackStories}
+              disabled={disabled}
+              aria-labelledby={trackStoriesLabelId}
+              aria-describedby={trackStoriesDescriptionId}
+              onChange={(event) => onTrackStoriesChange(event.target.checked)}
+            />
+            <span className="deck-modal__toggle-copy">
+              <strong id={trackStoriesLabelId}>{t("room.story.track")}</strong>
+              <small id={trackStoriesDescriptionId}>{t("room.story.trackHint")}</small>
+            </span>
+          </label>
+        </div>
+      ) : null}
 
       <TransferSection
         isModerator={isModerator}

@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import type { PublicParticipant } from "@yasp/shared";
 import { makePublicRoomState } from "../test/roomState";
 import {
+  DEFAULT_TIMER_DURATION_SECONDS,
   getAlmostConsensusCallout,
   getLastWaitingVoter,
   getOutlierCallout,
+  isTimerStripRelevant,
   shouldShowInviteHero,
+  shouldShowStoryAgenda,
 } from "./room";
 
 function participant(overrides: Partial<PublicParticipant>): PublicParticipant {
@@ -99,6 +102,117 @@ describe("shouldShowInviteHero", () => {
               connected: false,
             }),
           ],
+        })
+      )
+    ).toBe(true);
+  });
+});
+
+describe("shouldShowStoryAgenda", () => {
+  it("hides the agenda by default for an empty room", () => {
+    expect(shouldShowStoryAgenda(makePublicRoomState(), false)).toBe(false);
+  });
+
+  it("shows the agenda when the room has a current story label", () => {
+    expect(shouldShowStoryAgenda(makePublicRoomState({ currentStoryLabel: "YASP-123" }), false)).toBe(true);
+  });
+
+  it("shows the agenda when the room has queued stories", () => {
+    expect(
+      shouldShowStoryAgenda(
+        makePublicRoomState({
+          storyQueue: [{ id: "story-1", label: "Add deck keyboard hints" }],
+        }),
+        false
+      )
+    ).toBe(true);
+  });
+
+  it("lets moderators opt into the empty agenda", () => {
+    expect(shouldShowStoryAgenda(makePublicRoomState(), true)).toBe(true);
+  });
+
+  it("does not let non-moderators opt into the empty agenda", () => {
+    expect(
+      shouldShowStoryAgenda(
+        makePublicRoomState({
+          participants: [participant({ id: "me", name: "Alice", isSelf: true, isModerator: false })],
+        }),
+        true
+      )
+    ).toBe(false);
+  });
+});
+
+describe("isTimerStripRelevant", () => {
+  it("hides the timer strip for the untouched default timer", () => {
+    expect(isTimerStripRelevant(makePublicRoomState())).toBe(false);
+  });
+
+  it("shows the timer strip while the timer is running", () => {
+    expect(
+      isTimerStripRelevant(
+        makePublicRoomState({
+          timer: {
+            durationSeconds: DEFAULT_TIMER_DURATION_SECONDS,
+            remainingSeconds: DEFAULT_TIMER_DURATION_SECONDS,
+            running: true,
+            endsAt: Date.now() + DEFAULT_TIMER_DURATION_SECONDS * 1000,
+            completedAt: null,
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("shows the timer strip after the default timer has been used", () => {
+    expect(
+      isTimerStripRelevant(
+        makePublicRoomState({
+          timer: {
+            durationSeconds: DEFAULT_TIMER_DURATION_SECONDS,
+            remainingSeconds: 42,
+            running: false,
+            endsAt: null,
+            completedAt: null,
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("shows the timer strip for non-default durations and completed timers", () => {
+    expect(
+      isTimerStripRelevant(
+        makePublicRoomState({
+          timer: {
+            durationSeconds: 120,
+            remainingSeconds: 120,
+            running: false,
+            endsAt: null,
+            completedAt: null,
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
+        })
+      )
+    ).toBe(true);
+    expect(
+      isTimerStripRelevant(
+        makePublicRoomState({
+          timer: {
+            durationSeconds: DEFAULT_TIMER_DURATION_SECONDS,
+            remainingSeconds: 0,
+            running: false,
+            endsAt: null,
+            completedAt: Date.now(),
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
         })
       )
     ).toBe(true);

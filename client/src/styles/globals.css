@@ -1529,6 +1529,8 @@ select.input {
 }
 
 .room-code-share__button {
+  display: flex;
+  align-items: center;
   justify-content: flex-start;
   min-width: 0;
   max-width: 100%;
@@ -1537,6 +1539,10 @@ select.input {
   gap: 0.45rem;
   border-color: rgba(148, 172, 204, 0.18);
   background: rgba(10, 16, 26, 0.62);
+}
+
+.room-code-share__button--static {
+  width: fit-content;
 }
 
 .room-code-share__button:hover:not(:disabled) {
@@ -2862,6 +2868,7 @@ select.input {
 }
 
 .controls-panel__section--settings,
+.controls-panel__section--story,
 .controls-panel__section--transfer {
   display: flex;
   flex-direction: column;

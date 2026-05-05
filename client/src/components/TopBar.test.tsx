@@ -57,4 +57,21 @@ describe("TopBar", () => {
 
     expect(screen.queryByRole("button", { name: /moderator controls/i })).not.toBeInTheDocument();
   });
+
+  it("renders the room code without a copy action when sharing is owned elsewhere", () => {
+    render(
+      <TopBar
+        state={makePublicRoomState()}
+        connectionStatus="connected"
+        compatibilityMode={false}
+        onLeave={vi.fn()}
+        onCopyFeedback={vi.fn()}
+        roomCodeCopyEnabled={false}
+        moderatorControls={<div>Timer settings live here</div>}
+      />
+    );
+
+    expect(screen.getByText("ROOM01")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /copy link/i })).not.toBeInTheDocument();
+  });
 });
