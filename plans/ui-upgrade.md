@@ -23,6 +23,12 @@ for the audit that motivated each change.
   minutes/seconds inputs read as one grouped control. Next Phase 1 slice is
   the sound-toggle relocation into the utility menu, then Phase 2
   `RoundActionBar`.
+- 2026-05-05: Completed Phase 1 by relocating the interactive timer sound
+  toggle into the utility menu. `RoomTimer` now subscribes to the shared
+  preference and shows only a read-only sound indicator beside the countdown.
+  The utility-menu toggle preserves audio priming and the preference still
+  persists in `localStorage`. Next implementation slice is Phase 2:
+  `RoundActionBar`.
 
 ---
 

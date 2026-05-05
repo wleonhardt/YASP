@@ -1552,6 +1552,24 @@ select.input {
   border-radius: var(--radius-md);
 }
 
+.room-utility__sound-toggle {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 40px;
+  padding: 0.7rem 0.9rem;
+}
+
+.room-utility__sound-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.room-utility__sound-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
 .theme-toggle--labelled {
   width: 100%;
   justify-content: flex-start;
@@ -1595,6 +1613,13 @@ select.input {
 .room-timer__summary {
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.room-timer__summary-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
@@ -1721,16 +1746,26 @@ select.input {
   text-overflow: ellipsis;
 }
 
-.room-timer__sound-toggle {
-  min-height: 30px;
-  padding-inline: 0.7rem;
-  border-radius: var(--radius-pill);
-  font-size: var(--text-tiny);
-}
-
 .room-timer__secondary-action {
   min-height: 40px;
   padding-inline: 0.8rem;
+}
+
+.room-timer__sound-indicator {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: rgba(148, 172, 204, 0.08);
+  color: var(--color-text-secondary);
+}
+
+.room-timer__sound-indicator svg {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .room-timer__button-icon {
@@ -2477,10 +2512,6 @@ select.input {
   width: 100%;
 }
 
-.controls-panel--compact .room-timer__sound-toggle {
-  justify-content: center;
-}
-
 .controls-panel--compact .room-timer--compact-actions .timerPacingLayout {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -2571,8 +2602,7 @@ select.input {
   background: rgba(79, 150, 255, 0.12);
 }
 
-.controls-panel--compact .room-timer--compact-actions .timerControlsGrid .room-timer__secondary-action,
-.controls-panel--compact .room-timer--compact-actions .timerControlsGrid .room-timer__sound-toggle {
+.controls-panel--compact .room-timer--compact-actions .timerControlsGrid .room-timer__secondary-action {
   border-color: var(--color-border);
   background: var(--color-surface-soft);
 }
@@ -2622,10 +2652,6 @@ select.input {
 .controls-panel .room-timer--embedded .room-timer__action-group--local {
   margin-left: 0;
   justify-content: flex-start;
-}
-
-.controls-panel .room-timer--embedded .room-timer__sound-toggle {
-  width: fit-content;
 }
 
 /* ─── Results panel ───────────────────────────────────────── */
@@ -3149,10 +3175,6 @@ select.input {
     padding-bottom: var(--space-3);
     border-right: 0;
     border-bottom: 1px solid var(--color-border);
-  }
-
-  .controls-panel .room-timer--embedded .room-timer__sound-toggle {
-    width: 100%;
   }
 }
 

@@ -21,6 +21,9 @@
   the active UI uncertainties.
 - 2026-05-05 review: Phase 1 visual cleanup did not create new open questions.
   Sound relocation is still implementation work, not a product decision.
+- 2026-05-05 review: Phase 1 sound relocation did not create new open
+  questions. Phase 2 can proceed without an ADR because the change remains
+  client-only and does not alter the product's ephemeral state model.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.

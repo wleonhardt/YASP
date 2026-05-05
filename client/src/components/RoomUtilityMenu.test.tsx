@@ -2,7 +2,14 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
+import { getStoredTimerSoundEnabled, setStoredTimerSoundEnabled } from "../lib/storage";
 import { RoomUtilityMenu } from "./RoomUtilityMenu";
+
+const audioMocks = vi.hoisted(() => ({
+  primeRoomAudio: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock("../lib/audio", () => audioMocks);
 
 describe("RoomUtilityMenu", () => {
   const originalMatchMedia = window.matchMedia;
@@ -24,6 +31,8 @@ describe("RoomUtilityMenu", () => {
   };
 
   afterEach(async () => {
+    window.localStorage.clear();
+    vi.clearAllMocks();
     Object.defineProperty(window, "matchMedia", {
       writable: true,
       value: originalMatchMedia,
@@ -172,5 +181,24 @@ describe("RoomUtilityMenu", () => {
 
     const dialog = screen.getByRole("dialog", { name: /session preferences/i });
     expect(within(dialog).getByText("Compatibility mode active")).toBeInTheDocument();
+  });
+
+  it("toggles timer sound preference from the session preferences dialog", async () => {
+    const user = userEvent.setup();
+    setStoredTimerSoundEnabled(false);
+
+    render(<RoomUtilityMenu status="connected" />);
+
+    await user.click(screen.getByRole("button", { name: /open session preferences/i }));
+    await user.click(screen.getByRole("button", { name: /sound off/i }));
+
+    expect(audioMocks.primeRoomAudio).toHaveBeenCalledTimes(1);
+    expect(getStoredTimerSoundEnabled()).toBe(true);
+    expect(screen.getByRole("button", { name: /sound on/i })).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: /sound on/i }));
+
+    expect(getStoredTimerSoundEnabled()).toBe(false);
+    expect(screen.getByRole("button", { name: /sound off/i })).toHaveAttribute("aria-pressed", "false");
   });
 });

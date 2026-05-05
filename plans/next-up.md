@@ -5,8 +5,8 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  finish Phase 1 by relocating the sound toggle into the utility menu, then
-  move on to Phase 2 (`RoundActionBar`).
+  Phase 2 (`RoundActionBar`) to move Reveal/Next/Reset actions out of
+  `ModeratorControls` and into the stage zone.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -32,6 +32,10 @@
   primary weight while Reset/Beep stay quiet, and the duration minutes/seconds
   fields are visually grouped as one control. Sound relocation remains queued
   as the last Phase 1 slice because it changes timer sound state ownership.
+- 2026-05-05: Completed Phase 1 by moving the interactive timer sound toggle
+  into the room utility menu. Timer surfaces now subscribe to the shared
+  persisted sound preference and render only a read-only sound-state indicator,
+  while the utility toggle keeps audio priming behavior intact.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

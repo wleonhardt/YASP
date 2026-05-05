@@ -66,7 +66,8 @@ describe("ModeratorControls", () => {
 
     expect(scope.getByRole("heading", { name: "01:00" })).toBeInTheDocument();
     expect(scope.getByRole("button", { name: /start/i })).toBeInTheDocument();
-    expect(scope.getByRole("button", { name: /sound on/i })).toBeInTheDocument();
+    expect(scope.queryByRole("button", { name: /sound on/i })).not.toBeInTheDocument();
+    expect(scope.getByTitle(/sound on/i)).toBeInTheDocument();
     expect(scope.queryByRole("button", { name: /timer & pacing/i })).not.toBeInTheDocument();
     expect(scope.getByRole("button", { name: /^reveal votes$/i })).toBeInTheDocument();
     expect(scope.getByRole("button", { name: /^transfer$/i })).toBeInTheDocument();
@@ -100,7 +101,8 @@ describe("ModeratorControls", () => {
 
     expect(timerToggle).toHaveAttribute("aria-expanded", "true");
     expect(scope.getByRole("button", { name: /start/i })).toBeInTheDocument();
-    expect(scope.getByRole("button", { name: /sound on/i })).toBeInTheDocument();
+    expect(scope.queryByRole("button", { name: /sound on/i })).not.toBeInTheDocument();
+    expect(scope.getByTitle(/sound on/i)).toBeInTheDocument();
 
     rerender(
       <ModeratorControls

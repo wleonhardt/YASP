@@ -1,8 +1,11 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { primeRoomAudio } from "../lib/audio";
 import type { ConnectionStatus } from "../lib/connectionRecovery";
+import { useTimerSoundPreference } from "../hooks/useTimerSoundPreference";
 import { ConnectionBadge, getConnectionLabels } from "./ConnectionBadge";
+import { SoundIcon } from "./icons/SoundIcon";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -25,6 +28,7 @@ export function RoomUtilityMenu({ status, compatibilityMode = false }: Props) {
   const panelId = useId();
   const titleId = useId();
   const labels = getConnectionLabels(t, status);
+  const [timerSoundEnabled, setTimerSoundEnabled] = useTimerSoundPreference();
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
@@ -117,6 +121,16 @@ export function RoomUtilityMenu({ status, compatibilityMode = false }: Props) {
   const closeMenu = () => {
     setOpen(false);
     triggerRef.current?.focus();
+  };
+
+  const handleToggleTimerSound = async () => {
+    if (!timerSoundEnabled) {
+      await primeRoomAudio();
+      setTimerSoundEnabled(true);
+      return;
+    }
+
+    setTimerSoundEnabled(false);
   };
 
   return (
@@ -234,6 +248,25 @@ export function RoomUtilityMenu({ status, compatibilityMode = false }: Props) {
               <div className="room-utility__section">
                 <div className="section-label">{t("theme.appearance")}</div>
                 <ThemeToggle showLabel className="room-utility__theme-toggle" />
+              </div>
+
+              <div className="room-utility__section">
+                <div className="section-label">{t("room.timer")}</div>
+                <button
+                  type="button"
+                  className={[
+                    "button",
+                    timerSoundEnabled ? "button--secondary" : "button--ghost",
+                    "room-utility__sound-toggle",
+                  ].join(" ")}
+                  aria-pressed={timerSoundEnabled}
+                  onClick={() => void handleToggleTimerSound()}
+                >
+                  <span className="room-utility__sound-icon" aria-hidden="true">
+                    <SoundIcon enabled={timerSoundEnabled} />
+                  </span>
+                  <span>{timerSoundEnabled ? t("room.timerSoundOn") : t("room.timerSoundOff")}</span>
+                </button>
               </div>
 
               <div className="room-utility__section room-utility__section--language">

@@ -1,8 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { PublicRoomState } from "@yasp/shared";
+import { useTimerSoundPreference } from "../hooks/useTimerSoundPreference";
 import { getConnectedVoterCounts, isMeModerator } from "../lib/room";
-import { getStoredTimerSoundEnabled } from "../lib/storage";
 import {
   RoomTimer,
   formatCountdown,
@@ -422,6 +422,7 @@ export function ModeratorControls({
   const timerPanelId = useId();
   const actionHintId = useId();
   const transferSelectRef = useRef<HTMLSelectElement | null>(null);
+  const [soundEnabled] = useTimerSoundPreference();
   const { remainingSeconds } = useRoomTimerCountdown(state.timer, serverClockOffsetMs);
   const actionHint =
     !isModerator &&
@@ -516,7 +517,7 @@ export function ModeratorControls({
         ? `\u23f1 ${formatCountdown(remainingSeconds)}`
         : `${t("room.timer")} ${formatTimerDuration(state.timer.durationSeconds)}`;
 
-  const drawerSummary = `${t("room.timerDuration")} ${formatTimerDuration(state.timer.durationSeconds)} \u2022 ${getStoredTimerSoundEnabled() ? t("room.timerSoundOn") : t("room.timerSoundOff")}`;
+  const drawerSummary = `${t("room.timerDuration")} ${formatTimerDuration(state.timer.durationSeconds)} \u2022 ${soundEnabled ? t("room.timerSoundOn") : t("room.timerSoundOff")}`;
   const durationChip = formatTimerDuration(state.timer.durationSeconds);
   const readyChipLabel = allVoted && !state.revealed ? t("room.participant.ready") : null;
   const transferDisabled = disabled || transferCandidates.length === 0;

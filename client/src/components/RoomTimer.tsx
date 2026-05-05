@@ -18,8 +18,9 @@ import {
   playTimerTick,
   primeRoomAudio,
 } from "../lib/audio";
+import { useTimerSoundPreference } from "../hooks/useTimerSoundPreference";
 import { isMeModerator } from "../lib/room";
-import { getStoredTimerSoundEnabled, setStoredTimerSoundEnabled } from "../lib/storage";
+import { SoundIcon } from "./icons/SoundIcon";
 
 export type RoomTimerStatus = "running" | "complete" | "paused" | "ready";
 
@@ -197,26 +198,6 @@ function BeepIcon() {
   );
 }
 
-function SoundOnIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M11 5 6 9H3v6h3l5 4z" />
-      <path d="M15.5 8.5a5 5 0 0 1 0 7" />
-      <path d="M18 6a8.5 8.5 0 0 1 0 12" />
-    </svg>
-  );
-}
-
-function SoundOffIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M11 5 6 9H3v6h3l5 4z" />
-      <path d="m16 9 5 5" />
-      <path d="m21 9-5 5" />
-    </svg>
-  );
-}
-
 type TimerActionContentProps = {
   label: string;
   icon: ReactNode;
@@ -253,7 +234,7 @@ export function RoomTimer({
   const { t } = useTranslation();
   const moderator = isMeModerator(state);
   const HeadingTag = headingLevel;
-  const [soundEnabled, setSoundEnabled] = useState(getStoredTimerSoundEnabled);
+  const [soundEnabled] = useTimerSoundPreference();
   const headingId = useId();
   const hasMounted = useRef(false);
   const previousCompletedAt = useRef<number | null>(state.timer.completedAt);
@@ -281,10 +262,7 @@ export function RoomTimer({
   const honkAccessibleLabel = honkCooldownSeconds > 0 ? `${honkLabel} (${honkCooldownSeconds})` : honkLabel;
 
   useEffect(() => {
-    if (!soundEnabled) {
-      audioReadyRef.current = false;
-    }
-    setStoredTimerSoundEnabled(soundEnabled);
+    audioReadyRef.current = soundEnabled ? isRoomAudioPrimed() : false;
   }, [soundEnabled]);
 
   useEffect(() => {
@@ -368,17 +346,6 @@ export function RoomTimer({
     );
   }, [remainingSeconds, soundEnabled, state.timer.completedAt, state.timer.lastHonkAt, state.timer.running]);
 
-  const handleToggleSound = async () => {
-    if (!soundEnabled) {
-      audioReadyRef.current = await primeRoomAudio();
-      setSoundEnabled(true);
-      return;
-    }
-
-    audioReadyRef.current = false;
-    setSoundEnabled(false);
-  };
-
   const prepareAudioAndRun = async <T,>(action: () => Promise<T> | T): Promise<T> => {
     if (soundEnabled) {
       audioReadyRef.current = await primeRoomAudio();
@@ -423,16 +390,21 @@ export function RoomTimer({
           {formatCountdown(remainingSeconds)}
         </HeadingTag>
       </div>
-      {showStatusChip ? (
-        <div
-          className={["ui-chip", timerStatus === "complete" ? "ui-chip--success" : "ui-chip--neutral"].join(
-            " "
-          )}
-          aria-live="polite"
-        >
-          {timerStateLabel}
-        </div>
-      ) : null}
+      <div className="room-timer__summary-status">
+        {showStatusChip ? (
+          <div
+            className={["ui-chip", timerStatus === "complete" ? "ui-chip--success" : "ui-chip--neutral"].join(
+              " "
+            )}
+            aria-live="polite"
+          >
+            {timerStateLabel}
+          </div>
+        ) : null}
+        <span className="room-timer__sound-indicator" title={soundLabel} aria-label={soundLabel}>
+          <SoundIcon enabled={soundEnabled} />
+        </span>
+      </div>
     </div>
   );
 
@@ -547,23 +519,6 @@ export function RoomTimer({
     </>
   ) : null;
 
-  const soundToggleButton = (
-    <button
-      className={[
-        "button",
-        soundEnabled ? "button--secondary" : "button--ghost",
-        "room-timer__sound-toggle",
-      ].join(" ")}
-      type="button"
-      onClick={() => void handleToggleSound()}
-      aria-label={soundLabel}
-      aria-pressed={soundEnabled}
-      title={soundLabel}
-    >
-      <TimerActionContent label={soundLabel} icon={soundEnabled ? <SoundOnIcon /> : <SoundOffIcon />} />
-    </button>
-  );
-
   return (
     <section
       className={[
@@ -581,10 +536,7 @@ export function RoomTimer({
         <div className="timerPacingLayout">
           {summaryContent}
           {durationField}
-          <div className="timerControlsGrid">
-            {moderatorActionButtons}
-            {soundToggleButton}
-          </div>
+          <div className="timerControlsGrid">{moderatorActionButtons}</div>
           {roundActions ? <div className="room-timer__compact-round-actions">{roundActions}</div> : null}
         </div>
       ) : (
@@ -607,10 +559,6 @@ export function RoomTimer({
                     {roundActions}
                   </div>
                 ) : null}
-              </div>
-
-              <div className="room-timer__action-group room-timer__action-group--local">
-                {soundToggleButton}
               </div>
             </div>
           </div>

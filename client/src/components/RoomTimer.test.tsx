@@ -68,7 +68,8 @@ describe("RoomTimer", () => {
 
     expect(screen.queryByRole("button", { name: /start/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /beep/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /sound on/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /sound on/i })).not.toBeInTheDocument();
+    expect(screen.getByTitle(/sound on/i)).toBeInTheDocument();
   });
 
   it("shows Pause instead of Start when running", () => {
