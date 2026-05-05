@@ -59,6 +59,7 @@ type RoomServicePort = {
   revealVotes(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
   autoRevealIfReady(roomId: RoomId): Awaitable<AckResult<{ room: Room; changed: boolean }>>;
   resetRound(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  reopenVoting(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
   nextRound(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
   transferModerator(
     roomId: RoomId,
@@ -383,6 +384,7 @@ export function registerSocketHandlers(
     roomAction("clear_vote", (roomId, pid) => roomService.clearVote(roomId, pid), "autoReveal");
     roomAction("reveal_votes", (roomId, pid) => roomService.revealVotes(roomId, pid), "cancelAutoReveal");
     roomAction("reset_round", (roomId, pid) => roomService.resetRound(roomId, pid), "cancelAutoReveal");
+    roomAction("reopen_voting", (roomId, pid) => roomService.reopenVoting(roomId, pid), "cancelAutoReveal");
     roomAction("next_round", (roomId, pid) => roomService.nextRound(roomId, pid), "cancelAutoReveal");
     roomAction("transfer_moderator", (roomId, pid, i: TransferModeratorInput) =>
       roomService.transferModerator(roomId, pid, i.targetParticipantId)

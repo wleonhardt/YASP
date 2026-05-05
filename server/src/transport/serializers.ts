@@ -52,6 +52,7 @@ export function serializeRoom(room: Room, selfSessionId: SessionId): PublicRoomS
       participantId: selfParticipant?.id ?? null,
       sessionId: selfSessionId,
       connected: selfParticipant?.connected ?? false,
+      ownVote: selfParticipant ? (room.votes.get(selfParticipant.id) ?? null) : null,
     },
   };
 }

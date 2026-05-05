@@ -63,6 +63,7 @@ export function RoomPage() {
     clearVote,
     revealVotes,
     resetRound,
+    reopenVoting,
     nextRound,
     transferModerator,
     setTimerDuration,
@@ -377,8 +378,8 @@ export function RoomPage() {
 
     if (roomState.revealed && roomState.votes) {
       setSelectedCard(roomState.votes[self.id] ?? null);
-    } else if (!roomState.revealed && !self.hasVoted) {
-      setSelectedCard(null);
+    } else if (!roomState.revealed) {
+      setSelectedCard(roomState.me.ownVote);
     }
   }, [roomState]);
 
@@ -495,6 +496,17 @@ export function RoomPage() {
       setSelectedCard(null);
     }
   }, [actionsDisabled, resetRound, roomId]);
+
+  const handleReopenVoting = useCallback(async () => {
+    if (!roomId || actionsDisabled) {
+      return;
+    }
+
+    const result = await reopenVoting(roomId);
+    if (result.ok) {
+      setSelectedCard(roomState?.me.ownVote ?? null);
+    }
+  }, [actionsDisabled, reopenVoting, roomId, roomState?.me.ownVote]);
 
   const handleNextRound = useCallback(async () => {
     if (!roomId || actionsDisabled) {
@@ -812,6 +824,7 @@ export function RoomPage() {
             <RoundActionBar
               state={state}
               onReveal={handleReveal}
+              onReopenVoting={handleReopenVoting}
               onReset={handleReset}
               onNextRound={handleNextRound}
               disabled={actionsDisabled}

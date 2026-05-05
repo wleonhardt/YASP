@@ -6,10 +6,6 @@
   where YASP could differentiate. Out of scope for the current
   [`ui-upgrade.md`](ui-upgrade.md) plan but worth deciding before/after
   Phase 9 lands:
-  - Remaining implementation decision: P9.3 Re-open voting should be a
-    server/shared/client state transition that preserves hidden draft
-    votes, exposes each participant's own previous vote as editable, and
-    replaces the latest session snapshot on re-reveal.
   - Remaining implementation decision: P9.5 Story labels should start as
     an ephemeral room agenda with a current story label plus optional
     queue, bulk-paste, reorder/remove, and start-next-story behavior. No
@@ -74,6 +70,9 @@
   durable backlog. Implementation still needs shared/server/client design,
   but no new durable-state ADR is needed if it stays within TTL-bound active
   room/session state.
+- 2026-05-05 review: Phase 9 P9.3 Re-open voting is now implemented, so the
+  re-open-voting implementation question is resolved. P9.5 remains the only
+  open Phase 9 product/state thread.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.

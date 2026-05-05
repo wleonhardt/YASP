@@ -84,6 +84,7 @@ export type PublicRoomState = {
     participantId: ParticipantId | null;
     sessionId: SessionId;
     connected: boolean;
+    ownVote: VoteValue | null;
   };
 };
 

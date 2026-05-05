@@ -125,6 +125,13 @@ export function useRoom(socket: Socket, sessionId: string) {
     [emitAck]
   );
 
+  const reopenVoting = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("reopen_voting", { roomId });
+    },
+    [emitAck]
+  );
+
   const nextRound = useCallback(
     async (roomId: string): Promise<AckResult> => {
       return emitAck("next_round", { roomId });
@@ -192,6 +199,7 @@ export function useRoom(socket: Socket, sessionId: string) {
     clearVote,
     revealVotes,
     resetRound,
+    reopenVoting,
     nextRound,
     transferModerator,
     setTimerDuration,

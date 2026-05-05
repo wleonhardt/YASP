@@ -339,6 +339,27 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
       })
     );
 
+    const aliceReopenStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "reopen alice");
+    const bobReopenStatePromise = waitForEvent<PublicRoomState>(bob, "room_state", "reopen bob");
+    const reopenAck = await emitAck(alice, "reopen_voting", { roomId });
+    expect(reopenAck.ok).toBe(true);
+    if (!reopenAck.ok) return;
+    const [aliceReopenedState, bobReopenedState] = await Promise.all([
+      aliceReopenStatePromise,
+      bobReopenStatePromise,
+    ]);
+    expect(aliceReopenedState.revealed).toBe(false);
+    expect(aliceReopenedState.votes).toBeNull();
+    expect(aliceReopenedState.me.ownVote).toBe("5");
+    expect(bobReopenedState.me.ownVote).toBe("8");
+    expect(aliceReopenedState.sessionRounds).toHaveLength(0);
+
+    const rerevealStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "rereveal room_state");
+    const rerevealAck = await emitAck(alice, "reveal_votes", { roomId });
+    expect(rerevealAck.ok).toBe(true);
+    if (!rerevealAck.ok) return;
+    await rerevealStatePromise;
+
     const resetStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "reset room_state");
     const resetAck = await emitAck(alice, "reset_round", { roomId });
     expect(resetAck.ok).toBe(true);

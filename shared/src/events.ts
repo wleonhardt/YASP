@@ -63,6 +63,10 @@ export type ResetRoundInput = {
   roomId: RoomId;
 };
 
+export type ReopenVotingInput = {
+  roomId: RoomId;
+};
+
 export type NextRoundInput = {
   roomId: RoomId;
 };

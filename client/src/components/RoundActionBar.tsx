@@ -6,12 +6,20 @@ import { isMeModerator } from "../lib/room";
 type Props = {
   state: PublicRoomState;
   onReveal: () => void;
+  onReopenVoting: () => void;
   onReset: () => void;
   onNextRound: () => void;
   disabled?: boolean;
 };
 
-export function RoundActionBar({ state, onReveal, onReset, onNextRound, disabled = false }: Props) {
+export function RoundActionBar({
+  state,
+  onReveal,
+  onReopenVoting,
+  onReset,
+  onNextRound,
+  disabled = false,
+}: Props) {
   const { t } = useTranslation();
   const hintId = useId();
   const isModerator = isMeModerator(state);
@@ -39,6 +47,15 @@ export function RoundActionBar({ state, onReveal, onReset, onNextRound, disabled
       <div className="round-action-bar__actions">
         {state.revealed ? (
           <>
+            <button
+              className="button button--secondary round-action-bar__secondary"
+              type="button"
+              onClick={onReopenVoting}
+              disabled={!resetAllowed || disabled}
+              aria-describedby={!resetAllowed && actionHint ? hintId : undefined}
+            >
+              {t("room.reopenVoting")}
+            </button>
             <button
               className="button button--ghost round-action-bar__secondary"
               type="button"

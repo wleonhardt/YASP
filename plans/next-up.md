@@ -5,16 +5,11 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  Phase 9 stateful follow-ups. Recommended order:
-  - P9.3 Re-open voting, implemented as a server/shared/client state
-    transition that preserves hidden draft votes, exposes each user's own
-    previous vote for editing, and replaces the latest session snapshot on
-    re-reveal.
-  - P9.5 Story labels/agenda, implemented as ephemeral room/session state:
-    current story label first, then a compact optional queue with bulk
-    paste, reorder/remove, and start-next-story behavior.
-  Both require shared/server/client changes and focused tests; neither
-  should introduce durable storage or project-management scope.
+  P9.5 Story labels/agenda, implemented as ephemeral room/session state:
+  current story label first, then a compact optional queue with bulk paste,
+  reorder/remove, and start-next-story behavior. This requires
+  shared/server/client changes and focused tests, and must not introduce
+  durable storage or project-management scope.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -92,6 +87,11 @@
   The revealed-results consensus chip now gets a small decorative spark
   flourish when everyone agrees. The flourish is hidden from assistive tech
   and disables animation under reduced-motion preferences.
+- 2026-05-05: Implemented Phase 9 P9.3 Re-open voting as a real
+  shared/server/client state transition. Re-open follows the existing reset
+  policy, returns the same round to hidden-vote voting, preserves each
+  participant's previous card as their own editable selection, and removes the
+  prior reveal snapshot so re-reveal writes the corrected result.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

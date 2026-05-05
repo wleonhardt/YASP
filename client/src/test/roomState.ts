@@ -1,8 +1,4 @@
-import {
-  DEFAULT_DECKS,
-  DEFAULT_ROOM_SETTINGS,
-  type PublicRoomState,
-} from "@yasp/shared";
+import { DEFAULT_DECKS, DEFAULT_ROOM_SETTINGS, type PublicRoomState } from "@yasp/shared";
 
 const DEFAULT_TIMER_SECONDS = 60;
 
@@ -40,6 +36,7 @@ export function makePublicRoomState(overrides: Partial<PublicRoomState> = {}): P
       participantId: "me",
       sessionId: "session-1",
       connected: true,
+      ownVote: null,
     },
     ...overrides,
   };

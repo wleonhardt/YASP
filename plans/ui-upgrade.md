@@ -79,6 +79,12 @@ for the audit that motivated each change.
   results now add a small decorative spark flourish to the existing consensus
   chip. The flourish is `aria-hidden`, adds no new copy, and disables
   animation for reduced-motion users.
+- 2026-05-05: Implemented Phase 9 P9.3 Re-open voting. Revealed rounds now
+  offer a distinct re-open action governed by the existing reset policy. The
+  action returns the same round to voting, keeps prior votes hidden from other
+  participants, restores each voter's own previous card as an editable
+  selection, and removes the previous reveal snapshot so the next reveal
+  becomes the corrected session result.
 
 ---
 

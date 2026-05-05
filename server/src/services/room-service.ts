@@ -106,7 +106,6 @@ function stopRoomTimer(room: Room): void {
   room.timer.endsAt = null;
 }
 
-
 export class RoomService {
   constructor(private store: RoomStore) {}
 
@@ -447,6 +446,26 @@ export class RoomService {
     }
 
     resetRoundState(room);
+    touchRoom(room);
+    this.saveRoom(room);
+    return success({ room });
+  }
+
+  reopenVoting(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    if (!room.revealed) return fail({ code: "NOT_REVEALED", message: "Votes are not revealed" });
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canReset(room, participant.id)) {
+      return fail({ code: "NOT_ALLOWED", message: "Not allowed to re-open voting" });
+    }
+
+    room.revealed = false;
+    if (room.sessionRounds.at(-1)?.roundNumber === room.roundNumber) {
+      room.sessionRounds.pop();
+    }
+
     touchRoom(room);
     this.saveRoom(room);
     return success({ room });

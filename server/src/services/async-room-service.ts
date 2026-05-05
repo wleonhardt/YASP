@@ -121,6 +121,10 @@ export class AsyncRoomService {
     return this.withRoom(roomId, (service) => service.resetRound(roomId, sessionId));
   }
 
+  reopenVoting(roomId: RoomId, sessionId: SessionId): Promise<AckResult<{ room: Room }>> {
+    return this.withRoom(roomId, (service) => service.reopenVoting(roomId, sessionId));
+  }
+
   nextRound(roomId: RoomId, sessionId: SessionId): Promise<AckResult<{ room: Room }>> {
     return this.withRoom(roomId, (service) => service.nextRound(roomId, sessionId));
   }

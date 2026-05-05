@@ -69,6 +69,31 @@ describe("serializeRoom", () => {
     expect(state.votes).toBeNull();
     expect(state.stats).toBeNull();
     expect(state.participants[0].hasVoted).toBe(true);
+    expect(state.me.ownVote).toBe("5");
+  });
+
+  it("only exposes the caller's own vote before reveal", () => {
+    const p1 = makeParticipant({ id: "public-alice", sessionId: "private-alice" });
+    const p2 = makeParticipant({ id: "public-bob", sessionId: "private-bob", name: "Bob", joinedAt: 2000 });
+    const room = makeRoom({
+      participants: new Map([
+        ["private-alice", p1],
+        ["private-bob", p2],
+      ]),
+      votes: new Map([
+        ["public-alice", "5"],
+        ["public-bob", "8"],
+      ]),
+      revealed: false,
+    });
+
+    const aliceState = serializeRoom(room, "private-alice");
+    const bobState = serializeRoom(room, "private-bob");
+
+    expect(aliceState.votes).toBeNull();
+    expect(bobState.votes).toBeNull();
+    expect(aliceState.me.ownVote).toBe("5");
+    expect(bobState.me.ownVote).toBe("8");
   });
 
   it("exposes votes and stats after reveal", () => {

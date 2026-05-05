@@ -60,4 +60,23 @@ describe("useRoom", () => {
     );
     expect(ack).toEqual({ ok: true, data: undefined });
   });
+
+  it("emits reopen_voting with the expected payload", async () => {
+    const socket = createSocketMock();
+    const { result } = renderHook(() => useRoom(socket, "session-1"));
+
+    let ack: AckResult | null = null;
+    await act(async () => {
+      ack = await result.current.reopenVoting("ROOM01");
+    });
+
+    expect(socket.emit).toHaveBeenCalledWith(
+      "reopen_voting",
+      {
+        roomId: "ROOM01",
+      },
+      expect.any(Function)
+    );
+    expect(ack).toEqual({ ok: true, data: undefined });
+  });
 });

@@ -463,6 +463,68 @@ describe("RoomService.resetRound", () => {
   });
 });
 
+describe("RoomService.reopenVoting", () => {
+  it("returns a revealed round to voting while preserving hidden draft votes", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    const join = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!join.ok) return;
+    service.castVote(roomId, "s1", "5");
+    service.castVote(roomId, "s2", "8");
+    service.revealVotes(roomId, "s1");
+
+    const result = service.reopenVoting(roomId, "s1");
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.room.revealed).toBe(false);
+    expect(result.data.room.roundNumber).toBe(1);
+    expect(result.data.room.votes.get(create.data.participantId)).toBe("5");
+    expect(result.data.room.votes.get(join.data.participantId)).toBe("8");
+    expect(result.data.room.sessionRounds).toHaveLength(0);
+  });
+
+  it("replaces the reopened session snapshot when the round is revealed again", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    const join = service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+    if (!join.ok) return;
+    service.castVote(roomId, "s1", "5");
+    service.castVote(roomId, "s2", "8");
+    service.revealVotes(roomId, "s1");
+    service.reopenVoting(roomId, "s1");
+    service.castVote(roomId, "s2", "5");
+
+    const reveal = service.revealVotes(roomId, "s1");
+
+    expect(reveal.ok).toBe(true);
+    if (!reveal.ok) return;
+    expect(reveal.data.room.sessionRounds).toHaveLength(1);
+    expect(reveal.data.room.sessionRounds[0].participants.map((participant) => participant.vote)).toEqual([
+      "5",
+      "5",
+    ]);
+  });
+
+  it("rejects re-open before reveal and follows the reset policy", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    const beforeReveal = service.reopenVoting(roomId, "s1");
+    expect(beforeReveal.ok).toBe(false);
+    if (!beforeReveal.ok) expect(beforeReveal.error.code).toBe("NOT_REVEALED");
+
+    service.revealVotes(roomId, "s1");
+    const blocked = service.reopenVoting(roomId, "s2");
+    expect(blocked.ok).toBe(false);
+    if (!blocked.ok) expect(blocked.error.code).toBe("NOT_ALLOWED");
+  });
+});
+
 describe("RoomService.nextRound", () => {
   it("clears votes, sets revealed=false, increments roundNumber", () => {
     const create = service.createRoom("s1", "sock-1", "Alice", "voter");
