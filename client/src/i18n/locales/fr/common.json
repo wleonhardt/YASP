@@ -305,6 +305,12 @@
         "title": "Une estimation diffère — à vérifier ?",
         "details": "Examiner",
         "mode": "Estimation la plus fréquente : {{vote}}"
+      },
+      "almostConsensus": {
+        "eyebrow": "Presque consensus",
+        "title": "Presque là — une estimation diffère.",
+        "details": "Examiner",
+        "mode": "Estimation partagée : {{vote}}"
       }
     },
     "roomUnavailable": "Salle indisponible",

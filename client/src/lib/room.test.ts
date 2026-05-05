@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { PublicParticipant } from "@yasp/shared";
 import { makePublicRoomState } from "../test/roomState";
-import { getLastWaitingVoter, getOutlierCallout, shouldShowInviteHero } from "./room";
+import {
+  getAlmostConsensusCallout,
+  getLastWaitingVoter,
+  getOutlierCallout,
+  shouldShowInviteHero,
+} from "./room";
 
 function participant(overrides: Partial<PublicParticipant>): PublicParticipant {
   return {
@@ -266,6 +271,102 @@ describe("getOutlierCallout", () => {
     ).toBeNull();
     expect(
       getOutlierCallout(makePublicRoomState({ ...baseState, votes: { me: "5", bob: "coffee" } }))
+    ).toBeNull();
+  });
+});
+
+describe("getAlmostConsensusCallout", () => {
+  it("returns the only voter whose estimate differs from the shared estimate", () => {
+    const state = makePublicRoomState({
+      revealed: true,
+      participants: [
+        participant({ id: "me", name: "Alice", hasVoted: true, isSelf: true, isModerator: true }),
+        participant({ id: "bob", name: "Bob", hasVoted: true }),
+        participant({ id: "cam", name: "Cam", hasVoted: true }),
+        participant({ id: "dee", name: "Dee", hasVoted: true }),
+      ],
+      votes: { me: "5", bob: "5", cam: "8", dee: "5" },
+      stats: {
+        totalVotes: 4,
+        numericAverage: 5.75,
+        distribution: { "5": 3, "8": 1 },
+        consensus: false,
+        mostCommon: "5",
+      },
+    });
+
+    expect(getAlmostConsensusCallout(state)).toMatchObject({
+      kind: "almostConsensus",
+      modeVote: "5",
+      outliers: [{ participant: expect.objectContaining({ name: "Cam" }), vote: "8" }],
+    });
+  });
+
+  it("returns null for two-person splits and broader disagreement", () => {
+    const twoPersonSplit = makePublicRoomState({
+      revealed: true,
+      participants: [
+        participant({ id: "me", name: "Alice", hasVoted: true, isSelf: true, isModerator: true }),
+        participant({ id: "bob", name: "Bob", hasVoted: true }),
+      ],
+      votes: { me: "5", bob: "8" },
+      stats: {
+        totalVotes: 2,
+        numericAverage: 6.5,
+        distribution: { "5": 1, "8": 1 },
+        consensus: false,
+        mostCommon: "5",
+      },
+    });
+    const broaderDisagreement = makePublicRoomState({
+      ...twoPersonSplit,
+      participants: [
+        participant({ id: "me", name: "Alice", hasVoted: true, isSelf: true, isModerator: true }),
+        participant({ id: "bob", name: "Bob", hasVoted: true }),
+        participant({ id: "cam", name: "Cam", hasVoted: true }),
+        participant({ id: "dee", name: "Dee", hasVoted: true }),
+      ],
+      votes: { me: "5", bob: "8", cam: "13", dee: "5" },
+      stats: {
+        totalVotes: 4,
+        numericAverage: 7.75,
+        distribution: { "5": 2, "8": 1, "13": 1 },
+        consensus: false,
+        mostCommon: "5",
+      },
+    });
+
+    expect(getAlmostConsensusCallout(twoPersonSplit)).toBeNull();
+    expect(getAlmostConsensusCallout(broaderDisagreement)).toBeNull();
+  });
+
+  it("returns null for consensus and ties", () => {
+    const baseState = makePublicRoomState({
+      revealed: true,
+      participants: [
+        participant({ id: "me", name: "Alice", hasVoted: true, isSelf: true, isModerator: true }),
+        participant({ id: "bob", name: "Bob", hasVoted: true }),
+        participant({ id: "cam", name: "Cam", hasVoted: true }),
+      ],
+      votes: { me: "5", bob: "5", cam: "8" },
+      stats: {
+        totalVotes: 3,
+        numericAverage: 6,
+        distribution: { "5": 2, "8": 1 },
+        consensus: false,
+        mostCommon: "5",
+      },
+    });
+
+    expect(
+      getAlmostConsensusCallout(
+        makePublicRoomState({ ...baseState, stats: { ...baseState.stats!, consensus: true } })
+      )
+    ).toBeNull();
+    expect(
+      getAlmostConsensusCallout(
+        makePublicRoomState({ ...baseState, stats: { ...baseState.stats!, mostCommon: null } })
+      )
     ).toBeNull();
   });
 });

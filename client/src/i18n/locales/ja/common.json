@@ -305,6 +305,12 @@
         "title": "見積もりが1つ異なります。確認しますか？",
         "details": "確認",
         "mode": "最も多い見積もり: {{vote}}"
+      },
+      "almostConsensus": {
+        "eyebrow": "ほぼ合意",
+        "title": "あと少しです。見積もりが1つ異なります。",
+        "details": "確認",
+        "mode": "共通の見積もり: {{vote}}"
       }
     },
     "roomUnavailable": "ルームを利用できません",

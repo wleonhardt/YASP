@@ -305,6 +305,12 @@
         "title": "Uma estimativa difere — vale revisar?",
         "details": "Rever",
         "mode": "Estimativa mais comum: {{vote}}"
+      },
+      "almostConsensus": {
+        "eyebrow": "Quase consenso",
+        "title": "Quase lá — uma estimativa difere.",
+        "details": "Rever",
+        "mode": "Estimativa compartilhada: {{vote}}"
       }
     },
     "roomUnavailable": "Sala indisponível",

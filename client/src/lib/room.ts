@@ -2,7 +2,10 @@ import type { PublicRoomState, PublicParticipant } from "@yasp/shared";
 
 export type RoomPhase = "waiting" | "voting" | "revealed";
 
-export type OutlierCallout = {
+export type RoundSpotlightKind = "almostConsensus" | "outlier";
+
+export type RoundSpotlightCallout = {
+  kind: RoundSpotlightKind;
   modeVote: string;
   outliers: {
     participant: PublicParticipant;
@@ -49,7 +52,7 @@ export function getLastWaitingVoter(state: PublicRoomState): PublicParticipant |
   return waitingVoters[0];
 }
 
-export function getOutlierCallout(state: PublicRoomState): OutlierCallout | null {
+export function getOutlierCallout(state: PublicRoomState): RoundSpotlightCallout | null {
   if (
     !state.revealed ||
     !state.stats ||
@@ -83,13 +86,57 @@ export function getOutlierCallout(state: PublicRoomState): OutlierCallout | null
 
       return { participant, vote };
     })
-    .filter((outlier): outlier is OutlierCallout["outliers"][number] => outlier !== null);
+    .filter((outlier): outlier is RoundSpotlightCallout["outliers"][number] => outlier !== null);
 
   if (outliers.length < 1 || outliers.length > 2) {
     return null;
   }
 
   return {
+    kind: "outlier",
+    modeVote: state.stats.mostCommon,
+    outliers,
+  };
+}
+
+export function getAlmostConsensusCallout(state: PublicRoomState): RoundSpotlightCallout | null {
+  if (
+    !state.revealed ||
+    !state.stats ||
+    !state.votes ||
+    state.stats.consensus ||
+    state.stats.mostCommon === null ||
+    state.stats.totalVotes < 3
+  ) {
+    return null;
+  }
+
+  const distributionEntries = Object.entries(state.stats.distribution).filter(([, count]) => count > 0);
+  const modeCount = state.stats.distribution[state.stats.mostCommon] ?? 0;
+
+  if (distributionEntries.length !== 2 || modeCount !== state.stats.totalVotes - 1) {
+    return null;
+  }
+
+  const outliers = state.participants
+    .filter((participant) => participant.role === "voter")
+    .map((participant) => {
+      const vote = state.votes?.[participant.id];
+
+      if (vote === undefined || vote === state.stats?.mostCommon) {
+        return null;
+      }
+
+      return { participant, vote };
+    })
+    .filter((outlier): outlier is RoundSpotlightCallout["outliers"][number] => outlier !== null);
+
+  if (outliers.length !== 1) {
+    return null;
+  }
+
+  return {
+    kind: "almostConsensus",
     modeVote: state.stats.mostCommon,
     outliers,
   };

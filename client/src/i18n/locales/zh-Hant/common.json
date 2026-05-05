@@ -305,6 +305,12 @@
         "title": "有一個估算不同，要快速確認嗎？",
         "details": "查看",
         "mode": "最常見估算：{{vote}}"
+      },
+      "almostConsensus": {
+        "eyebrow": "接近共識",
+        "title": "快達成了，有一個估算不同。",
+        "details": "查看",
+        "mode": "共同估算：{{vote}}"
       }
     },
     "roomUnavailable": "房間不可用",

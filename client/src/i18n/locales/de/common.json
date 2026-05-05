@@ -305,6 +305,12 @@
         "title": "Eine Schätzung weicht ab — kurz prüfen?",
         "details": "Prüfen",
         "mode": "Häufigste Schätzung: {{vote}}"
+      },
+      "almostConsensus": {
+        "eyebrow": "Fast Konsens",
+        "title": "Fast geschafft — eine Schätzung weicht ab.",
+        "details": "Prüfen",
+        "mode": "Gemeinsame Schätzung: {{vote}}"
       }
     },
     "roomUnavailable": "Raum nicht verfügbar",

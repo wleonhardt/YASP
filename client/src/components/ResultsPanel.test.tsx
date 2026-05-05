@@ -163,4 +163,31 @@ describe("ResultsPanel", () => {
 
     expect(screen.queryByText(/worth a quick check/i)).not.toBeInTheDocument();
   });
+
+  it("surfaces an almost-consensus prompt for one close differing estimate", () => {
+    const deck: Deck = {
+      type: "custom",
+      label: "Planning",
+      cards: ["1", "2", "3", "5", "8", "13", "21"],
+    };
+
+    render(
+      <ResultsPanel state={makeRevealedState({ deck, mostCommon: "5", votes: ["5", "5", "8", "5"] })} />
+    );
+
+    const prompt = screen.getByText("Almost there — one estimate differs.");
+    const summary = prompt.closest("summary");
+    const details = prompt.closest("details");
+
+    expect(summary).not.toBeNull();
+    expect(details).not.toBeNull();
+    expect(summary).not.toHaveTextContent("Player 3");
+    expect(details).not.toHaveAttribute("open");
+
+    fireEvent.click(summary as HTMLElement);
+
+    expect(details).toHaveAttribute("open");
+    expect(screen.getByText("Shared estimate: 5")).toBeInTheDocument();
+    expect(screen.getByText("Player 3")).toBeInTheDocument();
+  });
 });

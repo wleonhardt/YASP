@@ -56,6 +56,11 @@
   native click-to-expand details. P9.4 can reuse this pattern, while P9.3
   re-open voting and P9.5 story labels remain product/state decisions rather
   than presentation-only work.
+- 2026-05-05 review: Phase 9 P9.4 Almost-consensus prompt reused the P9.2
+  disclosure pattern and did not create new product or architecture questions.
+  P9.3 re-open voting and P9.5 story labels remain deferred because they
+  change round state semantics; P9.6 consensus celebration remains a
+  presentation-only candidate if kept motion-aware.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.

@@ -305,6 +305,12 @@
         "title": "한 추정치가 다릅니다. 확인할까요?",
         "details": "검토",
         "mode": "가장 많은 추정치: {{vote}}"
+      },
+      "almostConsensus": {
+        "eyebrow": "거의 합의",
+        "title": "거의 다 왔습니다. 한 추정치가 다릅니다.",
+        "details": "검토",
+        "mode": "공통 추정치: {{vote}}"
       }
     },
     "roomUnavailable": "룸을 사용할 수 없습니다",

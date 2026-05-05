@@ -3,7 +3,14 @@ import { useTranslation } from "react-i18next";
 import type { PublicRoomState } from "@yasp/shared";
 import { DeckToken } from "./DeckToken";
 import { RoundSpotlight } from "./RoundSpotlight";
-import { getMedian, getNumericVotes, getOutlierCallout, getSpread, isMeModerator } from "../lib/room";
+import {
+  getAlmostConsensusCallout,
+  getMedian,
+  getNumericVotes,
+  getOutlierCallout,
+  getSpread,
+  isMeModerator,
+} from "../lib/room";
 
 type Props = {
   state: PublicRoomState;
@@ -107,7 +114,7 @@ export function ResultsPanel({
   const medianValue = formatOptionalStat(median, notAvailableLabel);
   const mostCommonValue = stats.mostCommon !== null ? <DeckToken token={stats.mostCommon} /> : t("room.tie");
   const spreadValue = formatOptionalStat(spread, notAvailableLabel);
-  const outlierCallout = getOutlierCallout(state);
+  const roundSpotlight = getOutlierCallout(state) ?? getAlmostConsensusCallout(state);
   const isModerator = isMeModerator(state);
   const reportMode = isModerator ? "moderator" : "participant";
   const reportButtonLabel =
@@ -147,7 +154,7 @@ export function ResultsPanel({
         spread={spreadValue}
         spreadLabel={spreadLabel}
       />
-      {outlierCallout && <RoundSpotlight callout={outlierCallout} />}
+      {roundSpotlight && <RoundSpotlight callout={roundSpotlight} />}
       <DistributionSection
         sectionId={distributionId}
         distribution={distribution}

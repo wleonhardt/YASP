@@ -70,6 +70,11 @@ for the audit that motivated each change.
   the results panel now shows a tone-safe disclosure above the distribution
   chart. The default headline names no participant; names and vote tokens are
   visible only after expanding the disclosure.
+- 2026-05-05: Continued Phase 9 with P9.4 Almost-consensus prompt. When a
+  revealed round has at least three votes and exactly one voter differs from
+  the shared estimate, the results panel now reuses the round spotlight
+  disclosure with "Almost there — one estimate differs." Names remain hidden
+  from the headline and appear only after expansion.
 
 ---
 

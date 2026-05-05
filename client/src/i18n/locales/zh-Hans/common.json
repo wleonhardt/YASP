@@ -305,6 +305,12 @@
         "title": "有一个估算不同，要快速确认吗？",
         "details": "查看",
         "mode": "最常见估算：{{vote}}"
+      },
+      "almostConsensus": {
+        "eyebrow": "接近共识",
+        "title": "快达成了，有一个估算不同。",
+        "details": "查看",
+        "mode": "共同估算：{{vote}}"
       }
     },
     "roomUnavailable": "房间不可用",

@@ -305,6 +305,12 @@
         "title": "One estimate differs — worth a quick check?",
         "details": "Review",
         "mode": "Most common estimate: {{vote}}"
+      },
+      "almostConsensus": {
+        "eyebrow": "Almost consensus",
+        "title": "Almost there — one estimate differs.",
+        "details": "Review",
+        "mode": "Shared estimate: {{vote}}"
       }
     },
     "roomUnavailable": "Room unavailable",
