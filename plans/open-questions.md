@@ -10,6 +10,24 @@
   tablet ~20% based on intuition, not data. Worth verifying via analytics
   if/when added — Phase 4 (drawer) and tablet-breakpoint priorities should
   follow real numbers, not guesses.
+- **UI: post-implementation QA findings (Q1–Q20).** A 2026-05-05 QA pass
+  on the post-Phase-5 build surfaced 26 findings — 4 high/medium severity
+  (drawer-icon collision with theme toggle, duplicated drawer heading,
+  stale "Sound on" copy in drawer summary, redundant topbar copy-link
+  while InviteHero is mounted) plus structural impressions about drawer
+  discoverability and story-agenda visibility default. Full list in
+  [`ui-upgrade.md`](ui-upgrade.md) under "Post-implementation QA review."
+  Decision needed: schedule a Phase 7.5 cleanup pass before Phase 6, or
+  fold fixes into Phase 7 polish.
+- **UI: moderator drawer discoverability.** Beyond the icon swap (Q1),
+  do new moderators find the gear on their own? A brief one-time
+  highlight on first room creation OR a real moderator user-test would
+  inform whether the drawer pattern survives long-term.
+- **UI: story-agenda default visibility.** Phase 9 P9.5 shipped early
+  but the story-agenda panel is permanently mounted at the top of the
+  stage even for teams that don't use story labels. Decision needed:
+  hide entirely when agenda is empty + no current story, or expose a
+  "Track stories" toggle in the moderator drawer.
 - 2026-05-05 review: Phase 8 foundation work did not create new open
   questions. The existing discussion-phase and viewport-mix questions remain
   the active UI uncertainties.

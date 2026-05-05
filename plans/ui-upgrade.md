@@ -427,6 +427,147 @@ Reviewed 2026-05-04 against
 
 ---
 
+## Post-implementation QA review (after Phases 1, 2, 3, 4, 5, 8)
+
+Captured 2026-05-05 against `main` at `6dfb74d` with all phases through 5
+shipped (plus Phase 8 foundation, plus an out-of-band Phase 9 P9.5 story
+agenda). Live preview at 1440 / 768 / 375 in lobby + voting + revealed
+states.
+
+The redesign is a substantial improvement — the deck is genuinely the
+centerpiece, the Round Action Bar makes "what do I do next" obvious, the
+column chart reads at a glance, the moderator drawer keeps voters'
+screens clean, the invite hero replaces the awkward 1-person empty state.
+This section catalogues what's still off so future phases (especially
+P7 polish and any P9 sub-features) can address it.
+
+### Q-findings (post-implementation issues)
+
+| # | Finding | Where | Severity |
+|---|---|---|---|
+| Q1 | **Moderator-drawer trigger icon is a sun-burst that visually reads as the theme toggle.** Inside the topbar this puts a "🌞-looking" button next to where the theme toggle lives in other contexts (landing, error states); moderators may click it expecting "switch to light mode." | `ModeratorDrawer.tsx:95-115` (SVG path) | High |
+| Q2 | **"Moderator controls" heading appears twice in the open drawer**: once as the drawer's `<h2>` (line 138), once as the embedded `<ModeratorControls>` `<h2>` (its `PanelHeader`). | `ModeratorDrawer.tsx:138` + `ModeratorControls.tsx` `PanelHeader` | Medium |
+| Q3 | **"Sound on" still rendered in the TIMER & PACING disclosure summary** in the drawer (`Duration 1m · Sound on`). Sound moved to the utility menu in Phase 1; this summary string was missed. | `ModeratorControls.tsx` `drawerSummary` | Medium |
+| Q4 | **Topbar "Copy link" button is redundant when the InviteHero is showing** the same room code with a more prominent copy button below. Both visible at desktop simultaneously when there are no other voters. Pre-Phase-6 the topbar was the only share affordance — now it's noise during the lobby state. | `TopBar.tsx:34` (`<RoomCodeShare>`) + `RoomPage.tsx` (always-mount) | Medium |
+| Q5 | **Reveal-phase RoundActionBar has three buttons** (Re-open voting · Reset round · Next round). On mobile this stacks into 4 rows of chrome (NEXT STEP label + Revealed state + 2 secondary buttons + 1 primary), pushing the actual results below the fold. The P2.4 "one primary CTA" invariant is technically met (only Next round is primary) but the visual weight competes. | `RoundActionBar.tsx:48-77` | Medium |
+| Q6 | **Re-open voting + Next round are semantically adjacent** ("what happens next?") and easy to confuse. Re-open voting is destructive-ish (loses the round's revealed state); Next round is forward-progress. Without confirmation, a wrong click here loses the discussion context. | `RoundActionBar.tsx:50-58` | Medium |
+| Q7 | **Distribution chart renders all empty columns with full-height frames and "0" labels above each.** With a 9-card deck and a single vote on `8`, you see `0 0 0 0 0 1 0 0 0` above empty rectangles — high noise-to-signal. | `ResultsPanel.tsx` `DistributionSection` | Medium |
+| Q8 | **Invite hero stays visible after a vote is cast (still no other voters)** — slightly odd UX: "you've voted, but we're still showing the empty-room invite." The invite is still correct (no one else is in the room) but the panel saying "Waiting for teammates" while the user is actively interacting with the deck feels disjointed. | `RoomPage.tsx` `<InviteHero>` mount condition | Low |
+| Q9 | **Story Agenda's `Save` button is always interactive** even when the input matches the current saved label. Should disable on no-change to prevent accidental "save" toasts that say "story updated" when nothing changed. | `StoryAgenda.tsx:91-112` | Low |
+| Q10 | **`Start next story` button is always rendered**, just disabled when `!hasQueue`. A disabled-by-default primary-styled button is a UX smell — hide it (or convert to ghost/secondary) when there's no agenda to start. | `StoryAgenda.tsx:120-130` | Low |
+| Q11 | **The "Save" button next to story input is full-width on mobile** but only covers a tiny single text input — visually outsized for what it does. | `globals.css` story-agenda mobile rules | Low |
+| Q12 | **Topbar at mobile (375px) is busy**: Room code chip + Moderator gear + Leave icon + Connection chevron = four interactive targets in a single row. Two of those (gear, connection chevron) overlap functionally with the utility menu. | `TopBar.tsx` + `RoomUtilityMenu.tsx` | Medium |
+| Q13 | **Timer-strip shows `Duration 1m` even when timer is `Ready` (not running, not paused).** Duration is a moderator-only configuration — voters don't need it persistently visible. Showing only the countdown + status would reduce chrome. | `TimerStrip.tsx:18-23` | Low |
+| Q14 | **Drawer slide-in has no transition** — abrupt appearance. Combined with the body-overflow lock, the room "snaps" when the drawer opens. With `prefers-reduced-motion` honored, a 150ms transform/opacity animation would feel calmer. | `ModeratorDrawer.tsx` + `globals.css` `.moderator-drawer__surface` | Low |
+| Q15 | **Drawer close button is a literal `×` text glyph** at default font weight inside a ghost button. Reads as small/squished; many users miss it. Use a bigger SVG `×` icon or `aria-label="Close"` with a 24×24 hit area. | `ModeratorDrawer.tsx:139-146` | Low |
+| Q16 | **Re-open voting copy** ("Re-open voting") might confuse — does it discard current votes or just unhide them? Should clarify in tooltip or short helper. | `i18n` `room.reopenVoting` | Low |
+| Q17 | **TimerStrip status chip is `aria-live="polite"`** ✓ but it always rerenders even when status hasn't changed; combined with the duration paragraph above, screen readers may announce "Ready" repeatedly on unrelated state changes. Consider memoizing the announced text or only announcing on transition. | `TimerStrip.tsx:25-34` | Low |
+| Q18 | **Distribution chart non-numeric "?" column** has no separator from the numeric region (Phase 5 P5.1 explicitly called for one when both are present). Visually it just sits at the right end. | `ResultsPanel.tsx` `DistributionSection` | Low |
+| Q19 | **No keyboard-shortcut hint visible on each vote card.** Phase 9 ideas mentioned this; current cards just show the value. With shortcuts active (number keys), a tiny `5` glyph in the corner would teach the shortcut without instruction. | `VoteDeck.tsx` card render | Enhancement |
+| Q20 | **Skip-link target jumps to `#main` but the main `<h1>` is `sr-only`.** Sighted keyboard users following the skip link land on a region with no visible heading; the first visible heading is "Current story" or whatever the stage shows. Functionally correct but mildly disorienting. | `RoomPage.tsx:857-858` | Low |
+| Q21 | **Empty-state of an expired room** ("Rooms are temporary. This room no longer exists.") is well-handled with a "Create a new room" CTA. ✓ Good. | `RoomPage.tsx` unavailable branch | Pass |
+| Q22 | **InviteHero copy button shows "Copied" on success** — uses `aria-live` + a 1.8s revert. ✓ | `InviteHero.tsx` | Pass |
+| Q23 | **Drawer focus trap + ESC close + restore focus to trigger** all work. ✓ | `ModeratorDrawer.tsx` | Pass |
+| Q24 | **KEY STATS strip (Average · Median · Mode · Spread) lays out beautifully at every breakpoint.** ✓ Phase 5 P5.2 nailed it. | `ResultsPanel.tsx` `KeyStatsCard` | Pass |
+| Q25 | **Vertical column distribution chart with mode highlighted** reads instantly. ✓ Phase 5 P5.1 nailed it. | `ResultsPanel.tsx` `DistributionSection` | Pass |
+| Q26 | **The Phase-3 "who hasn't voted yet" rail acceptance test** can't be run yet because the post-Phase-3 layout currently shows InviteHero in the aside (no voters present). Need a multi-voter test session to confirm the rail meets the 1-second-glance criterion. | n/a | Defer |
+
+### Suggested fixes — prioritised
+
+Roll these into Phase 7 (visual polish), Phase 9 (spotlight enhancements),
+or schedule a small **Phase 7.5 (post-implementation cleanup)** ahead of
+Phase 6 if InviteHero is already shipped:
+
+#### Must-fix (high-severity, cheap)
+
+- **Q1: Replace moderator-drawer SVG** with a true gear/settings icon (e.g.
+  cogwheel) — current sun-burst silhouette is one of the best-known "theme
+  toggle" icons on the web. Even a label-on-hover doesn't fix the
+  pre-click confusion.
+- **Q2: Remove the duplicated heading.** Either drop the drawer header's
+  `<h2>` (and rely on the ModeratorControls own header) or pass a
+  `noHeader` prop into `ModeratorControls` when rendered inside the
+  drawer.
+- **Q3: Strip "Sound on" from the drawer summary string.** The summary is
+  in `ModeratorControls.tsx` (`drawerSummary`); just remove the
+  `getStoredTimerSoundEnabled()` clause.
+- **Q4: Hide the topbar Copy link when the InviteHero is mounted.** A
+  single CSS rule (`.invite-hero ~ * .room-code-share` or via prop) or a
+  conditional in `TopBar`. When other voters are present and InviteHero
+  is gone, the topbar Copy link comes back as the share affordance.
+
+#### Should-fix (medium severity)
+
+- **Q5/Q6: Re-shape the reveal-phase action bar.** Two patterns to
+  consider:
+  - **(a)** Demote Re-open voting to a small ghost link at the bottom of
+    the bar (`'or re-open voting'`) — visually subordinate to Reset/Next.
+  - **(b)** Confirmation: clicking Re-open voting prompts
+    "Re-open voting? Current votes will be cleared." (matches the F-rule
+    for destructive actions in the guidelines audit).
+- **Q7: Don't render zero-count empty columns at full height.** Either
+  hide them entirely (cleaner; loses "you skipped these values" context)
+  or render them as half-height dotted/ghost columns with no `0` label.
+  Highlight only columns with votes.
+- **Q12: Move the moderator gear into the utility menu** (alongside
+  language/theme/sound) so the topbar drops to: Room code · Leave ·
+  Utility (with gear visible inside the menu drawer to moderators only).
+  Reduces topbar interactive count from 4 to 3 at mobile.
+- **Q18: Add the numeric/non-numeric chart separator** that Phase 5
+  P5.1 specified. A 1px vertical rule between the last numeric column
+  and `?`/`☕` columns.
+
+#### Nice-to-have (low severity)
+
+- **Q8: Subtly demote InviteHero after the local user votes.** Either
+  swap to a tighter "Share to invite voters" mini-banner once the user
+  has cast a vote (still no others), or keep it but reduce padding.
+- **Q9/Q10: Story-agenda button states.** Disable Save when input
+  unchanged; hide Start-next-story when queue is empty (or render as
+  ghost text).
+- **Q13: Hide the timer duration line when status is `ready` and the
+  timer hasn't been started yet** — show only the countdown + ready
+  chip. Bring duration back into view once running/paused/complete.
+- **Q14: Add a 150ms `transform: translateX` enter animation** to the
+  drawer surface, gated by `prefers-reduced-motion`.
+- **Q15: Replace `×` text glyph with a 24px `<svg>` X icon** for a
+  proper hit target.
+- **Q16: Add a tooltip/helper on Re-open voting** clarifying behaviour.
+- **Q17: Memoize the timer status announcement** so screen readers only
+  hear it on transitions, not every re-render.
+- **Q19: Keyboard shortcut glyphs on cards** — small numeric pip in the
+  upper-left of each card showing the shortcut key.
+- **Q20: Add a visible `<h1>` to the room main** (e.g. the current
+  story label, falling back to "Round N") and remove the `sr-only`
+  duplication. Better orientation for skip-link users.
+
+### Structural impressions
+
+Beyond the line-item findings, three higher-level observations from the
+QA pass:
+
+1. **The moderator drawer is the riskiest piece of new chrome.** Once
+   Q1/Q2/Q3 are fixed it works, but the drawer adds a layer of
+   indirection a moderator must learn ("where did the timer settings
+   go?"). Mitigation: when a moderator first joins a room, briefly
+   highlight the gear (one-time tooltip) so they discover it. Track
+   in [`open-questions.md`](open-questions.md) — needs a real moderator
+   user-test session before deciding.
+2. **Story-agenda landing inside Phase 5 territory was opportunistic
+   but creates ordering risk.** It now visually sits *above* the timer,
+   so for teams that don't use story labels it's a permanent empty
+   panel ("Add a story label" + "Save" + "Start next story" + "Agenda
+   0 stories"). Consider hiding the panel entirely when the room has
+   never had a story label set (and surfacing it via a "Track stories"
+   toggle in the moderator drawer). At minimum, when the agenda is
+   empty AND no current story is set, collapse the panel by default.
+3. **Mobile topbar is densely packed and at risk of feeling like a
+   utility shelf**, not a brand surface. The room code chip is
+   appropriate but the leave/gear/connection cluster competes. Once
+   Q12 is in (gear → utility menu), the topbar has room to breathe.
+
+---
+
 ## Phases
 
 Each phase is a single commit (or small ordered series) that leaves the app in
