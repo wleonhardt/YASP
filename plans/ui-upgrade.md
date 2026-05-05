@@ -54,6 +54,23 @@ Moderator panel is full-width and 381px tall on desktop.
 | F14 | `Round 1` heading appears in topbar AND is implied by panel content | Duplicated semantics |
 | F15 | `participants-board__progress` and `room-status__progress` use slightly different styling | Small consistency leak |
 
+### Live visual review (web-design-reviewer skill)
+
+Captured 2026-05-04 against `localhost:5173` at 1440 (desktop), 768
+(tablet), and 375 (mobile) breakpoints. New findings on top of F1–F15.
+
+| # | Finding | Why it matters |
+|---|---|---|
+| V1 | Tablet 768px: TopBar `grid-template-columns: 1fr 1.15fr auto` collapses awkwardly. "Round 1 / Voted / progress bar" wraps to a second row, progress bar cuts short of the right edge (misaligned with content). | TopBar redesign in P1.5 must explicitly handle 600–900 range, not just desktop+mobile |
+| V2 | At 768px the gap between timer controls and the floating "Reveal votes" / "Reset+Next" buttons becomes proportionally worse — controls cluster center-left, action sits far-right. | Reinforces F3: button needs to leave the moderator panel (Phase 2) |
+| V3 | **Mobile (375px) compact layout is dramatically better than desktop.** "NEXT STEP / Voting / Reveal votes (full-width primary)" + collapsed Timer & Settings disclosures is exactly the target shape. | Phase 4's "moderator drawer" and Phase 2's "phase action on stage" can be derived directly from the existing compact mode — much of the React already exists |
+| V4 | **Regression in shipped CSS**: `.distribution-row__label span { color: var(--color-text-secondary) }` (globals.css:2720) silently overrode the prominent-count color set in `.distribution-row__count` (line 2696, same specificity, later rule wins). The "make result number prominent" change from the original 3-change ask never visually landed. | Fixed inline in this session (`:not(.distribution-row__count)` selector); flag to verify before any P5 work that distribution count actually renders bright |
+| V5 | Stat tile meta line ("Consensus" under Most Common) hangs at the bottom of the tile while sibling tile (Spread) has no meta — visually unbalanced 2×2 grid. | Reinforces F8: kill the 2×2 grid, do a horizontal stat strip in P5.2 |
+| V6 | Topbar progress bar (when filled at reveal) gradient looks great, BUT it's the only place that gradient appears at the top of the page — no echo elsewhere. After demoting/removing it (per F5), consider whether the participants progress bar should pick up the same gradient treatment for visual continuity. | Cosmetic; address inside P7.3 |
+| V7 | At desktop, the empty-state participants area shows: avatar dot + "Alice (You)" card + "Not voted" badge + dashed `…` placeholder box. Four UI treatments for "you're alone." | Reinforces F11: P6 invite hero |
+
+---
+
 ### Vercel Web Interface Guidelines compliance audit
 
 Reviewed 2026-05-04 against

@@ -2717,7 +2717,7 @@ select.input {
   font-weight: 600;
 }
 
-.distribution-row__label span {
+.distribution-row__label span:not(.distribution-row__count) {
   color: var(--color-text-secondary);
 }
 
