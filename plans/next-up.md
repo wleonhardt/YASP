@@ -2,10 +2,18 @@
 
 ## Queue
 
-- **UI upgrade** — staged plan to make the phase action the centerpiece,
-  shrink moderator chrome, and improve results presentation. See
-  [ui-upgrade.md](ui-upgrade.md). Status: `phase 9 complete`; no next UI
-  upgrade slice is currently queued.
+- **UI upgrade — Phase 10 subtraction pass.** Phases 1–9 added a panel
+  per phase and never removed anything; the cumulative effect is a
+  visually dense room where nothing dominates. Phase 10 is a ruthless
+  subtraction pass: lazy-mount the story-agenda and timer-strip,
+  trim the round-action-bar, swap the drawer trigger icon (currently
+  visually collides with the theme toggle), de-duplicate the drawer
+  heading and stale "Sound on" copy, hide zero-count distribution
+  columns, shrink InviteHero after the local user votes, and audit
+  eyebrows. Eight focused commits; each independently revertable.
+  Full spec under "Phase 10 — Subtraction pass" in
+  [`ui-upgrade.md`](ui-upgrade.md). Recommended next slice:
+  P10.1+P10.2+P10.3 ("Reclaim the deck's space").
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms

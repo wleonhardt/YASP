@@ -912,6 +912,337 @@ chart.
 phase without adding clutter. Each item should be removable without
 breaking layout.
 
+### Phase 10 — Subtraction pass (post-shipping cleanup + reduction)
+
+Status: `proposed` · Date: 2026-05-05
+
+#### Why this phase exists
+
+Phases 1–9 each *added* something — a new panel, a new state surface,
+a new control. Each was justified individually. Together, they
+recreated the visual density we set out to reduce. The room now shows
+six distinct surfaces simultaneously (topbar · story-agenda · timer
+strip · round-action-bar · vote-deck · invite-hero) and nothing
+visibly dominates. We achieved the *contents* of the strategic
+direction (stage > chrome, role-aware UI weight, optimize the long
+stares) but not the *posture* — because we never told any of the new
+panels when to *recede or hide*.
+
+Phase 10 is a ruthless subtraction pass. **No new features. No new
+components. Only conditional visibility, removal of duplication, and
+sharpening of the visual hierarchy.** The exit goal is a calmer room
+where, at any moment, the user's eye lands on exactly one thing.
+
+#### Critical re-read of the current build
+
+A fresh, critical look at the post-Phase-9 room (with no charity for
+work we already shipped):
+
+##### Is everything purposeful?
+
+Mostly no. Audit by surface:
+
+| Surface | When does the user care? | Currently shown when? |
+|---|---|---|
+| Topbar room code chip | When sharing the room | Always |
+| Topbar Copy link button | When sharing the room | Always (and InviteHero has a bigger one when present) |
+| Topbar moderator gear | Moderator setting timer/settings/transfer (rare) | Always for moderators |
+| Topbar leave button | When leaving (once per session) | Always |
+| Topbar utility menu | Theme/language/sound (configured once) | Always |
+| **Story agenda panel** | When the team uses story labels | **Always** |
+| **Timer strip** | When timer is running/paused/complete | **Always** (even when never used) |
+| Round action bar | Voter waiting to reveal / moderator advancing | Always |
+| Vote deck | Voter choosing | Voting phase only ✓ |
+| Results panel | Everyone discussing reveal | Revealed phase only ✓ |
+| **Invite hero** | When room has no other voters | When no other voters ✓ but stays after local user votes |
+| Participants rail | When voters are present | When voters are present ✓ |
+
+The bolded rows are wrong. The story agenda and timer strip are
+*always-on*, but they're meaningful for ≤30% of sessions. They consume
+~200px of vertical real estate above the deck for everyone, every
+time.
+
+##### Is there unnecessary duplication?
+
+Yes — at least seven concrete duplications:
+
+1. **Room code shown twice** — topbar pill (UFDC3C) + InviteHero
+   massive code (48px). Both functional.
+2. **Copy link button shown twice** — topbar "Copy link" + InviteHero
+   "Copy room link" primary button. The InviteHero one is bigger and
+   more prominent; the topbar one is redundant in this state.
+3. **"Moderator controls" heading appears twice** in the open drawer
+   (drawer header `<h2>` + embedded `ModeratorControls` `<h2>`).
+4. **"Sound on/off" still appears in the drawer's TIMER & PACING
+   summary string** even though sound moved to utility menu in Phase 1.
+5. **"Connected" status is shown twice** in the topbar — once as the
+   utility menu's pill text, once inside the menu when expanded.
+6. **Phase action language layered three times**: NEXT STEP eyebrow +
+   "Voting" current-state text + "Reveal votes" button. Three
+   sentences for one decision.
+7. **Theme toggle visual collision with moderator gear** (Q1) —
+   the gear's sun-burst silhouette is the most-recognizable
+   "theme toggle" icon on the web. Not a duplication of function, but
+   a duplication of *visual signal*.
+
+##### Is the layout optimal?
+
+Not yet. Three concrete misallocations of space:
+
+1. **The deck is ~30% of viewport at desktop.** It should be ~60–70%.
+   The story agenda + timer strip + action bar together steal the
+   space.
+2. **Empty distribution columns at full height** (Q7) waste ~50% of
+   the chart's pixels on rendering "0" labels above empty rectangles.
+3. **Invite hero takes a full sidebar column** even when the local
+   user is mid-action (e.g. they've just voted, alone, waiting). The
+   hero should shrink once the local user has done their part.
+
+##### What should the user see and focus on?
+
+Per role, per phase, in a one-sentence answer:
+
+| Role | Phase | One thing to focus on |
+|---|---|---|
+| Voter | Voting | The deck. |
+| Voter | Revealed | The chart. |
+| Spectator | Voting | "Who's voted yet?" (peripheral) |
+| Spectator | Revealed | The chart. |
+| Moderator | Voting | The deck (also a voter usually) + a small "Reveal votes" CTA when ready. |
+| Moderator | Revealed | The chart + a single "Next round" CTA. |
+| Anyone | Lobby (no voters) | The invite. Nothing else. |
+
+The current build delivers this in *spirit* but not in *visual weight*.
+Phase 10 closes the gap.
+
+#### What to subtract (in priority order)
+
+##### P10.1 Hide the story-agenda panel by default
+
+Mount the panel only when at least one of: a current story label is
+set, the agenda has ≥1 item, or the moderator has explicitly enabled
+"Track stories" via a toggle in the drawer. Default state for new
+rooms = hidden. Saves ~120px above the deck for the ~70% of teams
+that don't use story labels.
+
+- *Files*: `RoomPage.tsx` (mount condition), `ModeratorControls.tsx`
+  (add "Track stories" preference toggle inside the drawer),
+  `globals.css` (drop padding when hidden).
+- *Carries forward*: existing story-agenda code unchanged when shown.
+
+##### P10.2 Lazy-mount the timer strip
+
+Render `<TimerStrip>` only when the timer has been used at least once
+(running, paused, or complete) OR the moderator has set a non-default
+duration. Default state for new rooms = strip hidden, timer settings
+still reachable via the drawer. Saves ~80px above the deck.
+
+- *Files*: `RoomPage.tsx`, `TimerStrip.tsx` (no change), maybe a tiny
+  state hook to detect "timer ever touched."
+
+##### P10.3 Conditional topbar copy-link
+
+When `<InviteHero>` is mounted, hide the topbar's `<RoomCodeShare>`
+copy-link button (or shrink it to a code-only chip with no copy
+action). When InviteHero is gone (other voters present), the topbar
+copy-link comes back as the primary share affordance.
+
+- *Files*: `TopBar.tsx` (accept `compact` prop or detect sibling),
+  `RoomPage.tsx` (pass condition).
+
+##### P10.4 Round-action-bar trim
+
+Reveal-phase currently shows three buttons (Re-open · Reset · Next).
+Demote ruthlessly:
+
+- **Next round**: stays primary, full-width on mobile.
+- **Re-open voting**: becomes a small text link below the bar
+  ("or re-open voting") — destructive-ish but recoverable.
+- **Reset round**: moves into the moderator drawer's settings section
+  (it's a destructive admin action; doesn't belong on the stage).
+
+- *Files*: `RoundActionBar.tsx`, `ModeratorControls.tsx` (host the
+  Reset action).
+
+##### P10.5 Drop the NEXT STEP eyebrow + "Voting"/"Revealed" copy
+
+The action bar currently reads:
+
+```
+NEXT STEP
+Voting
+[ Reveal votes ]
+```
+
+Three layers of copy for one button. Drop the eyebrow and the
+state-name text. Let the button speak for itself. The current phase
+is implicit: if "Reveal votes" is showing, you're in voting; if
+"Next round" is showing, you're in revealed.
+
+- *Files*: `RoundActionBar.tsx`.
+
+##### P10.6 Swap the moderator-drawer trigger SVG
+
+The current sun-burst is one of the web's most recognizable
+"light-mode toggle" icons. Replace with a true cogwheel/gear (or
+sliders icon). Keep the existing accessible label.
+
+- *Files*: `ModeratorDrawer.tsx`.
+
+##### P10.7 De-dup the drawer "Moderator controls" heading
+
+Either drop the drawer header `<h2>` (and rely on the embedded
+ModeratorControls header) or pass `noHeader` into ModeratorControls
+when rendered inside the drawer.
+
+- *Files*: `ModeratorDrawer.tsx`, `ModeratorControls.tsx`.
+
+##### P10.8 Strip "Sound on" from drawer summary
+
+Remove the `getStoredTimerSoundEnabled()` clause from the drawer
+summary in `ModeratorControls.tsx`. Sound moved out in Phase 1; the
+summary copy never updated.
+
+- *Files*: `ModeratorControls.tsx`.
+
+##### P10.9 Demote zero-count distribution columns
+
+Render columns with `count === 0` at half height with no `0` label,
+or hide them entirely. Show only columns with votes at full
+prominence. Reduces visual noise in the chart by ~50%.
+
+- *Files*: `ResultsPanel.tsx` `DistributionSection`, `globals.css`.
+
+##### P10.10 Add the numeric/non-numeric chart separator
+
+Phase 5 P5.1 specified a separator between the numeric region and
+non-numeric tokens (`?`, `☕`). Never landed. Add the 1px vertical
+rule.
+
+- *Files*: `ResultsPanel.tsx` `DistributionSection`, `globals.css`.
+
+##### P10.11 Shrink InviteHero after the local user votes
+
+When the local user has cast a vote (still no other voters), collapse
+the InviteHero from a full-aside hero to a slim banner ("Share to
+invite voters · Copy link"). Restores stage focus once the user has
+done their part.
+
+- *Files*: `RoomPage.tsx`, `InviteHero.tsx` (add `compact` variant).
+
+##### P10.12 Drawer animation + proper close icon
+
+Add a 150ms `transform: translateX` enter animation gated by
+`prefers-reduced-motion`. Replace the `×` text glyph with a 24px SVG
+X icon for a proper hit target.
+
+- *Files*: `ModeratorDrawer.tsx`, `globals.css`.
+
+##### P10.13 Move moderator gear into the utility menu
+
+The mobile topbar packs four interactive targets in one row. Move the
+gear button into the utility menu (visible only to moderators inside
+the menu). Topbar drops to: Room code · Leave · Utility.
+
+- *Files*: `TopBar.tsx`, `RoomUtilityMenu.tsx`.
+
+##### P10.14 Drop the topbar "ROOM" eyebrow
+
+The room code chip is already a visually distinctive monospace block.
+The "ROOM" all-caps eyebrow above it adds nothing.
+
+- *Files*: `RoomCodeShare.tsx`, `globals.css`.
+
+##### P10.15 Hide story-agenda Save button when input unchanged + hide Start-next-story when queue empty
+
+Disabled-by-default primary buttons are a UX smell. Render them only
+when actionable.
+
+- *Files*: `StoryAgenda.tsx`.
+
+##### P10.16 Visible `<h1>` on the room main
+
+Currently `<h1>` is `sr-only`. Add a small visible heading (e.g. the
+current story label, falling back to "Round N") so skip-link users
+land on a visible orientation point.
+
+- *Files*: `RoomPage.tsx`.
+
+##### P10.17 Section-label audit (eyebrow reduction)
+
+Drop uppercase eyebrows on stage panels whose meaning is implicit:
+`YOUR VOTE` (replaced by the heading "Choose a card" / "Your vote: 8"),
+`NEXT STEP` (P10.5 above). Keep eyebrows only on subsections inside
+larger panels: `KEY STATS`, `DISTRIBUTION`.
+
+- *Files*: `VoteDeck.tsx`, `RoundActionBar.tsx`.
+
+#### What we are NOT doing in Phase 10
+
+Important guardrails so this stays a subtraction pass and not a
+redesign:
+
+- Not changing the deck shape (still grid).
+- Not changing the chart shape (still vertical columns).
+- Not changing the page-level layout columns.
+- Not adding new components or state.
+- Not rewriting copy beyond what P10.5/P10.8 strip.
+- Not touching i18n keys other than to remove the stripped ones.
+- Not changing any backend/shared package.
+
+#### Sequencing within Phase 10
+
+P10.1–P10.3 are the highest-leverage changes (give the deck back its
+space). Land those first as a single "lazy-mount" commit. Then
+P10.4–P10.5 (action-bar trim) as one commit. Then P10.6–P10.8 (drawer
+fixes) as one commit. Then P10.9–P10.10 (chart cleanup), P10.11
+(invite shrink), P10.12 (drawer polish), P10.13–P10.14 (topbar trim),
+P10.15–P10.17 (eyebrow + heading audit) as small focused commits.
+
+Suggested ordering for review readability:
+
+1. P10.1 + P10.2 + P10.3 — *Reclaim the deck's space* (one commit)
+2. P10.4 + P10.5 — *Trim the action bar* (one commit)
+3. P10.6 + P10.7 + P10.8 — *Drawer fixes* (one commit)
+4. P10.9 + P10.10 — *Chart cleanup* (one commit)
+5. P10.11 — *Shrink InviteHero post-vote* (one commit)
+6. P10.12 — *Drawer animation + close icon* (one commit)
+7. P10.13 + P10.14 — *Topbar trim* (one commit)
+8. P10.15 + P10.16 + P10.17 — *Eyebrow + heading audit* (one commit)
+
+Eight focused commits, each independently revertable.
+
+#### Exit criteria
+
+The room measurably calmer:
+
+- Vote deck occupies ≥55% of the desktop viewport during voting phase
+  (currently ~30%).
+- Distribution chart occupies ≥50% of the desktop viewport during
+  revealed phase (currently ~25%, accounting for KEY STATS and
+  empty-column bloat).
+- A new room (no story label, no timer touched) renders only:
+  topbar + RoundActionBar + vote-deck + (if applicable) InviteHero.
+  No story-agenda, no timer-strip.
+- No duplicated headings, no duplicated copy buttons, no stale "Sound
+  on" copy anywhere in the drawer.
+- Mobile topbar interactive count drops from 4 to 3.
+- All Q1–Q20 findings from the post-implementation QA review are
+  addressed (Q21–Q26 are passes or defers).
+
+#### Acceptance test (single-glance check)
+
+After Phase 10 ships, open the room as a moderator on a fresh device
+and answer aloud: *"What is the most prominent thing on screen right
+now?"*
+
+- Voting phase, alone: "The invite code." (room is in lobby)
+- Voting phase, with voters: "The deck."
+- Revealed phase: "The distribution chart."
+
+If any answer is "the moderator drawer" or "the timer" or "the story
+agenda" or "I'm not sure," Phase 10 hasn't met its goal.
+
 ---
 
 ## Sequencing & rollback
@@ -930,6 +1261,11 @@ breaking layout.
   review.
 - **Phase 9** items each depend on Phase 3 (stage layout) being in
   place, but are otherwise independent and à la carte.
+- **Phase 10** runs after Phases 1–9 land (it's a subtraction pass on
+  the result). Each P10 sub-item is small and revertable; recommended
+  ordering is in the Phase 10 section above. Phase 10 should not be
+  skipped — without it, the cumulative effect of Phases 1–9 leaves
+  the room visually denser than the strategic direction intended.
 - Skip P6 if QR generation needs a dependency we don't want.
 - Each phase ends in a green CI run + a passing `npm run i18n:check`.
 
