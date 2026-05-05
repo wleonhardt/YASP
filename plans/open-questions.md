@@ -6,12 +6,14 @@
   where YASP could differentiate. Out of scope for the current
   [`ui-upgrade.md`](ui-upgrade.md) plan but worth deciding before/after
   Phase 9 lands:
-  - Outlier highlighting ("Alice picked 13, others 5. Discuss?")
-  - Re-open voting affordance distinct from "Reset round"
-  - Almost-consensus prompt naming the outlier
-  - Story labels per round + end-of-session story queue (would let YASP
-    be the *only* tool for an estimation meeting, not just one tab)
-  - Consensus celebration flourish (motion-aware)
+  - Remaining implementation decision: P9.3 Re-open voting should be a
+    server/shared/client state transition that preserves hidden draft
+    votes, exposes each participant's own previous vote as editable, and
+    replaces the latest session snapshot on re-reveal.
+  - Remaining implementation decision: P9.5 Story labels should start as
+    an ephemeral room agenda with a current story label plus optional
+    queue, bulk-paste, reorder/remove, and start-next-story behavior. No
+    durable backlog, account, integration, or history scope.
 - **UI: viewport mix.** We currently assume desktop ~50% / mobile ~30% /
   tablet ~20% based on intuition, not data. Worth verifying via analytics
   if/when added — Phase 4 (drawer) and tablet-breakpoint priorities should
@@ -65,6 +67,13 @@
   product or architecture questions. P9.3 re-open voting and P9.5 story
   labels remain the only Phase 9 items needing product/state decisions before
   implementation.
+- 2026-05-05 review: Product direction recorded for the remaining Phase 9
+  items. P9.3 should reuse the existing reset-permission model and preserve
+  votes as hidden editable drafts rather than clearing or keeping revealed
+  votes visible. P9.5 should become an optional ephemeral agenda, not a
+  durable backlog. Implementation still needs shared/server/client design,
+  but no new durable-state ADR is needed if it stays within TTL-bound active
+  room/session state.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.

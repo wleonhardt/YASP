@@ -5,9 +5,16 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  optional Phase 9 wrap-up/selection. P9.3 re-open voting and P9.5 story
-  labels need deeper product/state decisions before implementation, so they
-  should not be treated as automatic UI-only follow-ups.
+  Phase 9 stateful follow-ups. Recommended order:
+  - P9.3 Re-open voting, implemented as a server/shared/client state
+    transition that preserves hidden draft votes, exposes each user's own
+    previous vote for editing, and replaces the latest session snapshot on
+    re-reveal.
+  - P9.5 Story labels/agenda, implemented as ephemeral room/session state:
+    current story label first, then a compact optional queue with bulk
+    paste, reorder/remove, and start-next-story behavior.
+  Both require shared/server/client changes and focused tests; neither
+  should introduce durable storage or project-management scope.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms

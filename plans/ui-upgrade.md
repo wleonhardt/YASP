@@ -711,15 +711,42 @@ ship them à la carte once Phase 3 is in place. None are commitments.
   in the headline. Never shame, never default-spotlight; the goal is
   facilitating discussion, not calling people out.
 - **P9.3 Re-open voting**: after reveal, moderator gets a "Re-open vote"
-  affordance distinct from "Reset round" — keeps existing votes visible
-  as defaults, lets people change without destroying the round state.
+  affordance distinct from "Reset round". Best-judgment direction:
+  treat this as a real room-state transition, not a cosmetic client
+  toggle. Re-open should:
+  - Follow the existing `resetPolicy` permission model because it changes
+    the round after reveal.
+  - Keep the same `roundNumber` and preserve existing votes as hidden
+    draft selections.
+  - Hide all votes from other participants again; expose only each
+    participant's own previous vote so their card can appear preselected
+    and editable.
+  - Remove or replace the latest session-round snapshot for the same
+    round, because a re-opened reveal was not the final completed result.
+    Re-reveal should write the corrected snapshot once.
+  - Leave "Reset round" as the destructive clear-votes action and "Next
+    round" as the advance-and-clear action.
 - **P9.4 Almost-consensus prompt**: when one outlier is the only
   difference, surface a tone-safe prompt: *"Almost there — one
   estimate differs."* Same rule as P9.2: the differing person's name
   is revealed only on click/expand, never in the headline.
 - **P9.5 Story labels**: optional text input at the top of each round
-  for the story being estimated. Carries through to the round report.
-  Enables the "single tool for the whole meeting" use case.
+  for the story being estimated. Direction after product discussion:
+  implement this as an optional ephemeral agenda, not as a durable backlog.
+  The least-clunky shape is:
+  - A compact current-story field near the stage header, visible to
+    everyone and editable under the same moderator-oriented room-control
+    posture as deck/settings.
+  - A collapsible "Agenda" surface for moderators, with simple add,
+    reorder, remove, and bulk-paste-lines actions. Participants should see
+    the current story and optionally the upcoming queue in read-only form.
+  - "Start next story" advances to the next queued item and starts a new
+    round; manual "Next round" still works when no queue is being used.
+  - Round and session reports include the story label for each completed
+    round.
+  - All labels/queue items remain active room/session state only, covered
+    by existing room TTL behavior. No accounts, durable archives,
+    integrations, estimates history, or project-management fields.
 - **P9.6 Consensus celebration**: when everyone votes the same, a brief
   positive flourish (existing consensus chip + maybe a soft confetti
   burst respecting `prefers-reduced-motion`). Keep tasteful.
