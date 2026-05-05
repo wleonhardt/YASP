@@ -34,6 +34,11 @@ for the audit that motivated each change.
   `ModeratorControls` in both desktop and compact modes. The one-primary-CTA
   invariant now lives in `RoundActionBar`. Next implementation slice is
   Phase 3: stage layout.
+- 2026-05-05: Completed Phase 3 by making deck/results the primary stage
+  column, moving Participants into a compact awareness rail, and enlarging
+  the stage vote deck. The rail keeps names visible and highlights connected
+  voters who have not voted yet. Next implementation slice is Phase 4:
+  moderator drawer.
 
 ---
 

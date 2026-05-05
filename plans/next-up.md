@@ -5,8 +5,8 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  Phase 3 stage layout, moving deck/results into the dominant column and
-  demoting Participants to the awareness rail.
+  Phase 4 moderator drawer, hiding the remaining moderator-only controls
+  behind a topbar affordance while keeping the stage visible.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -41,6 +41,12 @@
   `ModeratorControls` in both desktop and compact modes. The current phase now
   has a single primary CTA in the stage zone; moderator controls are timer,
   settings, and transfer only.
+- 2026-05-05: Completed Phase 3 by swapping the room layout so
+  `RoundActionBar` plus deck/results own the dominant stage column and
+  Participants move into a compact awareness rail. The rail keeps participant
+  names visible, removes the large waiting placeholders during voting, and
+  makes the one connected voter who has not voted the visually prominent
+  state.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

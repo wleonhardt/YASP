@@ -401,8 +401,11 @@ export function RoomTimer({
             {timerStateLabel}
           </div>
         ) : null}
-        <span className="room-timer__sound-indicator" title={soundLabel} aria-label={soundLabel}>
-          <SoundIcon enabled={soundEnabled} />
+        <span className="room-timer__sound-indicator" title={soundLabel}>
+          <span className="sr-only">{soundLabel}</span>
+          <span aria-hidden="true">
+            <SoundIcon enabled={soundEnabled} />
+          </span>
         </span>
       </div>
     </div>

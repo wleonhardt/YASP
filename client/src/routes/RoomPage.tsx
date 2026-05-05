@@ -821,11 +821,7 @@ export function RoomPage() {
         />
 
         <div className="room-layout">
-          <div className="room-layout__main">
-            <ParticipantsBoard state={state} />
-          </div>
-
-          <aside className="room-layout__aside">
+          <div className="room-layout__main room-layout__stage">
             <RoundActionBar
               state={state}
               onReveal={handleReveal}
@@ -858,6 +854,10 @@ export function RoomPage() {
                 disabled={actionsDisabled}
               />
             )}
+          </div>
+
+          <aside className="room-layout__aside room-layout__participants">
+            <ParticipantsBoard state={state} variant="rail" />
           </aside>
         </div>
       </main>

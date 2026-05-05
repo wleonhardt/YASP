@@ -8,9 +8,10 @@ type Props = {
   revealed: boolean;
   vote?: string;
   compact?: boolean;
+  rail?: boolean;
 };
 
-export function ParticipantCard({ participant, revealed, vote, compact = false }: Props) {
+export function ParticipantCard({ participant, revealed, vote, compact = false, rail = false }: Props) {
   const { t } = useTranslation();
   const statusTone = !participant.connected ? "danger" : participant.hasVoted ? "success" : "neutral";
   const statusLabel = !participant.connected
@@ -18,6 +19,62 @@ export function ParticipantCard({ participant, revealed, vote, compact = false }
     : participant.hasVoted
       ? t("room.participant.voted")
       : t("room.participant.notVoted");
+  const railStatusLabel = !participant.connected
+    ? t("room.participant.offline")
+    : participant.role === "spectator"
+      ? t("room.participant.spectator")
+      : participant.hasVoted
+        ? t("room.participant.voted")
+        : t("room.participant.notVoted");
+  const waitingForVote =
+    participant.connected && participant.role === "voter" && !participant.hasVoted && !revealed;
+
+  if (rail) {
+    return (
+      <article
+        className={[
+          "participant-card",
+          "participant-card--rail",
+          participant.isSelf ? "participant-card--self" : "",
+          participant.connected ? "" : "participant-card--offline",
+          participant.hasVoted ? "participant-card--ready" : "",
+          waitingForVote ? "participant-card--waiting" : "",
+          revealed ? "participant-card--revealed" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        aria-label={`${participant.name}, ${railStatusLabel}`}
+      >
+        <div className="participant-card__identity">
+          <div className="participant-card__avatar" aria-hidden="true">
+            {getParticipantInitials(participant.name)}
+          </div>
+          <div className="participant-card__copy">
+            <div className="participant-card__name-row">
+              <span className="participant-card__name">{participant.name}</span>
+              {participant.isSelf && (
+                <span className="participant-card__subtle">{t("room.participant.you")}</span>
+              )}
+              {participant.isModerator && (
+                <span className="participant-card__moderator" title={t("room.participant.moderator")}>
+                  ✦
+                </span>
+              )}
+            </div>
+            <div className="participant-card__meta">
+              <span className="participant-card__rail-status">{railStatusLabel}</span>
+            </div>
+          </div>
+        </div>
+
+        {revealed ? (
+          <div className="participant-card__rail-vote">
+            {vote ? <DeckToken token={vote} variant="card" /> : "—"}
+          </div>
+        ) : null}
+      </article>
+    );
+  }
 
   return (
     <article

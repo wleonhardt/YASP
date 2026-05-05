@@ -6,26 +6,36 @@ import { getConnectedVoterCounts, getRevealedVote } from "../lib/room";
 
 type Props = {
   state: PublicRoomState;
+  variant?: "board" | "rail";
 };
 
-export function ParticipantsBoard({ state }: Props) {
+const MOBILE_ROSTER_QUERY = "(max-width: 720px)";
+
+function isMobileRosterViewport(): boolean {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia(MOBILE_ROSTER_QUERY).matches
+    : false;
+}
+
+export function ParticipantsBoard({ state, variant = "board" }: Props) {
   const { t } = useTranslation();
   const headingId = useId();
   const rosterId = useId();
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia("(max-width: 720px)").matches : false
-  );
-  const [mobileExpanded, setMobileExpanded] = useState(() =>
-    typeof window !== "undefined" ? !window.matchMedia("(max-width: 720px)").matches : true
-  );
+  const [isMobile, setIsMobile] = useState(isMobileRosterViewport);
+  const [mobileExpanded, setMobileExpanded] = useState(() => !isMobileRosterViewport());
   const { voted, total, percent } = getConnectedVoterCounts(state);
-  const compact = state.participants.length > 12 || isMobile;
+  const rail = variant === "rail";
+  const compact = rail || state.participants.length > 12 || isMobile;
   const overflowCount = Math.max(0, state.participants.length - 8);
   const visibleParticipants =
     overflowCount > 0 ? state.participants.slice(0, 7) : state.participants.slice(0, 8);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 720px)");
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(MOBILE_ROSTER_QUERY);
 
     const syncViewport = () => {
       const mobile = mediaQuery.matches;
@@ -40,7 +50,12 @@ export function ParticipantsBoard({ state }: Props) {
   }, []);
 
   return (
-    <section className="app-panel participants-board" aria-labelledby={headingId}>
+    <section
+      className={["app-panel participants-board", rail ? "participants-board--rail" : ""]
+        .filter(Boolean)
+        .join(" ")}
+      aria-labelledby={headingId}
+    >
       <div className="section-header">
         <div>
           <h2 id={headingId}>{t("room.participants")}</h2>
@@ -74,6 +89,9 @@ export function ParticipantsBoard({ state }: Props) {
                 "presence-row__dot",
                 participant.connected ? "presence-row__dot--online" : "presence-row__dot--offline",
                 participant.hasVoted ? "presence-row__dot--ready" : "",
+                participant.connected && participant.role === "voter" && !participant.hasVoted
+                  ? "presence-row__dot--waiting"
+                  : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -122,6 +140,7 @@ export function ParticipantsBoard({ state }: Props) {
             key={participant.id}
             participant={participant}
             compact={compact}
+            rail={rail}
             revealed={state.revealed}
             vote={getRevealedVote(state, participant.id)}
           />
