@@ -285,6 +285,7 @@
     "average": "평균",
     "median": "중앙값",
     "mostCommon": "최빈값",
+    "mode": "최빈값",
     "spread": "범위",
     "distribution": "분포",
     "plurality": "최다",

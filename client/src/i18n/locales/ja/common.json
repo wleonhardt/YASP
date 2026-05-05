@@ -285,6 +285,7 @@
     "average": "平均",
     "median": "中央値",
     "mostCommon": "最多値",
+    "mode": "最頻値",
     "spread": "範囲",
     "distribution": "分布",
     "plurality": "最多",

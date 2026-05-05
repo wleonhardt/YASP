@@ -5,8 +5,8 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  Phase 5 results presentation, replacing the horizontal distribution rows
-  and padded stat tiles with a stage-scaled chart and compact stat strip.
+  Phase 6 empty-state invite hero, showing the room code and copy-link action
+  prominently while the room has no other connected voters.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -52,6 +52,11 @@
   Moderators can still reach timer pacing, settings, and transfer controls
   from the drawer, while non-moderators land directly on the stage plus
   participant rail.
+- 2026-05-05: Completed Phase 5 by replacing the revealed-round distribution
+  rows with a deck-ordered vertical column chart and compact stat strip. The
+  chart preserves non-deck vote tokens, keeps non-numeric tokens at the right,
+  and adds a separator when numeric and non-numeric card buckets appear
+  together.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

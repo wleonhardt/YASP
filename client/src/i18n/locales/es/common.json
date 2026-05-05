@@ -285,6 +285,7 @@
     "average": "Promedio",
     "median": "Mediana",
     "mostCommon": "Más común",
+    "mode": "Moda",
     "spread": "Amplitud",
     "distribution": "Distribución",
     "plurality": "Mayoría relativa",

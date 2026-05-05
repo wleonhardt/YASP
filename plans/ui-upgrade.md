@@ -44,6 +44,11 @@ for the audit that motivated each change.
   stage so timer status remains visible to everyone. Non-moderators no longer
   see moderator chrome in the room body. Next implementation slice is Phase 5:
   results presentation.
+- 2026-05-05: Completed Phase 5 by replacing the revealed-round distribution
+  rows with a deck-ordered vertical column chart, preserving non-deck vote
+  tokens, separating non-numeric card buckets when mixed with numeric cards,
+  and collapsing the results stats into a compact Average / Median / Mode /
+  Spread strip. Next implementation slice is Phase 6: empty-state invite hero.
 
 ---
 

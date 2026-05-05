@@ -285,6 +285,7 @@
     "average": "平均值",
     "median": "中位數",
     "mostCommon": "最常見",
+    "mode": "眾數",
     "spread": "範圍",
     "distribution": "分佈",
     "plurality": "相對多數",

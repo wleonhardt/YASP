@@ -65,7 +65,7 @@ function cleanupLocalStorageFile() {
 
 cleanupLocalStorageFile();
 
-const child = spawn(process.execPath, [vitestPath, ...process.argv.slice(2)], {
+const child = spawn(process.execPath, [vitestPath, "--no-file-parallelism", ...process.argv.slice(2)], {
   cwd: clientDir,
   stdio: "inherit",
   env: {
