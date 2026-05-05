@@ -54,6 +54,30 @@ Moderator panel is full-width and 381px tall on desktop.
 | F14 | `Round 1` heading appears in topbar AND is implied by panel content | Duplicated semantics |
 | F15 | `participants-board__progress` and `room-status__progress` use slightly different styling | Small consistency leak |
 
+### Vercel Web Interface Guidelines compliance audit
+
+Reviewed 2026-05-04 against
+`https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md`.
+
+| # | Finding | Why it matters |
+|---|---|---|
+| G1 | `.language-switcher__select:focus-visible { outline: none }` (globals.css:1165) — no replacement focus indicator on parent `.language-switcher` | Keyboard users lose focus visibility on language picker |
+| G2 | No `color-scheme: dark` on `<html>` (or in CSS) | Native UI (scrollbars, form widgets, esp. Windows dark mode) won't pick the dark variant |
+| G3 | No skip-link to `<main>`; sr-only h1 in `RoomPage` is not a skip target | Keyboard/screen-reader users tab through topbar every nav |
+| G4 | Timer status chip (`RoomTimer.tsx:432`) lacks `aria-live` | running→complete transition silent for screen readers |
+| G5 | Consensus chip (`ResultsPanel.tsx:202-208`) lacks `role="status"`/`aria-live` | "Consensus reached" not announced post-reveal |
+| G6 | Deck tokens (`DeckToken` in `ResultsPanel.tsx:69,289` + `VoteDeck.tsx:91`) missing `translate="no"` | Auto-translate may garble `?`, `☕`, numerals |
+| G7 | `voted/total` count in `ParticipantsBoard.tsx:50-54` not wrapped in `tabular-nums` | Numbers visibly jump as votes update |
+| G8 | Duration inputs (`RoomTimer.tsx:451,471`) lack `inputMode="numeric"` and `autocomplete="off"` | Mobile shows full keyboard; password manager may suggest values |
+| G9 | Number inputs respond to scroll-wheel when focused | Accidental value mutation; consider `onWheel={e=>e.currentTarget.blur()}` |
+| G10 | "Hide/Show roster" toggle in `ParticipantsBoard.tsx:100` rendered at all widths | Redundant chrome on desktop |
+| G11 | No `touch-action: manipulation` on interactive elements | 300ms double-tap delay on iOS Safari |
+| G12 | No `-webkit-tap-highlight-color` set | Default blue flash on tap (mobile) |
+| G13 | No `overscroll-behavior: contain` on modal/drawer surfaces (`RoundReportModal`, `SessionReportModal`) | Body scroll-bleed when scrolling inside modal |
+| G14 | `prefers-reduced-motion` block (globals.css:3464) only handles `animation-*`, not `transition-*` properties | `transition: width …slow…` on progress fills still runs |
+| G15 | TopBar leave button (`TopBar.tsx:35`) has both visible label and `aria-label="Leave room"` (duplicate accessible name) | Minor a11y noise; prefer `title` only when label visible |
+| G16 | Vote card (`VoteDeck.tsx:75-93`) lacks `aria-describedby` linking to the keyboard shortcut hint | Hint exists but isn't programmatically associated |
+
 ---
 
 ## Phases
@@ -222,6 +246,83 @@ Addresses F9, F15. Cosmetic-only:
 
 *Files*: `globals.css`.
 
+### Phase 8 — Web Interface Guidelines compliance pass
+
+Addresses G1–G16. All small, surgical, low-risk fixes from the
+Vercel guidelines audit. Can land independently of the layout phases —
+schedule in parallel or after Phase 1 quick wins.
+
+Bundled by topic:
+
+- **P8.1 Focus & semantics** (G1, G3, G15)
+  - Add `:focus-within` ring on `.language-switcher` to replace the
+    removed `outline: none`.
+  - Add a skip-link (`<a href="#main">Skip to content</a>`) at the top
+    of `RoomPage` and `LandingPage`; matching `id="main"` and
+    `scroll-margin-top` on the `<main>` element.
+  - Drop redundant `aria-label` on TopBar leave button when label is
+    visible; keep `title`.
+  - *Files*: `globals.css`, `RoomPage.tsx`, `LandingPage.tsx`,
+    `TopBar.tsx`.
+
+- **P8.2 Live announcements** (G4, G5)
+  - Add `aria-live="polite"` to the timer status chip in
+    `RoomTimer.tsx`.
+  - Add `role="status"` to the consensus chip in `ResultsPanel.tsx`.
+  - *Files*: `RoomTimer.tsx`, `ResultsPanel.tsx`.
+
+- **P8.3 Translate guards** (G6)
+  - Add `translate="no"` to `<DeckToken>` root span (covers all uses).
+  - *Files*: `DeckToken.tsx`.
+
+- **P8.4 Tabular numbers** (G7)
+  - Add `font-variant-numeric: tabular-nums` to
+    `.participants-board__summary strong` and similar count-display
+    elements.
+  - *Files*: `globals.css`.
+
+- **P8.5 Form input quality** (G8, G9)
+  - Add `inputMode="numeric"`, `autoComplete="off"`,
+    `pattern="[0-9]*"` to duration inputs.
+  - Add `onWheel={e => e.currentTarget.blur()}` to prevent scroll-wheel
+    mutation while focused.
+  - *Files*: `RoomTimer.tsx`.
+
+- **P8.6 Mobile touch hygiene** (G10, G11, G12)
+  - `touch-action: manipulation` on `.button`, `.vote-card`,
+    `.input` (or via a global `button, a, input { touch-action: manipulation }`).
+  - `-webkit-tap-highlight-color: transparent` on body (or
+    interactive elements).
+  - Hide the Hide/Show roster toggle on desktop via media query
+    (`display: none` above 720px) instead of always rendering it.
+  - *Files*: `globals.css`, `ParticipantsBoard.tsx`.
+
+- **P8.7 Modal scroll containment** (G13)
+  - Add `overscroll-behavior: contain` to `.deck-modal` and any other
+    modal/drawer surfaces (`RoundReportModal`, `SessionReportModal`).
+  - *Files*: `globals.css`.
+
+- **P8.8 Reduced motion** (G14)
+  - Extend the `prefers-reduced-motion` block to include
+    `transition-duration: 0.01ms !important` so progress-fill width
+    transitions are also disabled.
+  - *Files*: `globals.css`.
+
+- **P8.9 Native UI theming** (G2)
+  - Add `color-scheme: dark light;` on `:root` (or `html`) so native
+    scrollbars/widgets follow the active theme. Override per-theme in
+    `[data-theme="light"]` and dark blocks if needed.
+  - *Files*: `globals.css`.
+
+- **P8.10 Programmatic associations** (G16)
+  - Add `aria-describedby` on each `.vote-card` button pointing to the
+    shortcut hint id (when shown).
+  - *Files*: `VoteDeck.tsx`.
+
+**Exit criteria**: re-run `web-design-guidelines` skill — no findings
+besides intentionally deferred items (e.g. URL-state for filters, which
+isn't applicable here).
+
 ---
 
 ## Sequencing & rollback
@@ -229,6 +330,8 @@ Addresses F9, F15. Cosmetic-only:
 - Phases are independent except: **P3 should land before P4** (drawer needs
   the new layout to make sense), and **P2 should land before P3** (so the
   stage already owns its primary button when the columns swap).
+- **Phase 8** is fully independent — can land any time, even before
+  Phase 1. Recommended order: P1 → P8 → P2 → P3 → P4 → P5 → P6 → P7.
 - Skip P6 if QR generation needs a dependency we don't want.
 - Each phase ends in a green CI run + a passing `npm run i18n:check`.
 
