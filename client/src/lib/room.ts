@@ -2,6 +2,14 @@ import type { PublicRoomState, PublicParticipant } from "@yasp/shared";
 
 export type RoomPhase = "waiting" | "voting" | "revealed";
 
+export type OutlierCallout = {
+  modeVote: string;
+  outliers: {
+    participant: PublicParticipant;
+    vote: string;
+  }[];
+};
+
 export function getSelf(state: PublicRoomState): PublicParticipant | undefined {
   return state.participants.find((p) => p.isSelf);
 }
@@ -39,6 +47,52 @@ export function getLastWaitingVoter(state: PublicRoomState): PublicParticipant |
   }
 
   return waitingVoters[0];
+}
+
+export function getOutlierCallout(state: PublicRoomState): OutlierCallout | null {
+  if (
+    !state.revealed ||
+    !state.stats ||
+    !state.votes ||
+    state.stats.consensus ||
+    state.stats.mostCommon === null
+  ) {
+    return null;
+  }
+
+  const modeIndex = state.deck.cards.indexOf(state.stats.mostCommon);
+
+  if (modeIndex === -1) {
+    return null;
+  }
+
+  const outliers = state.participants
+    .filter((participant) => participant.role === "voter")
+    .map((participant) => {
+      const vote = state.votes?.[participant.id];
+
+      if (vote === undefined) {
+        return null;
+      }
+
+      const voteIndex = state.deck.cards.indexOf(vote);
+
+      if (voteIndex === -1 || Math.abs(voteIndex - modeIndex) <= 2) {
+        return null;
+      }
+
+      return { participant, vote };
+    })
+    .filter((outlier): outlier is OutlierCallout["outliers"][number] => outlier !== null);
+
+  if (outliers.length < 1 || outliers.length > 2) {
+    return null;
+  }
+
+  return {
+    modeVote: state.stats.mostCommon,
+    outliers,
+  };
 }
 
 export function shouldShowInviteHero(state: PublicRoomState): boolean {

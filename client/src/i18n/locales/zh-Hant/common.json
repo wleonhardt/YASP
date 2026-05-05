@@ -299,6 +299,14 @@
     "consensus": "共識",
     "tie": "平手",
     "notAvailable": "無",
+    "spotlight": {
+      "outlier": {
+        "eyebrow": "討論提示",
+        "title": "有一個估算不同，要快速確認嗎？",
+        "details": "查看",
+        "mode": "最常見估算：{{vote}}"
+      }
+    },
     "roomUnavailable": "房間不可用",
     "roomMissing": "房間是暫時的。此房間已不存在。",
     "roomExpiredMessage": "此房間因長時間無活動而過期。",

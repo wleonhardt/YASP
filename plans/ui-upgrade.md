@@ -65,6 +65,11 @@ for the audit that motivated each change.
   voted-count pill with a calm "Waiting on {name}" status and gives that
   voter's presence dot a slightly stronger highlight. Remaining Phase 9 items
   stay optional and can land one at a time.
+- 2026-05-05: Continued Phase 9 with P9.2 Outlier callout. When a revealed
+  round has one or two voter estimates more than two deck cards from the mode,
+  the results panel now shows a tone-safe disclosure above the distribution
+  chart. The default headline names no participant; names and vote tokens are
+  visible only after expanding the disclosure.
 
 ---
 

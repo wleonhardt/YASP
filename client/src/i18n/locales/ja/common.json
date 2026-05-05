@@ -299,6 +299,14 @@
     "consensus": "一致",
     "tie": "同数",
     "notAvailable": "該当なし",
+    "spotlight": {
+      "outlier": {
+        "eyebrow": "議論の手がかり",
+        "title": "見積もりが1つ異なります。確認しますか？",
+        "details": "確認",
+        "mode": "最も多い見積もり: {{vote}}"
+      }
+    },
     "roomUnavailable": "ルームを利用できません",
     "roomMissing": "ルームは一時的なものです。このルームはもう存在しません。",
     "roomExpiredMessage": "このルームは無操作のため期限切れになりました。",

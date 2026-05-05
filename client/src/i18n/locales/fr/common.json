@@ -299,6 +299,14 @@
     "consensus": "Consensus",
     "tie": "Égalité",
     "notAvailable": "n/d",
+    "spotlight": {
+      "outlier": {
+        "eyebrow": "Point de discussion",
+        "title": "Une estimation diffère — à vérifier ?",
+        "details": "Examiner",
+        "mode": "Estimation la plus fréquente : {{vote}}"
+      }
+    },
     "roomUnavailable": "Salle indisponible",
     "roomMissing": "Les salles sont temporaires. Cette salle n’existe plus.",
     "roomExpiredMessage": "La salle a expiré après une période d’inactivité.",

@@ -299,6 +299,14 @@
     "consensus": "Konsens",
     "tie": "Gleichstand",
     "notAvailable": "k. A.",
+    "spotlight": {
+      "outlier": {
+        "eyebrow": "Diskussionshinweis",
+        "title": "Eine Schätzung weicht ab — kurz prüfen?",
+        "details": "Prüfen",
+        "mode": "Häufigste Schätzung: {{vote}}"
+      }
+    },
     "roomUnavailable": "Raum nicht verfügbar",
     "roomMissing": "Räume sind temporär. Dieser Raum existiert nicht mehr.",
     "roomExpiredMessage": "Der Raum ist nach Inaktivität abgelaufen.",

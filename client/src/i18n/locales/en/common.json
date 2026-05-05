@@ -299,6 +299,14 @@
     "consensus": "Consensus",
     "tie": "Tie",
     "notAvailable": "n/a",
+    "spotlight": {
+      "outlier": {
+        "eyebrow": "Discussion cue",
+        "title": "One estimate differs — worth a quick check?",
+        "details": "Review",
+        "mode": "Most common estimate: {{vote}}"
+      }
+    },
     "roomUnavailable": "Room unavailable",
     "roomMissing": "Rooms are temporary. This room no longer exists.",
     "roomExpiredMessage": "The room expired after inactivity.",

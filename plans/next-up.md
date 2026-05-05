@@ -5,8 +5,10 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  optional Phase 9 spotlight enhancements. Next candidate: P9.2 outlier
-  callout, using the tone-safe no-name headline described in the plan.
+  optional Phase 9 spotlight enhancements. Next candidate: P9.4
+  almost-consensus prompt, likely reusing the new round spotlight pattern.
+  P9.3 re-open voting and P9.5 story labels need deeper product/state
+  decisions before implementation.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -70,6 +72,11 @@
   participant rail now switches from the numeric voted summary to "Waiting on
   {name}" only when exactly one connected voter has not voted, and that
   voter's presence dot gets a slightly stronger calm highlight.
+- 2026-05-05: Continued optional Phase 9 with P9.2 Outlier callout. Revealed
+  rounds now show a tone-safe "One estimate differs — worth a quick check?"
+  disclosure above the distribution chart only when one or two voter estimates
+  sit more than two deck cards from the mode. Names stay out of the headline
+  and appear only after expanding the disclosure.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { Deck, PublicParticipant, PublicRoomState } from "@yasp/shared";
 import { makePublicRoomState } from "../test/roomState";
@@ -121,5 +121,46 @@ describe("ResultsPanel", () => {
     expect(within(stats).getByText("Median")).toBeInTheDocument();
     expect(within(stats).getByText("Mode")).toBeInTheDocument();
     expect(within(stats).getByText("Spread")).toBeInTheDocument();
+  });
+
+  it("surfaces a tone-safe outlier prompt and keeps names inside the disclosure", () => {
+    const deck: Deck = {
+      type: "custom",
+      label: "Planning",
+      cards: ["1", "2", "3", "5", "8", "13", "21"],
+    };
+
+    render(
+      <ResultsPanel state={makeRevealedState({ deck, mostCommon: "5", votes: ["5", "5", "5", "21"] })} />
+    );
+
+    const prompt = screen.getByText("One estimate differs — worth a quick check?");
+    const summary = prompt.closest("summary");
+    const details = prompt.closest("details");
+
+    expect(summary).not.toBeNull();
+    expect(details).not.toBeNull();
+    expect(summary).not.toHaveTextContent("Player 4");
+    expect(details).not.toHaveAttribute("open");
+
+    fireEvent.click(summary as HTMLElement);
+
+    expect(details).toHaveAttribute("open");
+    expect(screen.getByText("Most common estimate: 5")).toBeInTheDocument();
+    expect(screen.getByText("Player 4")).toBeInTheDocument();
+  });
+
+  it("does not render the outlier prompt for close estimates", () => {
+    const deck: Deck = {
+      type: "custom",
+      label: "Planning",
+      cards: ["1", "2", "3", "5", "8", "13", "21"],
+    };
+
+    render(
+      <ResultsPanel state={makeRevealedState({ deck, mostCommon: "5", votes: ["3", "5", "5", "8"] })} />
+    );
+
+    expect(screen.queryByText(/worth a quick check/i)).not.toBeInTheDocument();
   });
 });
