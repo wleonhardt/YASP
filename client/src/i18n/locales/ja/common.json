@@ -260,7 +260,9 @@
     "nextRound": "次のラウンド",
     "reset": "リセット",
     "resetRound": "ラウンドをリセット",
+    "resetRoundAdminHint": "現在のラウンドをクリアし、全員を投票に戻します。",
     "reopenVoting": "投票を再開",
+    "reopenVotingAlternative": "または投票を再開",
     "story": {
       "current": "現在のストーリー",
       "currentLabel": "現在のストーリー名",
@@ -299,6 +301,7 @@
     "transferHost": "モデレーターを引き継ぐ",
     "onlyModeratorReveal": "このラウンドを公開できるのはモデレーターだけです。",
     "onlyModeratorAdvanceReset": "このラウンドを進める、投票を再開する、またはリセットできるのはモデレーターだけです。",
+    "onlyModeratorAdvanceReopen": "このラウンドを進める、または投票を再開できるのはモデレーターだけです。",
     "confirmTransfer": "引き継ぎを確認",
     "transferPrompt": "新しいモデレーターにする参加者を選んでください。",
     "transferConfirmMessage": "{{name}} にモデレーター権限を引き継ぎますか？ あなたのモデレーター権限は失われます。",

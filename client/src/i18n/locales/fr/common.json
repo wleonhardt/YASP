@@ -260,7 +260,9 @@
     "nextRound": "Tour suivant",
     "reset": "Réinitialiser",
     "resetRound": "Réinitialiser le tour",
+    "resetRoundAdminHint": "Efface le tour actuel et ramène tout le monde au vote.",
     "reopenVoting": "Rouvrir le vote",
+    "reopenVotingAlternative": "ou rouvrir le vote",
     "story": {
       "current": "Story actuelle",
       "currentLabel": "Libellé de la story actuelle",
@@ -299,6 +301,7 @@
     "transferHost": "Transférer la modération",
     "onlyModeratorReveal": "Seul le modérateur peut révéler ce tour.",
     "onlyModeratorAdvanceReset": "Seul le modérateur peut avancer, rouvrir ou réinitialiser ce tour.",
+    "onlyModeratorAdvanceReopen": "Seul le modérateur peut avancer ou rouvrir ce tour.",
     "confirmTransfer": "Confirmer le transfert",
     "transferPrompt": "Choisissez la personne qui doit devenir le nouveau modérateur.",
     "transferConfirmMessage": "Transférer les contrôles du modérateur à {{name}} ? Vous perdrez les privilèges de modérateur.",

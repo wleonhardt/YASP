@@ -97,6 +97,11 @@ for the audit that motivated each change.
   non-default configuration, and the topbar room code becomes code-only while
   InviteHero owns the share action. Next implementation slice is P10.4/P10.5:
   trim the action bar.
+- 2026-05-05: Continued Phase 10 with P10.4/P10.5. The stage action bar now
+  lets the primary button carry the phase by itself, keeps re-open voting as a
+  small secondary text action after reveal, and moves Reset round into the
+  moderator room-settings drawer section. Next implementation slice is
+  P10.6/P10.7/P10.8: drawer fixes.
 
 ---
 

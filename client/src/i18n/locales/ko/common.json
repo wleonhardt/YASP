@@ -260,7 +260,9 @@
     "nextRound": "다음 라운드",
     "reset": "리셋",
     "resetRound": "라운드 초기화",
+    "resetRoundAdminHint": "현재 라운드를 지우고 모두를 투표 상태로 되돌립니다.",
     "reopenVoting": "투표 다시 열기",
+    "reopenVotingAlternative": "또는 투표 다시 열기",
     "story": {
       "current": "현재 스토리",
       "currentLabel": "현재 스토리 라벨",
@@ -299,6 +301,7 @@
     "transferHost": "진행자 권한 넘기기",
     "onlyModeratorReveal": "이 라운드는 진행자만 공개할 수 있습니다.",
     "onlyModeratorAdvanceReset": "이 라운드는 진행자만 진행하거나 투표를 다시 열거나 리셋할 수 있습니다.",
+    "onlyModeratorAdvanceReopen": "이 라운드는 진행자만 진행하거나 투표를 다시 열 수 있습니다.",
     "confirmTransfer": "넘기기 확인",
     "transferPrompt": "새 진행자가 될 참가자를 선택하세요.",
     "transferConfirmMessage": "{{name}}에게 진행자 권한을 넘기시겠습니까? 현재 진행자 권한은 사라집니다.",

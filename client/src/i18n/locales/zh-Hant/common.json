@@ -260,7 +260,9 @@
     "nextRound": "下一輪",
     "reset": "重設",
     "resetRound": "重設本輪",
+    "resetRoundAdminHint": "清除目前回合，並讓所有人回到投票狀態。",
     "reopenVoting": "重新開放投票",
+    "reopenVotingAlternative": "或重新開放投票",
     "story": {
       "current": "目前故事",
       "currentLabel": "目前故事標籤",
@@ -299,6 +301,7 @@
     "transferHost": "移交主持權限",
     "onlyModeratorReveal": "只有主持人可以揭示本輪結果。",
     "onlyModeratorAdvanceReset": "只有主持人可以推進、重新開放投票或重設本輪。",
+    "onlyModeratorAdvanceReopen": "只有主持人可以推進或重新開放本輪投票。",
     "confirmTransfer": "確認轉移",
     "transferPrompt": "選擇一位參與者作為新的主持人。",
     "transferConfirmMessage": "要將主持人控制權轉移給 {{name}} 嗎？你將失去主持權限。",

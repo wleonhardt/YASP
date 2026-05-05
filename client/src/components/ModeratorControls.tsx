@@ -24,6 +24,7 @@ type Props = {
   onResetTimer: () => Promise<unknown> | unknown;
   onHonkTimer: () => Promise<boolean> | boolean;
   onTransferModerator: (targetParticipantId: string) => Promise<boolean> | boolean;
+  onResetRound?: () => Promise<unknown> | unknown;
   trackStories?: boolean;
   onTrackStoriesChange?: (enabled: boolean) => void;
   disabled?: boolean;
@@ -319,6 +320,7 @@ export function ModeratorControls({
   onResetTimer,
   onHonkTimer,
   onTransferModerator,
+  onResetRound,
   trackStories = false,
   onTrackStoriesChange,
   disabled = false,
@@ -492,7 +494,12 @@ export function ModeratorControls({
         />
       </div>
 
-      <RoomSettingsPanel state={state} onUpdateSettings={onUpdateSettings} disabled={disabled} />
+      <RoomSettingsPanel
+        state={state}
+        onUpdateSettings={onUpdateSettings}
+        onResetRound={onResetRound}
+        disabled={disabled}
+      />
 
       {isModerator && onTrackStoriesChange ? (
         <div className="controls-panel__section controls-panel__section--story">

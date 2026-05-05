@@ -8,7 +8,6 @@ function handlers() {
   return {
     onReveal: vi.fn(),
     onReopenVoting: vi.fn(),
-    onReset: vi.fn(),
     onNextRound: vi.fn(),
   };
 }
@@ -25,9 +24,11 @@ describe("RoundActionBar", () => {
     expect(props.onReveal).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: /next round/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /reset round/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/next step/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^voting$/i)).not.toBeInTheDocument();
   });
 
-  it("renders Next round as the primary revealed action with Re-open and Reset as secondary actions", async () => {
+  it("renders Next round as the primary revealed action with Re-open as a text action", async () => {
     const user = userEvent.setup();
     const props = handlers();
 
@@ -35,11 +36,12 @@ describe("RoundActionBar", () => {
 
     await user.click(screen.getByRole("button", { name: /next round/i }));
     await user.click(screen.getByRole("button", { name: /re-open voting/i }));
-    await user.click(screen.getByRole("button", { name: /reset round/i }));
 
     expect(props.onNextRound).toHaveBeenCalledTimes(1);
     expect(props.onReopenVoting).toHaveBeenCalledTimes(1);
-    expect(props.onReset).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: /reset round/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/next step/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^revealed$/i)).not.toBeInTheDocument();
   });
 
   it("disables moderator-only reveal for non-moderators and explains why", () => {
@@ -89,7 +91,7 @@ describe("RoundActionBar", () => {
 
     expect(screen.getByRole("button", { name: /next round/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /re-open voting/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /reset round/i })).toBeDisabled();
-    expect(screen.getByText(/advance, re-open, or reset/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /reset round/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/advance or re-open/i)).toBeInTheDocument();
   });
 });

@@ -199,13 +199,41 @@ describe("ModeratorControls", () => {
     expect(scope.getByText(/duration 1m • sound off/i)).toBeInTheDocument();
   });
 
-  it("keeps round reset and next actions out of moderator controls after reveal", () => {
-    render(<ModeratorControls compact={false} state={makeState({ revealed: true })} {...handlers()} />);
+  it("keeps next out of moderator controls and moves reset into room settings after reveal", async () => {
+    const user = userEvent.setup();
+    const onResetRound = vi.fn();
+
+    render(
+      <ModeratorControls
+        compact={false}
+        state={makeState({ revealed: true })}
+        onResetRound={onResetRound}
+        {...handlers()}
+      />
+    );
 
     const panel = screen.getByRole("region", { name: /moderator controls/i });
     const scope = within(panel);
 
     expect(scope.queryByRole("button", { name: /next round/i })).not.toBeInTheDocument();
+    expect(scope.queryByRole("button", { name: /reset round/i })).not.toBeInTheDocument();
+
+    await user.click(scope.getByRole("button", { name: /room settings/i }));
+    await user.click(scope.getByRole("button", { name: /reset round/i }));
+
+    expect(onResetRound).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps reset hidden in room settings before reveal", async () => {
+    const user = userEvent.setup();
+
+    render(<ModeratorControls compact={false} state={makeState()} onResetRound={vi.fn()} {...handlers()} />);
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+    const scope = within(panel);
+
+    await user.click(scope.getByRole("button", { name: /room settings/i }));
+
     expect(scope.queryByRole("button", { name: /reset round/i })).not.toBeInTheDocument();
   });
 

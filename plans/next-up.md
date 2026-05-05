@@ -13,7 +13,7 @@
   eyebrows. Eight focused commits; each independently revertable.
   Full spec under "Phase 10 — Subtraction pass" in
   [`ui-upgrade.md`](ui-upgrade.md). Recommended next slice:
-  P10.4+P10.5 ("Trim the action bar").
+  P10.6+P10.7+P10.8 ("Drawer fixes").
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -107,6 +107,11 @@
   stays hidden until the timer is used or configured away from the default;
   and the topbar room code becomes a code-only chip while InviteHero owns
   sharing.
+- 2026-05-05: Continued Phase 10 with P10.4/P10.5, trimming the stage action
+  bar to one primary action plus a small re-open-voting text action after
+  reveal. Reset round moved into moderator room settings as an admin action,
+  and the redundant visible `NEXT STEP` / `Voting` / `Revealed` copy was
+  removed from the action bar.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

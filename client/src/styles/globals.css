@@ -2634,7 +2634,7 @@ select.input {
 
 .round-action-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 1fr;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3);
@@ -2643,11 +2643,6 @@ select.input {
   background: rgba(10, 16, 26, 0.62);
 }
 
-.round-action-bar__copy {
-  min-width: 0;
-}
-
-.round-action-bar__copy p,
 .round-action-bar__hint {
   margin: 0;
   color: var(--color-text-secondary);
@@ -2663,13 +2658,40 @@ select.input {
   flex-wrap: wrap;
 }
 
+.round-action-bar__actions--revealed {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
 .round-action-bar__primary {
   min-width: min(13rem, 100%);
 }
 
-.round-action-bar__secondary {
-  min-height: 40px;
-  padding-inline: 0.85rem;
+.round-action-bar__text-action {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-meta);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.round-action-bar__text-action:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.round-action-bar__text-action:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.round-action-bar__text-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .round-action-bar__hint {
@@ -2939,6 +2961,14 @@ select.input {
   margin-top: 0.4rem;
   color: var(--color-text-secondary);
   font-size: var(--text-meta);
+}
+
+.controls-panel__settings-admin-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding-top: var(--space-2);
 }
 
 .controls-panel__transfer-row {
@@ -3906,9 +3936,14 @@ select.input {
     justify-content: stretch;
   }
 
-  .round-action-bar__primary,
-  .round-action-bar__secondary {
+  .round-action-bar__actions--revealed,
+  .round-action-bar__primary {
+    align-items: stretch;
     flex: 1 1 auto;
+  }
+
+  .round-action-bar__text-action {
+    align-self: center;
   }
 
   .status-corner,

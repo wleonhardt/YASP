@@ -260,7 +260,9 @@
     "nextRound": "Próxima ronda",
     "reset": "Repor",
     "resetRound": "Repor ronda",
+    "resetRoundAdminHint": "Limpa a ronda atual e devolve todos à votação.",
     "reopenVoting": "Reabrir votação",
+    "reopenVotingAlternative": "ou reabrir votação",
     "story": {
       "current": "História atual",
       "currentLabel": "Etiqueta da história atual",
@@ -299,6 +301,7 @@
     "transferHost": "Transferir moderação",
     "onlyModeratorReveal": "Só o moderador pode revelar esta ronda.",
     "onlyModeratorAdvanceReset": "Só o moderador pode avançar, reabrir ou repor esta ronda.",
+    "onlyModeratorAdvanceReopen": "Só o moderador pode avançar ou reabrir esta ronda.",
     "confirmTransfer": "Confirmar transferência",
     "transferPrompt": "Escolhe a pessoa que deve passar a ser o novo moderador.",
     "transferConfirmMessage": "Transferir os controlos do moderador para {{name}}? Vais perder os privilégios de moderação.",

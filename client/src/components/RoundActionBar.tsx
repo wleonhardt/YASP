@@ -7,19 +7,11 @@ type Props = {
   state: PublicRoomState;
   onReveal: () => void;
   onReopenVoting: () => void;
-  onReset: () => void;
   onNextRound: () => void;
   disabled?: boolean;
 };
 
-export function RoundActionBar({
-  state,
-  onReveal,
-  onReopenVoting,
-  onReset,
-  onNextRound,
-  disabled = false,
-}: Props) {
+export function RoundActionBar({ state, onReveal, onReopenVoting, onNextRound, disabled = false }: Props) {
   const { t } = useTranslation();
   const hintId = useId();
   const isModerator = isMeModerator(state);
@@ -30,7 +22,7 @@ export function RoundActionBar({
     ((state.revealed && state.settings.resetPolicy === "moderator_only") ||
       (!state.revealed && state.settings.revealPolicy === "moderator_only"))
       ? state.revealed
-        ? t("room.onlyModeratorAdvanceReset")
+        ? t("room.onlyModeratorAdvanceReopen")
         : t("room.onlyModeratorReveal")
       : null;
 
@@ -38,33 +30,14 @@ export function RoundActionBar({
 
   return (
     <section className="round-action-bar" aria-label={t("room.nextStep")}>
-      <div className="round-action-bar__copy">
-        <div className="section-label">{t("room.nextStep")}</div>
-        <p>{state.revealed ? t("room.phase.revealed") : t("room.phase.voting")}</p>
-      </div>
-
       {/* Invariant: the current round phase has exactly one primary CTA, and it lives in this stage bar. */}
-      <div className="round-action-bar__actions">
+      <div
+        className={["round-action-bar__actions", state.revealed ? "round-action-bar__actions--revealed" : ""]
+          .filter(Boolean)
+          .join(" ")}
+      >
         {state.revealed ? (
           <>
-            <button
-              className="button button--secondary round-action-bar__secondary"
-              type="button"
-              onClick={onReopenVoting}
-              disabled={!resetAllowed || disabled}
-              aria-describedby={!resetAllowed && actionHint ? hintId : undefined}
-            >
-              {t("room.reopenVoting")}
-            </button>
-            <button
-              className="button button--ghost round-action-bar__secondary"
-              type="button"
-              onClick={onReset}
-              disabled={!resetAllowed || disabled}
-              aria-describedby={!resetAllowed && actionHint ? hintId : undefined}
-            >
-              {t("room.resetRound")}
-            </button>
             <button
               className="button button--primary round-action-bar__primary"
               type="button"
@@ -73,6 +46,15 @@ export function RoundActionBar({
               aria-describedby={primaryDisabled && actionHint ? hintId : undefined}
             >
               {t("room.nextRound")}
+            </button>
+            <button
+              className="round-action-bar__text-action"
+              type="button"
+              onClick={onReopenVoting}
+              disabled={!resetAllowed || disabled}
+              aria-describedby={!resetAllowed && actionHint ? hintId : undefined}
+            >
+              {t("room.reopenVotingAlternative")}
             </button>
           </>
         ) : (

@@ -90,6 +90,10 @@
   moderator-only "Track stories" opt-in from the drawer. P10.2/P10.3 did not
   create new product or architecture questions because they only subtract
   client chrome around existing state.
+- 2026-05-05 review: Phase 10 P10.4/P10.5 did not create new product or
+  architecture questions. Reset round remains an ephemeral active-room action;
+  it only moved from the stage to moderator settings, while next/re-open
+  continue to follow the existing reset-policy permission model.
 - No new backend/state open questions are active right now. The current scaling
   and deployment posture is recorded in ADR 0004, and the remaining
   multi-instance Redis work is intentionally deferred until operator

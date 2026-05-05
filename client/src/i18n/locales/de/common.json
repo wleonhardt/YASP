@@ -260,7 +260,9 @@
     "nextRound": "Nächste Runde",
     "reset": "Zurücksetzen",
     "resetRound": "Runde zurücksetzen",
+    "resetRoundAdminHint": "Löscht die aktuelle Runde und bringt alle zurück zur Abstimmung.",
     "reopenVoting": "Abstimmung wieder öffnen",
+    "reopenVotingAlternative": "oder Abstimmung wieder öffnen",
     "story": {
       "current": "Aktuelle Story",
       "currentLabel": "Aktuelle Story-Bezeichnung",
@@ -299,6 +301,7 @@
     "transferHost": "Moderation übertragen",
     "onlyModeratorReveal": "Nur der Moderator kann diese Runde aufdecken.",
     "onlyModeratorAdvanceReset": "Nur der Moderator kann diese Runde fortsetzen, wieder öffnen oder zurücksetzen.",
+    "onlyModeratorAdvanceReopen": "Nur der Moderator kann diese Runde fortsetzen oder wieder öffnen.",
     "confirmTransfer": "Übertragung bestätigen",
     "transferPrompt": "Wähle die Person aus, die neuer Moderator werden soll.",
     "transferConfirmMessage": "Moderatorrechte an {{name}} übertragen? Du verlierst deine Moderationsrechte.",

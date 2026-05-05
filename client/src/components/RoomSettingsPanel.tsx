@@ -7,6 +7,7 @@ import { isMeModerator } from "../lib/room";
 type Props = {
   state: PublicRoomState;
   onUpdateSettings: (settings: Partial<RoomSettings>) => Promise<boolean> | boolean;
+  onResetRound?: () => Promise<unknown> | unknown;
   disabled?: boolean;
 };
 
@@ -112,7 +113,7 @@ function ToggleSetting({ label, description, checked, onChange, disabled = false
   );
 }
 
-export function RoomSettingsPanel({ state, onUpdateSettings, disabled = false }: Props) {
+export function RoomSettingsPanel({ state, onUpdateSettings, onResetRound, disabled = false }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const isModerator = isMeModerator(state);
@@ -230,6 +231,19 @@ export function RoomSettingsPanel({ state, onUpdateSettings, disabled = false }:
                 onChange={handlePolicyUpdate("deckChangePolicy")}
               />
             </div>
+            {onResetRound && state.revealed ? (
+              <div className="controls-panel__settings-admin-action">
+                <button
+                  className="button button--danger"
+                  type="button"
+                  onClick={() => void onResetRound()}
+                  disabled={disabled}
+                >
+                  {t("room.resetRound")}
+                </button>
+                <small className="controls-panel__settings-help">{t("room.resetRoundAdminHint")}</small>
+              </div>
+            ) : null}
           </div>
 
           <div className="controls-panel__settings-group">

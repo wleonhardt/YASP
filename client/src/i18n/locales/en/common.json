@@ -260,7 +260,9 @@
     "nextRound": "Next round",
     "reset": "Reset",
     "resetRound": "Reset round",
+    "resetRoundAdminHint": "Clears the current round and returns everyone to voting.",
     "reopenVoting": "Re-open voting",
+    "reopenVotingAlternative": "or re-open voting",
     "story": {
       "current": "Current story",
       "currentLabel": "Current story label",
@@ -299,6 +301,7 @@
     "transferHost": "Transfer moderation",
     "onlyModeratorReveal": "Only the moderator can reveal this round.",
     "onlyModeratorAdvanceReset": "Only the moderator can advance, re-open, or reset this round.",
+    "onlyModeratorAdvanceReopen": "Only the moderator can advance or re-open this round.",
     "confirmTransfer": "Confirm transfer",
     "transferPrompt": "Choose the participant who should become the new moderator.",
     "transferConfirmMessage": "Transfer moderator controls to {{name}}? You will lose moderator privileges.",

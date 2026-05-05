@@ -873,6 +873,7 @@ export function RoomPage() {
             onHonkTimer={handleHonkTimer}
             onUpdateSettings={handleUpdateSettings}
             onTransferModerator={handleTransferModerator}
+            onResetRound={handleReset}
             trackStories={trackStories}
             onTrackStoriesChange={setTrackStories}
             disabled={actionsDisabled}
@@ -932,7 +933,6 @@ export function RoomPage() {
               state={state}
               onReveal={handleReveal}
               onReopenVoting={handleReopenVoting}
-              onReset={handleReset}
               onNextRound={handleNextRound}
               disabled={actionsDisabled}
             />
