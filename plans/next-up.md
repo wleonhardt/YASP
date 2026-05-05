@@ -5,8 +5,8 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  Phase 2 (`RoundActionBar`) to move Reveal/Next/Reset actions out of
-  `ModeratorControls` and into the stage zone.
+  Phase 3 stage layout, moving deck/results into the dominant column and
+  demoting Participants to the awareness rail.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -36,6 +36,11 @@
   into the room utility menu. Timer surfaces now subscribe to the shared
   persisted sound preference and render only a read-only sound-state indicator,
   while the utility toggle keeps audio priming behavior intact.
+- 2026-05-05: Completed Phase 2 by adding `RoundActionBar` above the
+  deck/results stage and removing Reveal/Next/Reset actions from
+  `ModeratorControls` in both desktop and compact modes. The current phase now
+  has a single primary CTA in the stage zone; moderator controls are timer,
+  settings, and transfer only.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

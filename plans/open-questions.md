@@ -24,6 +24,9 @@
 - 2026-05-05 review: Phase 1 sound relocation did not create new open
   questions. Phase 2 can proceed without an ADR because the change remains
   client-only and does not alter the product's ephemeral state model.
+- 2026-05-05 review: Phase 2 `RoundActionBar` did not create new open
+  questions. Phase 3 can proceed as planned; the 768px breakpoint remains the
+  main verification risk already tracked by the viewport-mix question.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.

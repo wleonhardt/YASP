@@ -9,6 +9,7 @@ import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ModeratorControls } from "../components/ModeratorControls";
 import { ParticipantsBoard } from "../components/ParticipantsBoard";
 import { ResultsPanel } from "../components/ResultsPanel";
+import { RoundActionBar } from "../components/RoundActionBar";
 import { RoundReportModal } from "../components/RoundReportModal";
 import { SessionReportModal } from "../components/SessionReportModal";
 import { ThemeToggle } from "../components/ThemeToggle";
@@ -815,9 +816,6 @@ export function RoomPage() {
           onResetTimer={handleResetTimer}
           onHonkTimer={handleHonkTimer}
           onUpdateSettings={handleUpdateSettings}
-          onReveal={handleReveal}
-          onReset={handleReset}
-          onNextRound={handleNextRound}
           onTransferModerator={handleTransferModerator}
           disabled={actionsDisabled}
         />
@@ -828,6 +826,13 @@ export function RoomPage() {
           </div>
 
           <aside className="room-layout__aside">
+            <RoundActionBar
+              state={state}
+              onReveal={handleReveal}
+              onReset={handleReset}
+              onNextRound={handleNextRound}
+              disabled={actionsDisabled}
+            />
             {state.revealed ? (
               <ResultsPanel
                 state={state}

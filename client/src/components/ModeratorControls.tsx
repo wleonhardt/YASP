@@ -22,9 +22,6 @@ type Props = {
   onPauseTimer: () => Promise<unknown> | unknown;
   onResetTimer: () => Promise<unknown> | unknown;
   onHonkTimer: () => Promise<boolean> | boolean;
-  onReveal: () => void;
-  onReset: () => void;
-  onNextRound: () => void;
   onTransferModerator: (targetParticipantId: string) => Promise<boolean> | boolean;
   disabled?: boolean;
 };
@@ -33,18 +30,6 @@ type PanelHeaderProps = {
   headingId: string;
   title: string;
   statusRail?: ReactNode;
-};
-
-type NextStepSectionProps = {
-  revealed: boolean;
-  revealAllowed: boolean;
-  resetAllowed: boolean;
-  disabled: boolean;
-  actionHint: string | null;
-  actionHintId: string;
-  onReveal: () => void;
-  onReset: () => void;
-  onNextRound: () => void;
 };
 
 type TimerSectionProps = {
@@ -59,7 +44,6 @@ type TimerSectionProps = {
   onPauseTimer: () => Promise<unknown> | unknown;
   onResetTimer: () => Promise<unknown> | unknown;
   onHonkTimer: () => Promise<boolean> | boolean;
-  roundActions?: ReactNode;
   disabled: boolean;
   serverClockOffsetMs?: number;
 };
@@ -114,69 +98,6 @@ function ModeratorStatusChips({
   );
 }
 
-function NextStepSection({
-  revealed,
-  revealAllowed,
-  resetAllowed,
-  disabled,
-  actionHint,
-  actionHintId,
-  onReveal,
-  onReset,
-  onNextRound,
-}: NextStepSectionProps) {
-  const { t } = useTranslation();
-
-  return (
-    <div className="controls-panel__section controls-panel__section--next-step">
-      <div className="controls-panel__section-header">
-        <div className="section-label">{t("room.nextStep")}</div>
-        <p className="controls-panel__section-state">
-          {revealed ? t("room.phase.revealed") : t("room.phase.voting")}
-        </p>
-      </div>
-
-      <div className="controls-panel__buttons">
-        {!revealed ? (
-          <button
-            className="button button--primary button--full controls-panel__primary-action"
-            onClick={onReveal}
-            disabled={!revealAllowed}
-            aria-describedby={!revealAllowed && actionHint ? actionHintId : undefined}
-          >
-            {t("room.revealVotes")}
-          </button>
-        ) : (
-          <>
-            <button
-              className="button button--primary button--full controls-panel__primary-action"
-              onClick={onNextRound}
-              disabled={!resetAllowed}
-              aria-describedby={!resetAllowed && actionHint ? actionHintId : undefined}
-            >
-              {t("room.nextRound")}
-            </button>
-            <button
-              className="button button--secondary button--full controls-panel__secondary-action"
-              onClick={onReset}
-              disabled={!resetAllowed || disabled}
-              aria-describedby={!resetAllowed && actionHint ? actionHintId : undefined}
-            >
-              {t("room.resetRound")}
-            </button>
-          </>
-        )}
-      </div>
-
-      {actionHint ? (
-        <p className="controls-panel__hint" id={actionHintId}>
-          {actionHint}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
 function TimerSection({
   compact,
   expanded,
@@ -189,7 +110,6 @@ function TimerSection({
   onPauseTimer,
   onResetTimer,
   onHonkTimer,
-  roundActions = null,
   disabled,
   serverClockOffsetMs = 0,
 }: TimerSectionProps) {
@@ -240,7 +160,6 @@ function TimerSection({
             headingLevel="h3"
             showSectionLabel={false}
             showStatusChip={false}
-            roundActions={roundActions}
             compactActions
             serverClockOffsetMs={serverClockOffsetMs}
           />
@@ -262,7 +181,6 @@ function TimerSection({
         headingLevel="h3"
         showSectionLabel={false}
         showStatusChip={false}
-        roundActions={roundActions}
         serverClockOffsetMs={serverClockOffsetMs}
       />
     </div>
@@ -396,16 +314,11 @@ export function ModeratorControls({
   onPauseTimer,
   onResetTimer,
   onHonkTimer,
-  onReveal,
-  onReset,
-  onNextRound,
   onTransferModerator,
   disabled = false,
 }: Props) {
   const { t } = useTranslation();
   const isModerator = isMeModerator(state);
-  const revealAllowed = !disabled && (state.settings.revealPolicy === "anyone" || isModerator);
-  const resetAllowed = !disabled && (state.settings.resetPolicy === "anyone" || isModerator);
   const { voted, total } = getConnectedVoterCounts(state);
   const allVoted = total > 0 && voted === total;
   const transferCandidates = useMemo(
@@ -420,18 +333,9 @@ export function ModeratorControls({
   const headingId = useId();
   const transferPanelId = useId();
   const timerPanelId = useId();
-  const actionHintId = useId();
   const transferSelectRef = useRef<HTMLSelectElement | null>(null);
   const [soundEnabled] = useTimerSoundPreference();
   const { remainingSeconds } = useRoomTimerCountdown(state.timer, serverClockOffsetMs);
-  const actionHint =
-    !isModerator &&
-    ((state.revealed && state.settings.resetPolicy === "moderator_only") ||
-      (!state.revealed && state.settings.revealPolicy === "moderator_only"))
-      ? state.revealed
-        ? t("room.onlyModeratorAdvanceReset")
-        : t("room.onlyModeratorReveal")
-      : null;
 
   useEffect(() => {
     setTimerExpanded((current) => {
@@ -523,32 +427,6 @@ export function ModeratorControls({
   const transferDisabled = disabled || transferCandidates.length === 0;
   const timerStatus = getRoomTimerStatus(state.timer, remainingSeconds);
   const timerChipTone = timerStatus === "complete" ? "ui-chip--success" : "ui-chip--neutral";
-  const desktopRoundActions = compact ? null : (
-    <>
-      {state.revealed ? (
-        <button
-          className="button button--secondary room-timer__round-secondary"
-          type="button"
-          onClick={onReset}
-          disabled={!resetAllowed || disabled}
-          aria-describedby={!resetAllowed && actionHint ? actionHintId : undefined}
-        >
-          {t("room.resetRound")}
-        </button>
-      ) : null}
-      <button
-        className="button button--primary room-timer__round-primary"
-        type="button"
-        onClick={state.revealed ? onNextRound : onReveal}
-        disabled={state.revealed ? !resetAllowed : !revealAllowed}
-        aria-describedby={
-          (state.revealed ? !resetAllowed : !revealAllowed) && actionHint ? actionHintId : undefined
-        }
-      >
-        {state.revealed ? t("room.nextRound") : t("room.revealVotes")}
-      </button>
-    </>
-  );
   const headerStatusRail = compact ? null : (
     <ModeratorStatusChips
       readyChipLabel={readyChipLabel}
@@ -579,54 +457,25 @@ export function ModeratorControls({
       )}
 
       <div className="controls-panel__main">
-        {compact ? (
-          <>
-            <NextStepSection
-              revealed={state.revealed}
-              revealAllowed={revealAllowed}
-              resetAllowed={resetAllowed}
-              disabled={disabled}
-              actionHint={actionHint}
-              actionHintId={actionHintId}
-              onReveal={onReveal}
-              onReset={onReset}
-              onNextRound={onNextRound}
-            />
-            <TimerSection
-              compact
-              expanded={timerExpanded}
-              sectionId={timerPanelId}
-              summaryLabel={drawerSummary}
-              onToggle={() => setTimerExpanded((value) => !value)}
-              state={state}
-              onSetTimerDuration={onSetTimerDuration}
-              onStartTimer={onStartTimer}
-              onPauseTimer={onPauseTimer}
-              onResetTimer={onResetTimer}
-              onHonkTimer={onHonkTimer}
-              roundActions={null}
-              disabled={disabled}
-              serverClockOffsetMs={serverClockOffsetMs}
-            />
-          </>
-        ) : (
-          <TimerSection
-            compact={false}
-            expanded
-            sectionId={timerPanelId}
-            summaryLabel=""
-            onToggle={() => undefined}
-            state={state}
-            onSetTimerDuration={onSetTimerDuration}
-            onStartTimer={onStartTimer}
-            onPauseTimer={onPauseTimer}
-            onResetTimer={onResetTimer}
-            onHonkTimer={onHonkTimer}
-            roundActions={desktopRoundActions}
-            disabled={disabled}
-            serverClockOffsetMs={serverClockOffsetMs}
-          />
-        )}
+        <TimerSection
+          compact={compact}
+          expanded={compact ? timerExpanded : true}
+          sectionId={timerPanelId}
+          summaryLabel={compact ? drawerSummary : ""}
+          onToggle={() => {
+            if (compact) {
+              setTimerExpanded((value) => !value);
+            }
+          }}
+          state={state}
+          onSetTimerDuration={onSetTimerDuration}
+          onStartTimer={onStartTimer}
+          onPauseTimer={onPauseTimer}
+          onResetTimer={onResetTimer}
+          onHonkTimer={onHonkTimer}
+          disabled={disabled}
+          serverClockOffsetMs={serverClockOffsetMs}
+        />
       </div>
 
       <RoomSettingsPanel state={state} onUpdateSettings={onUpdateSettings} disabled={disabled} />

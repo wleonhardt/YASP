@@ -29,6 +29,11 @@ for the audit that motivated each change.
   The utility-menu toggle preserves audio priming and the preference still
   persists in `localStorage`. Next implementation slice is Phase 2:
   `RoundActionBar`.
+- 2026-05-05: Completed Phase 2 by adding `RoundActionBar` above the
+  deck/results stage and removing Reveal/Next/Reset actions from
+  `ModeratorControls` in both desktop and compact modes. The one-primary-CTA
+  invariant now lives in `RoundActionBar`. Next implementation slice is
+  Phase 3: stage layout.
 
 ---
 
