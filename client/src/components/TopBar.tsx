@@ -1,6 +1,9 @@
 import type { PublicRoomState } from "@yasp/shared";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { ConnectionStatus } from "../lib/connectionRecovery";
+import { isMeModerator } from "../lib/room";
+import { ModeratorDrawer } from "./ModeratorDrawer";
 import { RoomCodeShare } from "./RoomCodeShare";
 import { RoomUtilityMenu } from "./RoomUtilityMenu";
 
@@ -10,6 +13,7 @@ type Props = {
   compatibilityMode: boolean;
   onLeave: () => void;
   onCopyFeedback: (intent: "success" | "error", message: string) => void;
+  moderatorControls?: ReactNode;
   disabled?: boolean;
 };
 
@@ -19,15 +23,20 @@ export function TopBar({
   compatibilityMode,
   onLeave,
   onCopyFeedback,
+  moderatorControls = null,
   disabled = false,
 }: Props) {
   const { t } = useTranslation();
+  const showModeratorDrawer = isMeModerator(state) && moderatorControls !== null;
 
   return (
     <header className="topbar app-panel">
       <RoomCodeShare roomId={state.id} onCopyError={onCopyFeedback} />
 
       <div className="topbar__actions">
+        {showModeratorDrawer ? (
+          <ModeratorDrawer disabled={disabled}>{moderatorControls}</ModeratorDrawer>
+        ) : null}
         <button
           className="button button--ghost topbar__leave-button"
           onClick={onLeave}

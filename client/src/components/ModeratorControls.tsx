@@ -16,6 +16,7 @@ type Props = {
   compact: boolean;
   state: PublicRoomState;
   serverClockOffsetMs?: number;
+  surface?: "panel" | "embedded";
   onUpdateSettings: (settings: Partial<PublicRoomState["settings"]>) => Promise<boolean> | boolean;
   onSetTimerDuration: (durationSeconds: number) => Promise<unknown> | unknown;
   onStartTimer: () => Promise<boolean> | boolean;
@@ -308,6 +309,7 @@ export function ModeratorControls({
   compact,
   state,
   serverClockOffsetMs = 0,
+  surface = "panel",
   onUpdateSettings,
   onSetTimerDuration,
   onStartTimer,
@@ -438,7 +440,12 @@ export function ModeratorControls({
 
   return (
     <section
-      className={["app-panel controls-panel", compact ? "controls-panel--compact" : ""]
+      className={[
+        surface === "panel" ? "app-panel" : "",
+        "controls-panel",
+        compact ? "controls-panel--compact" : "",
+        surface === "embedded" ? "controls-panel--embedded" : "",
+      ]
         .filter(Boolean)
         .join(" ")}
       aria-labelledby={headingId}

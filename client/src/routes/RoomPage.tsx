@@ -13,6 +13,7 @@ import { RoundActionBar } from "../components/RoundActionBar";
 import { RoundReportModal } from "../components/RoundReportModal";
 import { SessionReportModal } from "../components/SessionReportModal";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { TimerStrip } from "../components/TimerStrip";
 import { Toast, type ToastState } from "../components/Toast";
 import { TopBar } from "../components/TopBar";
 import { VoteDeck } from "../components/VoteDeck";
@@ -35,7 +36,6 @@ import { getStoredDisplayName, getStoredRole, setStoredDisplayName, setStoredRol
 
 type RoomUnavailableReason = "ROOM_NOT_FOUND" | "ROOM_EXPIRED";
 const JOIN_ROLE_OPTIONS = ["voter", "spectator"] as const satisfies readonly ParticipantRole[];
-const COMPACT_ROUND_LAYOUT_QUERY = "(max-width: 640px)";
 
 function formatOptionalSummaryNumber(value: number | null, fallback: string): string {
   if (value === null) {
@@ -83,11 +83,6 @@ export function RoomPage() {
   const roundReportButtonRef = useRef<HTMLButtonElement | null>(null);
   const [sessionReportOpen, setSessionReportOpen] = useState(false);
   const sessionReportButtonRef = useRef<HTMLButtonElement | null>(null);
-  const [compactRoundLayout, setCompactRoundLayout] = useState(() =>
-    typeof window !== "undefined" && typeof window.matchMedia === "function"
-      ? window.matchMedia(COMPACT_ROUND_LAYOUT_QUERY).matches
-      : false
-  );
 
   const roomTitle = roomUnavailable
     ? t("documentTitle.roomUnavailable")
@@ -304,18 +299,6 @@ export function RoomPage() {
         window.clearTimeout(announcementTimeout.current);
       }
     };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return;
-    }
-
-    const mediaQuery = window.matchMedia(COMPACT_ROUND_LAYOUT_QUERY);
-    const syncViewport = () => setCompactRoundLayout(mediaQuery.matches);
-    syncViewport();
-    mediaQuery.addEventListener("change", syncViewport);
-    return () => mediaQuery.removeEventListener("change", syncViewport);
   }, []);
 
   const getIntendedRole = useCallback((): ParticipantRole => {
@@ -772,6 +755,22 @@ export function RoomPage() {
         compatibilityMode={connection.compatibilityMode}
         onLeave={handleLeave}
         onCopyFeedback={showToast}
+        moderatorControls={
+          <ModeratorControls
+            compact
+            surface="embedded"
+            state={state}
+            serverClockOffsetMs={serverClockOffsetMs}
+            onSetTimerDuration={handleSetTimerDuration}
+            onStartTimer={handleStartTimer}
+            onPauseTimer={handlePauseTimer}
+            onResetTimer={handleResetTimer}
+            onHonkTimer={handleHonkTimer}
+            onUpdateSettings={handleUpdateSettings}
+            onTransferModerator={handleTransferModerator}
+            disabled={actionsDisabled}
+          />
+        }
         disabled={actionsDisabled}
       />
 
@@ -806,22 +805,9 @@ export function RoomPage() {
           </section>
         )}
 
-        <ModeratorControls
-          compact={compactRoundLayout}
-          state={state}
-          serverClockOffsetMs={serverClockOffsetMs}
-          onSetTimerDuration={handleSetTimerDuration}
-          onStartTimer={handleStartTimer}
-          onPauseTimer={handlePauseTimer}
-          onResetTimer={handleResetTimer}
-          onHonkTimer={handleHonkTimer}
-          onUpdateSettings={handleUpdateSettings}
-          onTransferModerator={handleTransferModerator}
-          disabled={actionsDisabled}
-        />
-
         <div className="room-layout">
           <div className="room-layout__main room-layout__stage">
+            <TimerStrip state={state} serverClockOffsetMs={serverClockOffsetMs} />
             <RoundActionBar
               state={state}
               onReveal={handleReveal}

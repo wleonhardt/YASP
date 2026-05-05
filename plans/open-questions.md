@@ -31,6 +31,10 @@
   architecture questions. Phase 4 can proceed without an ADR because it is
   still a client-only chrome relocation; the existing viewport-mix question
   remains the main tablet validation thread.
+- 2026-05-05 review: Phase 4 moderator drawer did not create new product or
+  architecture questions. Phase 5 remains client-only presentation work; the
+  existing discussion-phase enhancements question is still the next product
+  thread after results presentation.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.

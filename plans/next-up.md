@@ -5,8 +5,8 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  Phase 4 moderator drawer, hiding the remaining moderator-only controls
-  behind a topbar affordance while keeping the stage visible.
+  Phase 5 results presentation, replacing the horizontal distribution rows
+  and padded stat tiles with a stage-scaled chart and compact stat strip.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -47,6 +47,11 @@
   names visible, removes the large waiting placeholders during voting, and
   makes the one connected voter who has not voted the visually prominent
   state.
+- 2026-05-05: Completed Phase 4 by hiding remaining moderator-only controls
+  behind a topbar drawer and adding a shared `TimerStrip` above the stage.
+  Moderators can still reach timer pacing, settings, and transfer controls
+  from the drawer, while non-moderators land directly on the stage plus
+  participant rail.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

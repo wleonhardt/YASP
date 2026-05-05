@@ -48,7 +48,7 @@ function handlers() {
 }
 
 function mockTimerSound(enabled: boolean) {
-  vi.spyOn(storage, "getStoredTimerSoundEnabled").mockReturnValue(enabled);
+  storage.setStoredTimerSoundEnabled(enabled);
 }
 
 beforeEach(() => {

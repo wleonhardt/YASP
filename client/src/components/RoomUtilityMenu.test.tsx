@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
@@ -198,7 +198,7 @@ describe("RoomUtilityMenu", () => {
 
     await user.click(screen.getByRole("button", { name: /sound on/i }));
 
-    expect(getStoredTimerSoundEnabled()).toBe(false);
+    await waitFor(() => expect(getStoredTimerSoundEnabled()).toBe(false));
     expect(screen.getByRole("button", { name: /sound off/i })).toHaveAttribute("aria-pressed", "false");
   });
 });

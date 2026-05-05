@@ -39,6 +39,11 @@ for the audit that motivated each change.
   the stage vote deck. The rail keeps names visible and highlights connected
   voters who have not voted yet. Next implementation slice is Phase 4:
   moderator drawer.
+- 2026-05-05: Completed Phase 4 by moving `ModeratorControls` into a
+  moderator-only topbar drawer and adding a shared `TimerStrip` above the
+  stage so timer status remains visible to everyone. Non-moderators no longer
+  see moderator chrome in the room body. Next implementation slice is Phase 5:
+  results presentation.
 
 ---
 
