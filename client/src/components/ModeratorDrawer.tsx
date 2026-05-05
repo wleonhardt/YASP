@@ -93,6 +93,7 @@ export function ModeratorDrawer({ children, disabled = false }: Props) {
       >
         <span className="sr-only">{t("room.moderatorControls")}</span>
         <svg
+          className="moderator-drawer__trigger-icon"
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -103,15 +104,15 @@ export function ModeratorDrawer({ children, disabled = false }: Props) {
           strokeLinejoin="round"
           aria-hidden="true"
         >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 2v3" />
-          <path d="M12 19v3" />
-          <path d="M2 12h3" />
-          <path d="M19 12h3" />
-          <path d="m4.9 4.9 2.1 2.1" />
-          <path d="m17 17 2.1 2.1" />
-          <path d="m19.1 4.9-2.1 2.1" />
-          <path d="m7 17-2.1 2.1" />
+          <line x1="21" y1="4" x2="14" y2="4" />
+          <line x1="10" y1="4" x2="3" y2="4" />
+          <line x1="21" y1="12" x2="12" y2="12" />
+          <line x1="8" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="20" x2="16" y2="20" />
+          <line x1="12" y1="20" x2="3" y2="20" />
+          <line x1="14" y1="2" x2="14" y2="6" />
+          <line x1="8" y1="10" x2="8" y2="14" />
+          <line x1="16" y1="18" x2="16" y2="22" />
         </svg>
       </button>
 

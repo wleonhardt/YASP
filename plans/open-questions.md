@@ -11,15 +11,14 @@
   if/when added — Phase 4 (drawer) and tablet-breakpoint priorities should
   follow real numbers, not guesses.
 - **UI: post-implementation QA findings (Q1–Q20).** A 2026-05-05 QA pass on
-  the post-Phase-5 build surfaced 26 findings. Remaining high/medium items are
-  drawer-icon collision with theme toggle, duplicated drawer heading, and stale
-  "Sound on" copy in drawer summary, plus the structural drawer-discoverability
-  impression. The redundant topbar copy-link and story-agenda default
-  visibility items were addressed by Phase 10 P10.1/P10.3. Full list in
-  [`ui-upgrade.md`](ui-upgrade.md) under "Post-implementation QA review."
-  Continue folding fixes into Phase 10 subtraction slices.
+  the post-Phase-5 build surfaced 26 findings. The high/medium chrome issues
+  called out there have been folded into Phase 10 through P10.8; the remaining
+  active thread is the structural drawer-discoverability impression. Full list
+  in [`ui-upgrade.md`](ui-upgrade.md) under "Post-implementation QA review."
+  Continue folding low-severity visual cleanup into Phase 10 subtraction
+  slices.
 - **UI: moderator drawer discoverability.** Beyond the icon swap (Q1),
-  do new moderators find the gear on their own? A brief one-time
+  do new moderators find the controls trigger on their own? A brief one-time
   highlight on first room creation OR a real moderator user-test would
   inform whether the drawer pattern survives long-term.
 - 2026-05-05 review: Phase 8 foundation work did not create new open
@@ -94,6 +93,10 @@
   architecture questions. Reset round remains an ephemeral active-room action;
   it only moved from the stage to moderator settings, while next/re-open
   continue to follow the existing reset-policy permission model.
+- 2026-05-05 review: Phase 10 P10.6/P10.7/P10.8 did not create new product or
+  architecture questions. The drawer trigger icon, duplicate heading removal,
+  and timer summary copy change are client-only chrome cleanup; drawer
+  discoverability remains the only related open UX validation thread.
 - No new backend/state open questions are active right now. The current scaling
   and deployment posture is recorded in ADR 0004, and the remaining
   multi-instance Redis work is intentionally deferred until operator

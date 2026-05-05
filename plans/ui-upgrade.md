@@ -102,6 +102,11 @@ for the audit that motivated each change.
   small secondary text action after reveal, and moves Reset round into the
   moderator room-settings drawer section. Next implementation slice is
   P10.6/P10.7/P10.8: drawer fixes.
+- 2026-05-05: Continued Phase 10 with P10.6/P10.7/P10.8. The moderator drawer
+  trigger now uses sliders instead of a sunburst-style icon, the embedded
+  drawer controls hide their duplicate "Moderator controls" heading, and the
+  compact timer disclosure summary no longer repeats Sound on/off. Next
+  implementation slice is P10.9/P10.10: chart cleanup.
 
 ---
 

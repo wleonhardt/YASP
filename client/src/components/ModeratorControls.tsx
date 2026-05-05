@@ -1,7 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { PublicRoomState } from "@yasp/shared";
-import { useTimerSoundPreference } from "../hooks/useTimerSoundPreference";
 import { getConnectedVoterCounts, isMeModerator } from "../lib/room";
 import {
   RoomTimer,
@@ -17,6 +16,7 @@ type Props = {
   state: PublicRoomState;
   serverClockOffsetMs?: number;
   surface?: "panel" | "embedded";
+  showHeader?: boolean;
   onUpdateSettings: (settings: Partial<PublicRoomState["settings"]>) => Promise<boolean> | boolean;
   onSetTimerDuration: (durationSeconds: number) => Promise<unknown> | unknown;
   onStartTimer: () => Promise<boolean> | boolean;
@@ -313,6 +313,7 @@ export function ModeratorControls({
   state,
   serverClockOffsetMs = 0,
   surface = "panel",
+  showHeader = true,
   onUpdateSettings,
   onSetTimerDuration,
   onStartTimer,
@@ -345,7 +346,6 @@ export function ModeratorControls({
   const trackStoriesLabelId = useId();
   const trackStoriesDescriptionId = useId();
   const transferSelectRef = useRef<HTMLSelectElement | null>(null);
-  const [soundEnabled] = useTimerSoundPreference();
   const { remainingSeconds } = useRoomTimerCountdown(state.timer, serverClockOffsetMs);
 
   useEffect(() => {
@@ -432,7 +432,7 @@ export function ModeratorControls({
         ? `\u23f1 ${formatCountdown(remainingSeconds)}`
         : `${t("room.timer")} ${formatTimerDuration(state.timer.durationSeconds)}`;
 
-  const drawerSummary = `${t("room.timerDuration")} ${formatTimerDuration(state.timer.durationSeconds)} \u2022 ${soundEnabled ? t("room.timerSoundOn") : t("room.timerSoundOff")}`;
+  const drawerSummary = `${t("room.timerDuration")} ${formatTimerDuration(state.timer.durationSeconds)}`;
   const durationChip = formatTimerDuration(state.timer.durationSeconds);
   const readyChipLabel = allVoted && !state.revealed ? t("room.participant.ready") : null;
   const transferDisabled = disabled || transferCandidates.length === 0;
@@ -457,9 +457,16 @@ export function ModeratorControls({
       ]
         .filter(Boolean)
         .join(" ")}
-      aria-labelledby={headingId}
+      aria-labelledby={showHeader ? headingId : undefined}
+      aria-label={showHeader ? undefined : t("room.moderatorControls")}
     >
-      <PanelHeader headingId={headingId} title={t("room.moderatorControls")} statusRail={headerStatusRail} />
+      {showHeader ? (
+        <PanelHeader
+          headingId={headingId}
+          title={t("room.moderatorControls")}
+          statusRail={headerStatusRail}
+        />
+      ) : null}
 
       {compact && (
         <div className="controls-panel__status-row">

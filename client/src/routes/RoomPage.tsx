@@ -864,6 +864,7 @@ export function RoomPage() {
           <ModeratorControls
             compact
             surface="embedded"
+            showHeader={false}
             state={state}
             serverClockOffsetMs={serverClockOffsetMs}
             onSetTimerDuration={handleSetTimerDuration}

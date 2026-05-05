@@ -99,7 +99,8 @@ describe("ModeratorControls", () => {
     expect(panel.querySelectorAll(".controls-panel__status-row .ui-chip")).toHaveLength(1);
     expect(scope.queryByRole("button", { name: /start/i })).not.toBeInTheDocument();
     expect(scope.queryByRole("button", { name: /^reveal votes$/i })).not.toBeInTheDocument();
-    expect(scope.getByText(/duration 1m • sound on/i)).toBeInTheDocument();
+    expect(scope.getByText(/^duration 1m$/i)).toBeInTheDocument();
+    expect(scope.queryByText(/sound on/i)).not.toBeInTheDocument();
 
     await user.click(timerToggle);
 
@@ -188,7 +189,7 @@ describe("ModeratorControls", () => {
     expect(scope.getByRole("button", { name: /beep/i })).toBeDisabled();
   });
 
-  it("shows sound off in the compact drawer summary when the stored preference is off", () => {
+  it("keeps sound preference out of the compact drawer summary", () => {
     mockTimerSound(false);
 
     render(<ModeratorControls compact state={makeState()} {...handlers()} />);
@@ -196,7 +197,16 @@ describe("ModeratorControls", () => {
     const panel = screen.getByRole("region", { name: /moderator controls/i });
     const scope = within(panel);
 
-    expect(scope.getByText(/duration 1m • sound off/i)).toBeInTheDocument();
+    expect(scope.getByText(/^duration 1m$/i)).toBeInTheDocument();
+    expect(scope.queryByText(/sound off/i)).not.toBeInTheDocument();
+  });
+
+  it("can hide its own header when it is embedded in the moderator drawer", () => {
+    render(<ModeratorControls compact showHeader={false} state={makeState()} {...handlers()} />);
+
+    const panel = screen.getByRole("region", { name: /moderator controls/i });
+
+    expect(within(panel).queryByRole("heading", { name: /moderator controls/i })).not.toBeInTheDocument();
   });
 
   it("keeps next out of moderator controls and moves reset into room settings after reveal", async () => {

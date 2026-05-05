@@ -20,6 +20,10 @@ describe("TopBar", () => {
     );
 
     const trigger = screen.getByRole("button", { name: /moderator controls/i });
+    const icon = trigger.querySelector(".moderator-drawer__trigger-icon");
+    expect(icon?.querySelectorAll("line")).toHaveLength(9);
+    expect(icon?.querySelector("circle")).toBeNull();
+
     await user.click(trigger);
 
     const dialog = screen.getByRole("dialog", { name: /moderator controls/i });
