@@ -15,6 +15,7 @@ import { SessionReportModal } from "./SessionReportModal";
 function makeSnapshot(overrides: Partial<SessionRoundSnapshot> = {}): SessionRoundSnapshot {
   return {
     roundNumber: 1,
+    storyLabel: null,
     revealedAt: Date.UTC(2026, 3, 15, 14, 0),
     deck: DEFAULT_DECKS.fibonacci,
     participants: [
@@ -321,6 +322,20 @@ describe("Session report — multi-round accumulation", () => {
     const dialog = screen.getByRole("dialog", { name: /session summary/i });
     expect(within(dialog).getByText(/round 1/i)).toBeInTheDocument();
     expect(within(dialog).getByText(/round 2/i)).toBeInTheDocument();
+  });
+
+  it("shows story labels for completed rounds when present", () => {
+    render(
+      <SessionReportModal
+        open
+        roomId="ROOM01"
+        sessionRounds={[makeSnapshot({ storyLabel: "Checkout total" })]}
+        mode="participant"
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Story: Checkout total")).toBeInTheDocument();
   });
 });
 

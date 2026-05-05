@@ -139,6 +139,41 @@ export function useRoom(socket: Socket, sessionId: string) {
     [emitAck]
   );
 
+  const updateStoryLabel = useCallback(
+    async (roomId: string, label: string): Promise<AckResult> => {
+      return emitAck("update_story_label", { roomId, label });
+    },
+    [emitAck]
+  );
+
+  const addStoryAgendaItems = useCallback(
+    async (roomId: string, labels: string[]): Promise<AckResult> => {
+      return emitAck("add_story_agenda_items", { roomId, labels });
+    },
+    [emitAck]
+  );
+
+  const removeStoryAgendaItem = useCallback(
+    async (roomId: string, itemId: string): Promise<AckResult> => {
+      return emitAck("remove_story_agenda_item", { roomId, itemId });
+    },
+    [emitAck]
+  );
+
+  const moveStoryAgendaItem = useCallback(
+    async (roomId: string, itemId: string, direction: "up" | "down"): Promise<AckResult> => {
+      return emitAck("move_story_agenda_item", { roomId, itemId, direction });
+    },
+    [emitAck]
+  );
+
+  const startNextStory = useCallback(
+    async (roomId: string): Promise<AckResult> => {
+      return emitAck("start_next_story", { roomId });
+    },
+    [emitAck]
+  );
+
   const transferModerator = useCallback(
     async (roomId: string, targetParticipantId: string): Promise<AckResult> => {
       return emitAck("transfer_moderator", { roomId, targetParticipantId });
@@ -201,6 +236,11 @@ export function useRoom(socket: Socket, sessionId: string) {
     resetRound,
     reopenVoting,
     nextRound,
+    updateStoryLabel,
+    addStoryAgendaItems,
+    removeStoryAgendaItem,
+    moveStoryAgendaItem,
+    startNextStory,
     transferModerator,
     setTimerDuration,
     startTimer,

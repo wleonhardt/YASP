@@ -697,6 +697,7 @@ code {
 .distribution-row,
 .ui-banner__body,
 .room-status,
+.story-agenda,
 .room-code-share,
 .controls-panel__buttons,
 .controls-panel__transfer-disclosure,
@@ -735,6 +736,145 @@ code {
 .empty-state,
 .session-panel {
   padding: var(--space-5);
+}
+
+/* ─── Story agenda ────────────────────────────────────────── */
+
+.story-agenda {
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.story-agenda__current {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.story-agenda__copy,
+.story-agenda__current-form,
+.story-agenda__body,
+.story-agenda__editors {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.story-agenda__current-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.story-agenda__current-input {
+  min-width: 0;
+  font-weight: 600;
+}
+
+.story-agenda__current-readonly {
+  min-width: 0;
+  color: var(--color-text);
+  font-size: var(--text-title);
+  font-weight: 650;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.story-agenda__save,
+.story-agenda__next {
+  white-space: nowrap;
+}
+
+.story-agenda__details {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+}
+
+.story-agenda__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--text-meta);
+  font-weight: 650;
+  list-style: none;
+}
+
+.story-agenda__summary::-webkit-details-marker {
+  display: none;
+}
+
+.story-agenda__body {
+  margin-top: var(--space-3);
+}
+
+.story-agenda__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.story-agenda__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-soft);
+}
+
+.story-agenda__item-label {
+  min-width: 0;
+  color: var(--color-text);
+  font-size: var(--text-meta);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.story-agenda__item-actions,
+.story-agenda__add-form {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.story-agenda__item-action {
+  min-height: 32px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.story-agenda__empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-meta);
+}
+
+.story-agenda__editors {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.story-agenda__add-field {
+  flex: 1 1 18rem;
+}
+
+.story-agenda__bulk-input {
+  min-height: 6rem;
+  resize: vertical;
 }
 
 .identity-panel,
@@ -3672,6 +3812,7 @@ select.input {
   .action-card,
   .participants-board,
   .room-timer,
+  .story-agenda,
   .vote-deck,
   .results-panel,
   .controls-panel,
@@ -3740,6 +3881,18 @@ select.input {
 
   .timer-strip__status {
     justify-content: space-between;
+  }
+
+  .story-agenda__current,
+  .story-agenda__current-form,
+  .story-agenda__item {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .story-agenda__item-actions,
+  .story-agenda__add-form {
+    align-items: stretch;
   }
 
   .round-action-bar__actions {

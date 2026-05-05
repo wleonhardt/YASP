@@ -267,6 +267,11 @@ function SessionRoundSection({
         <span className="round-report-modal__deck-meta">
           {t("room.roundReport.deck", { deck: snap.deck.label })}
         </span>
+        {snap.storyLabel ? (
+          <span className="round-report-modal__deck-meta">
+            {t("room.roundReport.story", { story: snap.storyLabel })}
+          </span>
+        ) : null}
       </div>
 
       <div className="round-report-modal__stat-grid">

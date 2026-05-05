@@ -312,6 +312,24 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     if (!joinAck.ok) return;
     await Promise.all([aliceJoinStatePromise, bobJoinStatePromise]);
 
+    const storyStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "story label");
+    const storyAck = await emitAck(alice, "update_story_label", {
+      roomId,
+      label: "Checkout total",
+    });
+    expect(storyAck.ok).toBe(true);
+    if (!storyAck.ok) return;
+    expect((await storyStatePromise).currentStoryLabel).toBe("Checkout total");
+
+    const agendaStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "agenda add");
+    const agendaAck = await emitAck(alice, "add_story_agenda_items", {
+      roomId,
+      labels: ["Discount code"],
+    });
+    expect(agendaAck.ok).toBe(true);
+    if (!agendaAck.ok) return;
+    expect((await agendaStatePromise).storyQueue.map((item) => item.label)).toEqual(["Discount code"]);
+
     const aliceVoteStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "alice cast room_state");
     const aliceVoteAck = await emitAck(alice, "cast_vote", { roomId, value: "5" });
     expect(aliceVoteAck.ok).toBe(true);
@@ -332,6 +350,7 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     if (!revealAck.ok) return;
     const revealedState = await revealStatePromise;
     expect(revealedState.revealed).toBe(true);
+    expect(revealedState.sessionRounds[0]?.storyLabel).toBe("Checkout total");
     expect(revealedState.votes).toMatchObject(
       expect.objectContaining({
         [revealedState.participants.find((participant) => participant.name === "Alice")!.id]: "5",
@@ -398,7 +417,18 @@ describe.skipIf(!hasLiveRedisTestUrl())("Redis runtime integration", () => {
     const nextRoundState = await nextRoundStatePromise;
     expect(nextRoundState.revealed).toBe(false);
     expect(nextRoundState.roundNumber).toBe(2);
+    expect(nextRoundState.currentStoryLabel).toBeNull();
+    expect(nextRoundState.storyQueue.map((item) => item.label)).toEqual(["Discount code"]);
     expect(nextRoundState.votes).toBeNull();
+
+    const startNextStoryStatePromise = waitForEvent<PublicRoomState>(alice, "room_state", "start next story");
+    const startNextStoryAck = await emitAck(alice, "start_next_story", { roomId });
+    expect(startNextStoryAck.ok).toBe(true);
+    if (!startNextStoryAck.ok) return;
+    const startNextStoryState = await startNextStoryStatePromise;
+    expect(startNextStoryState.roundNumber).toBe(3);
+    expect(startNextStoryState.currentStoryLabel).toBe("Discount code");
+    expect(startNextStoryState.storyQueue).toHaveLength(0);
   });
 
   it("supports moderator transfer and moves moderator-only permissions immediately", async () => {

@@ -60,8 +60,14 @@ export type SessionRoundParticipant = {
   connected: boolean;
 };
 
+export type StoryAgendaItem = {
+  id: string;
+  label: string;
+};
+
 export type SessionRoundSnapshot = {
   roundNumber: number;
+  storyLabel: string | null;
   revealedAt: number;
   deck: Deck;
   participants: SessionRoundParticipant[];
@@ -73,6 +79,8 @@ export type PublicRoomState = {
   title?: string;
   roundNumber: number;
   revealed: boolean;
+  currentStoryLabel: string | null;
+  storyQueue: StoryAgendaItem[];
   deck: Deck;
   settings: RoomSettings;
   timer: RoomTimerState;
@@ -96,6 +104,7 @@ export type ErrorCode =
   | "INVALID_ROLE"
   | "INVALID_DECK"
   | "INVALID_VOTE"
+  | "INVALID_STORY"
   | "SPECTATORS_DISABLED"
   | "NAME_CHANGE_DISABLED"
   | "ROLE_CHANGE_DISABLED"

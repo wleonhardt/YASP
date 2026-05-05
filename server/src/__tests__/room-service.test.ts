@@ -540,6 +540,118 @@ describe("RoomService.nextRound", () => {
     expect(result.data.room.revealed).toBe(false);
     expect(result.data.room.roundNumber).toBe(2);
   });
+
+  it("clears the current story label for manually advanced rounds", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.updateStoryLabel(roomId, "s1", "Checkout total");
+
+    const result = service.nextRound(roomId, "s1");
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.room.roundNumber).toBe(2);
+    expect(result.data.room.currentStoryLabel).toBeNull();
+  });
+});
+
+describe("RoomService story agenda", () => {
+  it("lets the moderator set the current story label and include it in the reveal snapshot", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.castVote(roomId, "s1", "5");
+
+    const updated = service.updateStoryLabel(roomId, "s1", "  Checkout   total  ");
+    expect(updated.ok).toBe(true);
+    if (!updated.ok) return;
+    expect(updated.data.room.currentStoryLabel).toBe("Checkout total");
+
+    const reveal = service.revealVotes(roomId, "s1");
+    expect(reveal.ok).toBe(true);
+    if (!reveal.ok) return;
+    expect(reveal.data.room.sessionRounds[0]?.storyLabel).toBe("Checkout total");
+  });
+
+  it("lets the moderator add, reorder, remove, and start queued stories", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    const added = service.addStoryAgendaItems(roomId, "s1", [
+      "Checkout total",
+      "Discount code",
+      "Guest checkout",
+    ]);
+    expect(added.ok).toBe(true);
+    if (!added.ok) return;
+    expect(added.data.room.storyQueue.map((item) => item.label)).toEqual([
+      "Checkout total",
+      "Discount code",
+      "Guest checkout",
+    ]);
+
+    const guestCheckoutId = added.data.room.storyQueue[2]?.id;
+    if (!guestCheckoutId) return;
+    const moved = service.moveStoryAgendaItem(roomId, "s1", guestCheckoutId, "up");
+    expect(moved.ok).toBe(true);
+    if (!moved.ok) return;
+    expect(moved.data.room.storyQueue.map((item) => item.label)).toEqual([
+      "Checkout total",
+      "Guest checkout",
+      "Discount code",
+    ]);
+
+    const discountId = moved.data.room.storyQueue[2]?.id;
+    if (!discountId) return;
+    const removed = service.removeStoryAgendaItem(roomId, "s1", discountId);
+    expect(removed.ok).toBe(true);
+    if (!removed.ok) return;
+    expect(removed.data.room.storyQueue.map((item) => item.label)).toEqual([
+      "Checkout total",
+      "Guest checkout",
+    ]);
+
+    service.castVote(roomId, "s1", "8");
+    const started = service.startNextStory(roomId, "s1");
+    expect(started.ok).toBe(true);
+    if (!started.ok) return;
+    expect(started.data.room.roundNumber).toBe(2);
+    expect(started.data.room.revealed).toBe(false);
+    expect(started.data.room.votes.size).toBe(0);
+    expect(started.data.room.currentStoryLabel).toBe("Checkout total");
+    expect(started.data.room.storyQueue.map((item) => item.label)).toEqual(["Guest checkout"]);
+  });
+
+  it("rejects agenda changes from non-moderators", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+    service.joinRoom(roomId, "s2", "sock-2", "Bob", "voter");
+
+    const updated = service.updateStoryLabel(roomId, "s2", "Checkout");
+    expect(updated.ok).toBe(false);
+    if (!updated.ok) expect(updated.error.code).toBe("NOT_ALLOWED");
+
+    const added = service.addStoryAgendaItems(roomId, "s2", ["Checkout"]);
+    expect(added.ok).toBe(false);
+    if (!added.ok) expect(added.error.code).toBe("NOT_ALLOWED");
+  });
+
+  it("validates agenda labels and empty start-next-story requests", () => {
+    const create = service.createRoom("s1", "sock-1", "Alice", "voter");
+    if (!create.ok) return;
+    const roomId = create.data.room.id;
+
+    const tooLong = service.updateStoryLabel(roomId, "s1", "x".repeat(121));
+    expect(tooLong.ok).toBe(false);
+    if (!tooLong.ok) expect(tooLong.error.code).toBe("INVALID_STORY");
+
+    const emptyStart = service.startNextStory(roomId, "s1");
+    expect(emptyStart.ok).toBe(false);
+    if (!emptyStart.ok) expect(emptyStart.error.code).toBe("INVALID_STORY");
+  });
 });
 
 describe("RoomService.transferModerator", () => {

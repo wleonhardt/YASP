@@ -1,6 +1,7 @@
 import type { Server as SocketServer, Socket } from "socket.io";
 import type {
   AckResult,
+  AddStoryAgendaItemsInput,
   CastVoteInput,
   ChangeDeckInput,
   ChangeNameInput,
@@ -11,9 +12,12 @@ import type {
   JoinRoomInput,
   JoinRoomOutput,
   LeaveRoomInput,
+  MoveStoryAgendaItemInput,
   RoomId,
+  RemoveStoryAgendaItemInput,
   SetTimerDurationInput,
   TransferModeratorInput,
+  UpdateStoryLabelInput,
   UpdateSettingsInput,
   PingInput,
   PongEvent,
@@ -61,6 +65,24 @@ type RoomServicePort = {
   resetRound(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
   reopenVoting(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
   nextRound(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
+  updateStoryLabel(roomId: RoomId, sessionId: string, label: string): Awaitable<AckResult<{ room: Room }>>;
+  addStoryAgendaItems(
+    roomId: RoomId,
+    sessionId: string,
+    labels: string[]
+  ): Awaitable<AckResult<{ room: Room }>>;
+  removeStoryAgendaItem(
+    roomId: RoomId,
+    sessionId: string,
+    itemId: string
+  ): Awaitable<AckResult<{ room: Room }>>;
+  moveStoryAgendaItem(
+    roomId: RoomId,
+    sessionId: string,
+    itemId: string,
+    direction: "up" | "down"
+  ): Awaitable<AckResult<{ room: Room }>>;
+  startNextStory(roomId: RoomId, sessionId: string): Awaitable<AckResult<{ room: Room }>>;
   transferModerator(
     roomId: RoomId,
     sessionId: string,
@@ -386,6 +408,23 @@ export function registerSocketHandlers(
     roomAction("reset_round", (roomId, pid) => roomService.resetRound(roomId, pid), "cancelAutoReveal");
     roomAction("reopen_voting", (roomId, pid) => roomService.reopenVoting(roomId, pid), "cancelAutoReveal");
     roomAction("next_round", (roomId, pid) => roomService.nextRound(roomId, pid), "cancelAutoReveal");
+    roomAction("update_story_label", (roomId, pid, i: UpdateStoryLabelInput) =>
+      roomService.updateStoryLabel(roomId, pid, i.label)
+    );
+    roomAction("add_story_agenda_items", (roomId, pid, i: AddStoryAgendaItemsInput) =>
+      roomService.addStoryAgendaItems(roomId, pid, i.labels)
+    );
+    roomAction("remove_story_agenda_item", (roomId, pid, i: RemoveStoryAgendaItemInput) =>
+      roomService.removeStoryAgendaItem(roomId, pid, i.itemId)
+    );
+    roomAction("move_story_agenda_item", (roomId, pid, i: MoveStoryAgendaItemInput) =>
+      roomService.moveStoryAgendaItem(roomId, pid, i.itemId, i.direction)
+    );
+    roomAction(
+      "start_next_story",
+      (roomId, pid) => roomService.startNextStory(roomId, pid),
+      "cancelAutoReveal"
+    );
     roomAction("transfer_moderator", (roomId, pid, i: TransferModeratorInput) =>
       roomService.transferModerator(roomId, pid, i.targetParticipantId)
     );

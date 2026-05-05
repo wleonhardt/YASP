@@ -14,3 +14,7 @@ export function generateRoomId(length = 6): string {
 export function generateParticipantId(): string {
   return randomUUID();
 }
+
+export function generateStoryAgendaItemId(): string {
+  return randomUUID();
+}

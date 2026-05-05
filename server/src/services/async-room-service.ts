@@ -129,6 +129,41 @@ export class AsyncRoomService {
     return this.withRoom(roomId, (service) => service.nextRound(roomId, sessionId));
   }
 
+  updateStoryLabel(roomId: RoomId, sessionId: SessionId, label: string): Promise<AckResult<{ room: Room }>> {
+    return this.withRoom(roomId, (service) => service.updateStoryLabel(roomId, sessionId, label));
+  }
+
+  addStoryAgendaItems(
+    roomId: RoomId,
+    sessionId: SessionId,
+    labels: string[]
+  ): Promise<AckResult<{ room: Room }>> {
+    return this.withRoom(roomId, (service) => service.addStoryAgendaItems(roomId, sessionId, labels));
+  }
+
+  removeStoryAgendaItem(
+    roomId: RoomId,
+    sessionId: SessionId,
+    itemId: string
+  ): Promise<AckResult<{ room: Room }>> {
+    return this.withRoom(roomId, (service) => service.removeStoryAgendaItem(roomId, sessionId, itemId));
+  }
+
+  moveStoryAgendaItem(
+    roomId: RoomId,
+    sessionId: SessionId,
+    itemId: string,
+    direction: "up" | "down"
+  ): Promise<AckResult<{ room: Room }>> {
+    return this.withRoom(roomId, (service) =>
+      service.moveStoryAgendaItem(roomId, sessionId, itemId, direction)
+    );
+  }
+
+  startNextStory(roomId: RoomId, sessionId: SessionId): Promise<AckResult<{ room: Room }>> {
+    return this.withRoom(roomId, (service) => service.startNextStory(roomId, sessionId));
+  }
+
   transferModerator(
     roomId: RoomId,
     sessionId: SessionId,

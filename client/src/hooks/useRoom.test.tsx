@@ -79,4 +79,39 @@ describe("useRoom", () => {
     );
     expect(ack).toEqual({ ok: true, data: undefined });
   });
+
+  it("emits story agenda events with the expected payloads", async () => {
+    const socket = createSocketMock();
+    const { result } = renderHook(() => useRoom(socket, "session-1"));
+
+    await act(async () => {
+      await result.current.updateStoryLabel("ROOM01", "Checkout total");
+      await result.current.addStoryAgendaItems("ROOM01", ["Discount code", "Guest checkout"]);
+      await result.current.moveStoryAgendaItem("ROOM01", "story-2", "up");
+      await result.current.removeStoryAgendaItem("ROOM01", "story-1");
+      await result.current.startNextStory("ROOM01");
+    });
+
+    expect(socket.emit).toHaveBeenCalledWith(
+      "update_story_label",
+      { roomId: "ROOM01", label: "Checkout total" },
+      expect.any(Function)
+    );
+    expect(socket.emit).toHaveBeenCalledWith(
+      "add_story_agenda_items",
+      { roomId: "ROOM01", labels: ["Discount code", "Guest checkout"] },
+      expect.any(Function)
+    );
+    expect(socket.emit).toHaveBeenCalledWith(
+      "move_story_agenda_item",
+      { roomId: "ROOM01", itemId: "story-2", direction: "up" },
+      expect.any(Function)
+    );
+    expect(socket.emit).toHaveBeenCalledWith(
+      "remove_story_agenda_item",
+      { roomId: "ROOM01", itemId: "story-1" },
+      expect.any(Function)
+    );
+    expect(socket.emit).toHaveBeenCalledWith("start_next_story", { roomId: "ROOM01" }, expect.any(Function));
+  });
 });

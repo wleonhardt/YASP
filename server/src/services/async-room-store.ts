@@ -89,6 +89,8 @@ export function serializeRoom(room: Room): SerializedRoom {
 export function deserializeRoom(sr: SerializedRoom): Room {
   return {
     ...sr,
+    currentStoryLabel: sr.currentStoryLabel ?? null,
+    storyQueue: sr.storyQueue ?? [],
     participants: new Map(sr.participants),
     votes: new Map(sr.votes),
   };

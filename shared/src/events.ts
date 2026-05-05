@@ -71,6 +71,31 @@ export type NextRoundInput = {
   roomId: RoomId;
 };
 
+export type UpdateStoryLabelInput = {
+  roomId: RoomId;
+  label: string;
+};
+
+export type AddStoryAgendaItemsInput = {
+  roomId: RoomId;
+  labels: string[];
+};
+
+export type RemoveStoryAgendaItemInput = {
+  roomId: RoomId;
+  itemId: string;
+};
+
+export type MoveStoryAgendaItemInput = {
+  roomId: RoomId;
+  itemId: string;
+  direction: "up" | "down";
+};
+
+export type StartNextStoryInput = {
+  roomId: RoomId;
+};
+
 export type TransferModeratorInput = {
   roomId: RoomId;
   targetParticipantId: ParticipantId;

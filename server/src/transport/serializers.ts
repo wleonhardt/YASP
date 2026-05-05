@@ -38,6 +38,8 @@ export function serializeRoom(room: Room, selfSessionId: SessionId): PublicRoomS
     title: room.title,
     roundNumber: room.roundNumber,
     revealed: room.revealed,
+    currentStoryLabel: room.currentStoryLabel ?? null,
+    storyQueue: room.storyQueue ?? [],
     deck: room.deck,
     settings: room.settings,
     timer: {

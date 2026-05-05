@@ -27,6 +27,8 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     hasBeenActive: false,
     revealed: false,
     roundNumber: 1,
+    currentStoryLabel: null,
+    storyQueue: [],
     deck: DEFAULT_DECKS.fibonacci,
     settings: { ...DEFAULT_ROOM_SETTINGS },
     timer: createRoomTimerState(),
@@ -108,6 +110,26 @@ describe("serializeRoom", () => {
     expect(state.votes).toEqual({ p1: "5" });
     expect(state.stats).not.toBeNull();
     expect(state.stats!.totalVotes).toBe(1);
+  });
+
+  it("serializes current story and upcoming agenda", () => {
+    const p1 = makeParticipant();
+    const room = makeRoom({
+      participants: new Map([["s1", p1]]),
+      currentStoryLabel: "Checkout total",
+      storyQueue: [
+        { id: "story-1", label: "Discount code" },
+        { id: "story-2", label: "Guest checkout" },
+      ],
+    });
+
+    const state = serializeRoom(room, "s1");
+
+    expect(state.currentStoryLabel).toBe("Checkout total");
+    expect(state.storyQueue).toEqual([
+      { id: "story-1", label: "Discount code" },
+      { id: "story-2", label: "Guest checkout" },
+    ]);
   });
 
   it("serializes timer state with remaining seconds", () => {

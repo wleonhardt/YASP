@@ -212,6 +212,11 @@ export function RoundReportModal({ open, state, revealedAt, mode, onClose, retur
             <p className="round-report-modal__deck-meta">
               {t("room.roundReport.deck", { deck: report.deckLabel })}
             </p>
+            {report.storyLabel ? (
+              <p className="round-report-modal__deck-meta">
+                {t("room.roundReport.story", { story: report.storyLabel })}
+              </p>
+            ) : null}
           </div>
 
           <button

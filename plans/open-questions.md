@@ -3,13 +3,9 @@
 ## Open
 
 - **UI: discussion-phase enhancements.** The reveal-and-discuss phase is
-  where YASP could differentiate. Out of scope for the current
-  [`ui-upgrade.md`](ui-upgrade.md) plan but worth deciding before/after
-  Phase 9 lands:
-  - Remaining implementation decision: P9.5 Story labels should start as
-    an ephemeral room agenda with a current story label plus optional
-    queue, bulk-paste, reorder/remove, and start-next-story behavior. No
-    durable backlog, account, integration, or history scope.
+  where YASP could differentiate. Phase 9's selected enhancements have now
+  landed, so this is a future-product thread rather than active
+  implementation work.
 - **UI: viewport mix.** We currently assume desktop ~50% / mobile ~30% /
   tablet ~20% based on intuition, not data. Worth verifying via analytics
   if/when added — Phase 4 (drawer) and tablet-breakpoint priorities should
@@ -71,8 +67,12 @@
   but no new durable-state ADR is needed if it stays within TTL-bound active
   room/session state.
 - 2026-05-05 review: Phase 9 P9.3 Re-open voting is now implemented, so the
-  re-open-voting implementation question is resolved. P9.5 remains the only
-  open Phase 9 product/state thread.
+  re-open-voting implementation question is resolved. P9.5 was the remaining
+  Phase 9 product/state thread before the agenda implementation.
+- 2026-05-05 review: Phase 9 P9.5 Story labels/agenda is now implemented as
+  ephemeral active room state only. The current story label and optional queue
+  are covered by the existing room TTL model; no durable backlog, account,
+  integration, or history scope was added.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.

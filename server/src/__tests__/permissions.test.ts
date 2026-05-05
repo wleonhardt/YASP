@@ -13,6 +13,8 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     hasBeenActive: false,
     revealed: false,
     roundNumber: 1,
+    currentStoryLabel: null,
+    storyQueue: [],
     deck: DEFAULT_DECKS.fibonacci,
     settings: { ...DEFAULT_ROOM_SETTINGS },
     timer: createRoomTimerState(),

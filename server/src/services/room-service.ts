@@ -27,7 +27,7 @@ import {
 } from "../domain/room.js";
 import { createRoomTimerState, getRemainingSeconds } from "../domain/timer.js";
 import * as permissions from "../domain/permissions.js";
-import { generateParticipantId, generateRoomId } from "../utils/id.js";
+import { generateParticipantId, generateRoomId, generateStoryAgendaItemId } from "../utils/id.js";
 import { now } from "../utils/time.js";
 import {
   ROOM_TTL_MS,
@@ -46,6 +46,9 @@ import {
   normalizeDeckInput,
   validateVote,
   validateSettingsUpdate,
+  validateStoryLabel,
+  validateStoryLabels,
+  normalizeStoryLabel,
 } from "../transport/validators.js";
 
 function fail(error: ServerErrorEvent): AckResult<never> {
@@ -178,6 +181,8 @@ export class RoomService {
       hasBeenActive: false,
       revealed: false,
       roundNumber: 1,
+      currentStoryLabel: null,
+      storyQueue: [],
       deck: resolveDeck(deckInput),
       settings: { ...DEFAULT_ROOM_SETTINGS },
       timer: createRoomTimerState(),
@@ -387,6 +392,7 @@ export class RoomService {
     const stats = computeStats(room.votes, room.deck.cards);
     const snapshot: SessionRoundSnapshot = {
       roundNumber: room.roundNumber,
+      storyLabel: room.currentStoryLabel,
       revealedAt: now(),
       deck: room.deck,
       participants: Array.from(room.participants.values()).map((p) => ({
@@ -419,6 +425,7 @@ export class RoomService {
     const autoStats = computeStats(room.votes, room.deck.cards);
     const autoSnapshot: SessionRoundSnapshot = {
       roundNumber: room.roundNumber,
+      storyLabel: room.currentStoryLabel,
       revealedAt: now(),
       deck: room.deck,
       participants: Array.from(room.participants.values()).map((p) => ({
@@ -482,6 +489,132 @@ export class RoomService {
 
     resetRoundState(room);
     room.roundNumber += 1;
+    room.currentStoryLabel = null;
+    touchRoom(room);
+    this.saveRoom(room);
+    return success({ room });
+  }
+
+  updateStoryLabel(roomId: RoomId, sessionId: string, label: string): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canUpdateSettings(room, participant.id)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can change the story" });
+    }
+
+    const labelCheck = validateStoryLabel(label);
+    if (!labelCheck.valid) return fail(labelCheck.error);
+
+    const normalized = normalizeStoryLabel(label);
+    room.currentStoryLabel = normalized.length > 0 ? normalized : null;
+    touchRoom(room);
+    this.saveRoom(room);
+    return success({ room });
+  }
+
+  addStoryAgendaItems(roomId: RoomId, sessionId: string, labels: string[]): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canUpdateSettings(room, participant.id)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can change the agenda" });
+    }
+
+    const labelsCheck = validateStoryLabels(labels, room.storyQueue.length);
+    if (!labelsCheck.valid) return fail(labelsCheck.error);
+
+    const items = labels
+      .map(normalizeStoryLabel)
+      .filter((label) => label.length > 0)
+      .map((label) => ({ id: generateStoryAgendaItemId(), label }));
+    room.storyQueue.push(...items);
+    touchRoom(room);
+    this.saveRoom(room);
+    return success({ room });
+  }
+
+  removeStoryAgendaItem(roomId: RoomId, sessionId: string, itemId: string): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canUpdateSettings(room, participant.id)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can change the agenda" });
+    }
+
+    const nextQueue = room.storyQueue.filter((item) => item.id !== itemId);
+    if (nextQueue.length === room.storyQueue.length) {
+      return fail({ code: "INVALID_STORY", message: "Story not found" });
+    }
+
+    room.storyQueue = nextQueue;
+    touchRoom(room);
+    this.saveRoom(room);
+    return success({ room });
+  }
+
+  moveStoryAgendaItem(
+    roomId: RoomId,
+    sessionId: string,
+    itemId: string,
+    direction: "up" | "down"
+  ): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canUpdateSettings(room, participant.id)) {
+      return fail({ code: "NOT_ALLOWED", message: "Only the moderator can change the agenda" });
+    }
+    if (direction !== "up" && direction !== "down") {
+      return fail({ code: "INVALID_STORY", message: "Move direction must be up or down" });
+    }
+
+    const index = room.storyQueue.findIndex((item) => item.id === itemId);
+    if (index === -1) {
+      return fail({ code: "INVALID_STORY", message: "Story not found" });
+    }
+
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= room.storyQueue.length) {
+      return success({ room });
+    }
+
+    const queue = [...room.storyQueue];
+    const current = queue[index];
+    const target = queue[targetIndex];
+    if (!current || !target) {
+      return success({ room });
+    }
+    queue[index] = target;
+    queue[targetIndex] = current;
+    room.storyQueue = queue;
+    touchRoom(room);
+    this.saveRoom(room);
+    return success({ room });
+  }
+
+  startNextStory(roomId: RoomId, sessionId: string): AckResult<{ room: Room }> {
+    const room = this.store.get(roomId);
+    if (!room) return fail({ code: "ROOM_NOT_FOUND", message: "Room not found" });
+    const participant = findParticipantBySessionId(room, sessionId);
+    if (!participant) return fail({ code: "PARTICIPANT_NOT_FOUND", message: "Participant not found" });
+    if (!permissions.canNextRound(room, participant.id)) {
+      return fail({ code: "NOT_ALLOWED", message: "Not allowed to start the next story" });
+    }
+
+    const [nextStory, ...remainingStories] = room.storyQueue;
+    if (!nextStory) {
+      return fail({ code: "INVALID_STORY", message: "Agenda is empty" });
+    }
+
+    resetRoundState(room);
+    room.roundNumber += 1;
+    room.currentStoryLabel = nextStory.label;
+    room.storyQueue = remainingStories;
     touchRoom(room);
     this.saveRoom(room);
     return success({ room });

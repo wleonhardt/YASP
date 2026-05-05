@@ -229,6 +229,7 @@ describe("RoundReportModal participant mode", () => {
         state={makeRevealedState({
           selfModerator: false,
           overrides: {
+            currentStoryLabel: "Checkout total",
             votes: { me: "?", p2: "5" },
             stats: {
               totalVotes: 2,
@@ -248,6 +249,7 @@ describe("RoundReportModal participant mode", () => {
     const dialog = screen.getByRole("dialog", { name: /round summary/i });
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByText(/round 4/i)).toBeInTheDocument();
+    expect(within(dialog).getByText("Story: Checkout total")).toBeInTheDocument();
     expect(within(dialog).getByText(/deck:/i)).toBeInTheDocument();
     expect(
       within(dialog).getByText(/non-numeric votes appear in the table and distribution/i)

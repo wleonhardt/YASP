@@ -23,6 +23,7 @@ export type RoundReportDistributionEntry = {
 export type RoundReport = {
   roomId: string;
   roundNumber: number;
+  storyLabel: string | null;
   revealedAt: number;
   deckLabel: string;
   deckType: string;
@@ -41,6 +42,7 @@ export type RoundReport = {
 export type RoundReportPlainTextSummary = {
   heading: string;
   meta?: string;
+  story?: string;
   deck: string;
   stats: Array<{
     label: string;
@@ -75,6 +77,7 @@ export function toPlainTextSummary(summary: RoundReportPlainTextSummary): string
   const lines = [
     summary.heading,
     summary.meta,
+    summary.story,
     summary.deck,
     ...summary.stats.map(({ label, value }) => `${label}: ${value}`),
     `${summary.votesHeading}: ${summary.votes.join("; ")}`,
@@ -135,6 +138,7 @@ export function buildRoundReport(state: PublicRoomState, revealedAt: number): Ro
   return {
     roomId: state.id,
     roundNumber: state.roundNumber,
+    storyLabel: state.currentStoryLabel,
     revealedAt,
     deckLabel: state.deck.label,
     deckType: state.deck.type,
@@ -159,9 +163,9 @@ function csvEscape(value: string): string {
 }
 
 export function toCsv(report: RoundReport): string {
-  const header = ["Participant", "Role", "Vote"];
+  const header = ["Story", "Participant", "Role", "Vote"];
   const rows = report.voters.map((voter) =>
-    [voter.name, voter.role, voter.vote ?? ""].map(csvEscape).join(",")
+    [report.storyLabel ?? "", voter.name, voter.role, voter.vote ?? ""].map(csvEscape).join(",")
   );
   return [header.join(","), ...rows].join("\r\n") + "\r\n";
 }
@@ -200,6 +204,7 @@ function isNumericVoteStr(value: string): boolean {
 export function sessionToCsv(snapshots: SessionRoundSnapshot[], locale: string): string {
   const header = [
     "round_number",
+    "story_label",
     "revealed_at",
     "deck_label",
     "participant_name",
@@ -237,6 +242,7 @@ export function sessionToCsv(snapshots: SessionRoundSnapshot[], locale: string):
       rows.push(
         [
           String(snap.roundNumber),
+          snap.storyLabel ?? "",
           revealedAtLabel,
           snap.deck.label,
           p.name,
@@ -298,10 +304,11 @@ export function sessionToPlainText(
       .map(Number);
     const median = computeMedian(numericVotes);
 
-    lines.push(
-      t("room.roundReport.meta", { round: snap.roundNumber, time: revealedAtLabel }),
-      t("room.roundReport.deck", { deck: snap.deck.label })
-    );
+    lines.push(t("room.roundReport.meta", { round: snap.roundNumber, time: revealedAtLabel }));
+    if (snap.storyLabel) {
+      lines.push(t("room.roundReport.story", { story: snap.storyLabel }));
+    }
+    lines.push(t("room.roundReport.deck", { deck: snap.deck.label }));
 
     if (snap.stats.numericAverage !== null) {
       lines.push(`${t("room.average")}: ${snap.stats.numericAverage}`);

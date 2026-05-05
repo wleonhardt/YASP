@@ -8,6 +8,7 @@ import type {
   Deck,
   RoomSettings,
   RoomTimerState,
+  StoryAgendaItem,
   SessionRoundSnapshot,
 } from "@yasp/shared";
 
@@ -44,6 +45,8 @@ export type Room = {
   hasBeenActive: boolean;
   revealed: boolean;
   roundNumber: number;
+  currentStoryLabel: string | null;
+  storyQueue: StoryAgendaItem[];
   title?: string;
   deck: Deck;
   settings: RoomSettings;

@@ -13,6 +13,8 @@ export const MAX_CUSTOM_DECK_LABEL_LENGTH = 60;
 // canonical boundary check ready (F-02: "future footgun"). Matches the
 // custom-deck-label cap so both user-visible-string surfaces agree.
 export const MAX_ROOM_TITLE_LENGTH = 60;
+export const MAX_STORY_LABEL_LENGTH = 120;
+export const MAX_STORY_QUEUE_ITEMS = 30;
 
 export function validateName(name: unknown): ValidationResult {
   if (typeof name !== "string") {
@@ -120,6 +122,65 @@ export function validateVote(value: unknown, deckCards: string[]): ValidationRes
   if (!deckCards.includes(value)) {
     return { valid: false, error: { code: "INVALID_VOTE", message: "Vote value not in current deck" } };
   }
+  return { valid: true };
+}
+
+export function normalizeStoryLabel(label: string): string {
+  return label.trim().replace(/\s+/g, " ");
+}
+
+export function validateStoryLabel(label: unknown): ValidationResult {
+  if (typeof label !== "string") {
+    return { valid: false, error: { code: "INVALID_STORY", message: "Story label must be a string" } };
+  }
+  const normalized = normalizeStoryLabel(label);
+  if (normalized.length > MAX_STORY_LABEL_LENGTH) {
+    return {
+      valid: false,
+      error: {
+        code: "INVALID_STORY",
+        message: `Story label must be at most ${MAX_STORY_LABEL_LENGTH} characters`,
+      },
+    };
+  }
+  return { valid: true };
+}
+
+export function validateStoryLabels(labels: unknown, currentQueueLength = 0): ValidationResult {
+  if (!Array.isArray(labels)) {
+    return { valid: false, error: { code: "INVALID_STORY", message: "Story labels must be an array" } };
+  }
+
+  if (labels.some((label) => typeof label !== "string")) {
+    return { valid: false, error: { code: "INVALID_STORY", message: "Story labels must be strings" } };
+  }
+
+  const normalized = labels.map(normalizeStoryLabel).filter((label) => label.length > 0);
+
+  if (normalized.length === 0) {
+    return { valid: false, error: { code: "INVALID_STORY", message: "Add at least one story" } };
+  }
+
+  if (normalized.some((label) => label.length > MAX_STORY_LABEL_LENGTH)) {
+    return {
+      valid: false,
+      error: {
+        code: "INVALID_STORY",
+        message: `Story labels must be at most ${MAX_STORY_LABEL_LENGTH} characters`,
+      },
+    };
+  }
+
+  if (currentQueueLength + normalized.length > MAX_STORY_QUEUE_ITEMS) {
+    return {
+      valid: false,
+      error: {
+        code: "INVALID_STORY",
+        message: `Agenda can include at most ${MAX_STORY_QUEUE_ITEMS} stories`,
+      },
+    };
+  }
+
   return { valid: true };
 }
 

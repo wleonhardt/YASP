@@ -85,6 +85,12 @@ for the audit that motivated each change.
   participants, restores each voter's own previous card as an editable
   selection, and removes the previous reveal snapshot so the next reveal
   becomes the corrected session result.
+- 2026-05-05: Implemented Phase 9 P9.5 Story labels. The room state now has
+  an optional current story label and compact agenda queue, both ephemeral and
+  covered by the existing room TTL model. Moderators can add, bulk-paste,
+  reorder, remove, and start the next queued story as a new round; other
+  participants see the current story and queue read-only. Round and session
+  reports include story labels.
 
 ---
 

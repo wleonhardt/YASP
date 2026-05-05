@@ -78,6 +78,11 @@ describe("buildRoundReport", () => {
     expect(report?.voters.every((v) => v.voteIsNumeric)).toBe(true);
   });
 
+  it("includes the current story label when one is set", () => {
+    const report = buildRoundReport(revealedState({ currentStoryLabel: "Checkout total" }), 0);
+    expect(report?.storyLabel).toBe("Checkout total");
+  });
+
   it("computes median, spread, and sorted distribution", () => {
     const report = buildRoundReport(revealedState(), 1_700_000_000_000);
     expect(report?.stats.median).toBe(5);
@@ -111,9 +116,9 @@ describe("toCsv", () => {
   it("produces RFC-ish CSV with header and escaped fields", () => {
     const report = buildRoundReport(revealedState(), 0);
     const csv = toCsv(report!);
-    expect(csv.split("\r\n")[0]).toBe("Participant,Role,Vote");
-    expect(csv).toContain("Alice,voter,3");
-    expect(csv).toContain("Bob,voter,5");
+    expect(csv.split("\r\n")[0]).toBe("Story,Participant,Role,Vote");
+    expect(csv).toContain(",Alice,voter,3");
+    expect(csv).toContain(",Bob,voter,5");
   });
 
   it("escapes names containing commas and quotes", () => {
@@ -139,7 +144,7 @@ describe("toCsv", () => {
       },
     });
     const csv = toCsv(buildRoundReport(state, 0)!);
-    expect(csv).toContain('"Alice, ""A""",voter,3');
+    expect(csv).toContain(',"Alice, ""A""",voter,3');
   });
 });
 
@@ -150,6 +155,7 @@ describe("toJson", () => {
     const parsed = JSON.parse(json);
     expect(parsed.roomId).toBe("ROOM01");
     expect(parsed.roundNumber).toBe(3);
+    expect(parsed.storyLabel).toBeNull();
     expect(parsed.revealedAt).toBe(1_700_000_000_000);
     expect(parsed.voters).toHaveLength(3);
     expect(parsed.stats.mostCommon).toBe("5");
@@ -169,6 +175,7 @@ describe("toPlainTextSummary", () => {
     const summary = toPlainTextSummary({
       heading: "Round summary",
       meta: "Round 3 • Revealed 2:30 PM",
+      story: "Story: Checkout total",
       deck: "Deck: Fibonacci",
       stats: [
         { label: "Average", value: "4" },
@@ -181,6 +188,7 @@ describe("toPlainTextSummary", () => {
     });
 
     expect(summary).toContain("Round summary");
+    expect(summary).toContain("Story: Checkout total");
     expect(summary).toContain("Average: 4");
     expect(summary).toContain("Votes: Alice: 3; Bob: 5");
   });

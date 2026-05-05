@@ -50,6 +50,8 @@ function makeRoom(id: string, overrides: Partial<Room> = {}): Room {
     hasBeenActive: false,
     revealed: false,
     roundNumber: 1,
+    currentStoryLabel: null,
+    storyQueue: [],
     deck: DEFAULT_DECKS.fibonacci,
     settings: { ...DEFAULT_ROOM_SETTINGS },
     timer: createRoomTimerState(),
@@ -218,10 +220,29 @@ describe("serializeRoom / deserializeRoom", () => {
     const room = makeRoom("RT1", {
       participants: new Map([["s1", makeParticipant()]]),
       votes: new Map([["p1", "13"]]),
+      currentStoryLabel: "Checkout total",
+      storyQueue: [{ id: "story-1", label: "Discount code" }],
     });
     const redacted = JSON.parse(JSON.stringify(serializeRoom(room)));
     const restored = deserializeRoom(redacted);
     expect(restored.participants.get("s1")?.name).toBe("Alice");
     expect(restored.votes.get("p1")).toBe("13");
+    expect(restored.currentStoryLabel).toBe("Checkout total");
+    expect(restored.storyQueue).toEqual([{ id: "story-1", label: "Discount code" }]);
+  });
+
+  it("defaults agenda fields when deserializing older active room payloads", () => {
+    const room = makeRoom("RT2");
+    const serialized = serializeRoom(room);
+    const legacyPayload = {
+      ...serialized,
+      currentStoryLabel: undefined,
+      storyQueue: undefined,
+    };
+
+    const restored = deserializeRoom(legacyPayload as unknown as Parameters<typeof deserializeRoom>[0]);
+
+    expect(restored.currentStoryLabel).toBeNull();
+    expect(restored.storyQueue).toEqual([]);
   });
 });

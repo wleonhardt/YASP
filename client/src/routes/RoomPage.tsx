@@ -13,6 +13,7 @@ import { ResultsPanel } from "../components/ResultsPanel";
 import { RoundActionBar } from "../components/RoundActionBar";
 import { RoundReportModal } from "../components/RoundReportModal";
 import { SessionReportModal } from "../components/SessionReportModal";
+import { StoryAgenda } from "../components/StoryAgenda";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { TimerStrip } from "../components/TimerStrip";
 import { Toast, type ToastState } from "../components/Toast";
@@ -65,6 +66,11 @@ export function RoomPage() {
     resetRound,
     reopenVoting,
     nextRound,
+    updateStoryLabel,
+    addStoryAgendaItems,
+    removeStoryAgendaItem,
+    moveStoryAgendaItem,
+    startNextStory,
     transferModerator,
     setTimerDuration,
     startTimer,
@@ -241,6 +247,7 @@ export function RoomPage() {
         round: report.roundNumber,
         time: revealedAtLabel,
       }),
+      story: report.storyLabel ? t("room.roundReport.story", { story: report.storyLabel }) : undefined,
       deck: t("room.roundReport.deck", { deck: report.deckLabel }),
       stats: [
         {
@@ -518,6 +525,66 @@ export function RoomPage() {
       setSelectedCard(null);
     }
   }, [actionsDisabled, nextRound, roomId]);
+
+  const handleUpdateStoryLabel = useCallback(
+    async (label: string) => {
+      if (!roomId || actionsDisabled) {
+        return false;
+      }
+
+      const result = await updateStoryLabel(roomId, label);
+      return result.ok;
+    },
+    [actionsDisabled, roomId, updateStoryLabel]
+  );
+
+  const handleAddStoryAgendaItems = useCallback(
+    async (labels: string[]) => {
+      if (!roomId || actionsDisabled) {
+        return false;
+      }
+
+      const result = await addStoryAgendaItems(roomId, labels);
+      return result.ok;
+    },
+    [actionsDisabled, addStoryAgendaItems, roomId]
+  );
+
+  const handleRemoveStoryAgendaItem = useCallback(
+    async (itemId: string) => {
+      if (!roomId || actionsDisabled) {
+        return false;
+      }
+
+      const result = await removeStoryAgendaItem(roomId, itemId);
+      return result.ok;
+    },
+    [actionsDisabled, removeStoryAgendaItem, roomId]
+  );
+
+  const handleMoveStoryAgendaItem = useCallback(
+    async (itemId: string, direction: "up" | "down") => {
+      if (!roomId || actionsDisabled) {
+        return false;
+      }
+
+      const result = await moveStoryAgendaItem(roomId, itemId, direction);
+      return result.ok;
+    },
+    [actionsDisabled, moveStoryAgendaItem, roomId]
+  );
+
+  const handleStartNextStory = useCallback(async () => {
+    if (!roomId || actionsDisabled) {
+      return false;
+    }
+
+    const result = await startNextStory(roomId);
+    if (result.ok) {
+      setSelectedCard(null);
+    }
+    return result.ok;
+  }, [actionsDisabled, roomId, startNextStory]);
 
   const handleTransferModerator = useCallback(
     async (targetParticipantId: string) => {
@@ -820,6 +887,15 @@ export function RoomPage() {
 
         <div className="room-layout">
           <div className="room-layout__main room-layout__stage">
+            <StoryAgenda
+              state={state}
+              disabled={actionsDisabled}
+              onUpdateStoryLabel={handleUpdateStoryLabel}
+              onAddStoryAgendaItems={handleAddStoryAgendaItems}
+              onRemoveStoryAgendaItem={handleRemoveStoryAgendaItem}
+              onMoveStoryAgendaItem={handleMoveStoryAgendaItem}
+              onStartNextStory={handleStartNextStory}
+            />
             <TimerStrip state={state} serverClockOffsetMs={serverClockOffsetMs} />
             <RoundActionBar
               state={state}
