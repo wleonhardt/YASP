@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PublicRoomState } from "@yasp/shared";
 import { ParticipantCard } from "./ParticipantCard";
-import { getConnectedVoterCounts, getRevealedVote } from "../lib/room";
+import { getConnectedVoterCounts, getLastWaitingVoter, getRevealedVote } from "../lib/room";
 
 type Props = {
   state: PublicRoomState;
@@ -24,6 +24,7 @@ export function ParticipantsBoard({ state, variant = "board" }: Props) {
   const [isMobile, setIsMobile] = useState(isMobileRosterViewport);
   const [mobileExpanded, setMobileExpanded] = useState(() => !isMobileRosterViewport());
   const { voted, total, percent } = getConnectedVoterCounts(state);
+  const waitingOnParticipant = getLastWaitingVoter(state);
   const rail = variant === "rail";
   const compact = rail || state.participants.length > 12 || isMobile;
   const overflowCount = Math.max(0, state.participants.length - 8);
@@ -60,11 +61,27 @@ export function ParticipantsBoard({ state, variant = "board" }: Props) {
         <div>
           <h2 id={headingId}>{t("room.participants")}</h2>
         </div>
-        <div className="participants-board__summary ui-chip ui-chip--neutral">
-          <strong>
-            {voted}/{total}
-          </strong>
-          <span>{t("room.participant.voted")}</span>
+        <div
+          className={[
+            "participants-board__summary",
+            "ui-chip",
+            waitingOnParticipant
+              ? "ui-chip--warning participants-board__summary--waiting"
+              : "ui-chip--neutral",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {waitingOnParticipant ? (
+            <span>{t("room.waitingOn", { name: waitingOnParticipant.name })}</span>
+          ) : (
+            <>
+              <strong>
+                {voted}/{total}
+              </strong>
+              <span>{t("room.participant.voted")}</span>
+            </>
+          )}
         </div>
       </div>
 
@@ -92,6 +109,7 @@ export function ParticipantsBoard({ state, variant = "board" }: Props) {
                 participant.connected && participant.role === "voter" && !participant.hasVoted
                   ? "presence-row__dot--waiting"
                   : "",
+                waitingOnParticipant?.id === participant.id ? "presence-row__dot--spotlight" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}

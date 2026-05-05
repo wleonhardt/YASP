@@ -2028,6 +2028,11 @@ select.input {
   font-size: var(--text-meta);
 }
 
+.participants-board__summary--waiting span {
+  color: var(--color-warning);
+  font-weight: 650;
+}
+
 .participants-board__presence {
   display: flex;
   align-items: center;
@@ -2065,6 +2070,12 @@ select.input {
   color: var(--color-warning);
   border-color: rgba(245, 184, 74, 0.44);
   background: rgba(245, 184, 74, 0.08);
+}
+
+.presence-row__dot--spotlight {
+  border-color: rgba(245, 184, 74, 0.68);
+  background: rgba(245, 184, 74, 0.14);
+  box-shadow: 0 0 0 3px rgba(245, 184, 74, 0.12);
 }
 
 .presence-row__dot--offline {

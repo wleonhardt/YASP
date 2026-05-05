@@ -225,6 +225,7 @@
     "participants": "Participants",
     "voteProgress": "Progression du vote",
     "voteProgressAria": "{{voted}} votes sur {{total}}",
+    "waitingOn": "En attente de {{name}}",
     "hideRoster": "Masquer la liste",
     "showRoster": "Afficher la liste ({{count}})",
     "participant": {

@@ -5,9 +5,8 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  optional Phase 9 spotlight enhancements. First candidate: P9.1
-  Waiting-on-Bob, which gently highlights the last connected voter who has not
-  voted without adding more moderator chrome.
+  optional Phase 9 spotlight enhancements. Next candidate: P9.2 outlier
+  callout, using the tone-safe no-name headline described in the plan.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -67,6 +66,10 @@
   shared surface token, promoting only the stage deck/results panel with the
   stronger border/background treatment, and confirming the remaining
   operational section labels are not redundant panel headers.
+- 2026-05-05: Started optional Phase 9 with P9.1 Waiting-on-Bob. The
+  participant rail now switches from the numeric voted summary to "Waiting on
+  {name}" only when exactly one connected voter has not voted, and that
+  voter's presence dot gets a slightly stronger calm highlight.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

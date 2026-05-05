@@ -225,6 +225,7 @@
     "participants": "참가자",
     "voteProgress": "투표 진행 상황",
     "voteProgressAria": "{{total}}명 중 {{voted}}명 투표",
+    "waitingOn": "{{name}}님 대기 중",
     "hideRoster": "참가자 목록 숨기기",
     "showRoster": "참가자 목록 보기 ({{count}})",
     "participant": {

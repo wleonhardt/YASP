@@ -47,6 +47,10 @@
   product or architecture questions. The existing discussion-phase enhancement
   question remains the relevant thread before selecting specific Phase 9
   spotlight work.
+- 2026-05-05 review: Phase 9 P9.1 Waiting-on-Bob did not create new product
+  or architecture questions. P9.2/P9.4 still sit under the existing
+  discussion-phase enhancement thread because they introduce post-reveal
+  prompting behavior.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.

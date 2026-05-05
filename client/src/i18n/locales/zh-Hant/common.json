@@ -225,6 +225,7 @@
     "participants": "參與者",
     "voteProgress": "投票進度",
     "voteProgressAria": "{{total}} 人中已有 {{voted}} 人投票",
+    "waitingOn": "等待 {{name}}",
     "hideRoster": "隱藏名單",
     "showRoster": "顯示名單（{{count}}）",
     "participant": {

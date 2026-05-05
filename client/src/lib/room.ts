@@ -24,6 +24,23 @@ export function getConnectedVoterCounts(state: PublicRoomState) {
   };
 }
 
+export function getLastWaitingVoter(state: PublicRoomState): PublicParticipant | null {
+  if (state.revealed) {
+    return null;
+  }
+
+  const connectedVoters = state.participants.filter(
+    (participant) => participant.role === "voter" && participant.connected
+  );
+  const waitingVoters = connectedVoters.filter((participant) => !participant.hasVoted);
+
+  if (connectedVoters.length <= 1 || waitingVoters.length !== 1) {
+    return null;
+  }
+
+  return waitingVoters[0];
+}
+
 export function shouldShowInviteHero(state: PublicRoomState): boolean {
   return !state.participants.some(
     (participant) => participant.role === "voter" && participant.connected && !participant.isModerator

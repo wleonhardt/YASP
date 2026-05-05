@@ -59,5 +59,49 @@ describe("ParticipantsBoard", () => {
     expect(within(row).getByText("Not voted")).toBeInTheDocument();
     expect(row.querySelector(".participant-card__vote")).not.toBeInTheDocument();
     expect(screen.getByRole("progressbar", { name: /vote progress/i })).toHaveAttribute("aria-valuenow", "3");
+    expect(screen.getByText("Waiting on Bob")).toBeInTheDocument();
+    expect(screen.getByLabelText(/bob, connected/i)).toHaveClass("presence-row__dot--spotlight");
+  });
+
+  it("keeps the numeric voted summary when more than one connected voter has not voted", () => {
+    render(
+      <ParticipantsBoard
+        variant="rail"
+        state={makePublicRoomState({
+          participants: [
+            {
+              id: "me",
+              name: "Alice",
+              role: "voter",
+              connected: true,
+              hasVoted: true,
+              isSelf: true,
+              isModerator: true,
+            },
+            {
+              id: "bob",
+              name: "Bob",
+              role: "voter",
+              connected: true,
+              hasVoted: false,
+              isSelf: false,
+              isModerator: false,
+            },
+            {
+              id: "cam",
+              name: "Cam",
+              role: "voter",
+              connected: true,
+              hasVoted: false,
+              isSelf: false,
+              isModerator: false,
+            },
+          ],
+        })}
+      />
+    );
+
+    expect(screen.queryByText(/waiting on/i)).not.toBeInTheDocument();
+    expect(screen.getByText("1/3")).toBeInTheDocument();
   });
 });

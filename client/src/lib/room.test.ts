@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PublicParticipant } from "@yasp/shared";
 import { makePublicRoomState } from "../test/roomState";
-import { shouldShowInviteHero } from "./room";
+import { getLastWaitingVoter, shouldShowInviteHero } from "./room";
 
 function participant(overrides: Partial<PublicParticipant>): PublicParticipant {
   return {
@@ -97,5 +97,69 @@ describe("shouldShowInviteHero", () => {
         })
       )
     ).toBe(true);
+  });
+});
+
+describe("getLastWaitingVoter", () => {
+  it("returns the only connected voter who has not voted", () => {
+    const state = makePublicRoomState({
+      participants: [
+        participant({
+          id: "me",
+          name: "Alice",
+          isSelf: true,
+          isModerator: true,
+          hasVoted: true,
+        }),
+        participant({
+          id: "bob",
+          name: "Bob",
+          hasVoted: false,
+        }),
+        participant({
+          id: "cam",
+          name: "Cam",
+          hasVoted: true,
+        }),
+      ],
+    });
+
+    expect(getLastWaitingVoter(state)?.name).toBe("Bob");
+  });
+
+  it("returns null when multiple connected voters are still missing", () => {
+    const state = makePublicRoomState({
+      participants: [
+        participant({
+          id: "me",
+          name: "Alice",
+          isSelf: true,
+          isModerator: true,
+          hasVoted: true,
+        }),
+        participant({ id: "bob", name: "Bob", hasVoted: false }),
+        participant({ id: "cam", name: "Cam", hasVoted: false }),
+      ],
+    });
+
+    expect(getLastWaitingVoter(state)).toBeNull();
+  });
+
+  it("returns null after votes are revealed", () => {
+    const state = makePublicRoomState({
+      revealed: true,
+      participants: [
+        participant({
+          id: "me",
+          name: "Alice",
+          isSelf: true,
+          isModerator: true,
+          hasVoted: true,
+        }),
+        participant({ id: "bob", name: "Bob", hasVoted: false }),
+      ],
+    });
+
+    expect(getLastWaitingVoter(state)).toBeNull();
   });
 });

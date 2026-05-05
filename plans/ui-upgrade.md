@@ -60,6 +60,11 @@ for the audit that motivated each change.
   the same shared styling. The header audit found no remaining redundant
   operational panel eyebrows to remove. Next implementation slice is optional
   Phase 9 spotlight enhancements.
+- 2026-05-05: Started Phase 9 with P9.1 Waiting-on-Bob. When exactly one
+  connected voter has not voted, the participant rail now replaces the generic
+  voted-count pill with a calm "Waiting on {name}" status and gives that
+  voter's presence dot a slightly stronger highlight. Remaining Phase 9 items
+  stay optional and can land one at a time.
 
 ---
 

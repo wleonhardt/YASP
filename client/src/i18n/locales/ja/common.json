@@ -225,6 +225,7 @@
     "participants": "参加者",
     "voteProgress": "投票の進行状況",
     "voteProgressAria": "{{total}}人中{{voted}}人が投票済み",
+    "waitingOn": "{{name}} さん待ち",
     "hideRoster": "参加者一覧を隠す",
     "showRoster": "参加者一覧を表示 ({{count}})",
     "participant": {
