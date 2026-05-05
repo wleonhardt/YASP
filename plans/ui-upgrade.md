@@ -10,16 +10,262 @@ for the audit that motivated each change.
 
 ---
 
+## Product context & strategic direction
+
+Before more tactical phases, this section reasons about *who uses YASP, when,
+and how often* — and lets that drive UI weight. The conclusion (a stage-style
+layout with role-aware chrome) shapes the rest of the plan.
+
+### What YASP actually is
+
+A real-time, ephemeral scrum poker room. No accounts, no history, one URL per
+session. Sessions are short (15–60 min), high-presence (everyone is "live"),
+and structured into rounds:
+
+```
+[ Voting → Reveal & discuss → Next round ]  × N stories
+```
+
+Most teams estimate 5–15 stories per session. So the same UI gets traversed
+5–15 times in 30 minutes. **Anything that takes more than one click per round
+is friction multiplied by N.**
+
+### Three roles, very different usage patterns
+
+| Role | Count per room | What they do | UI weight they should command |
+|---|---|---|---|
+| **Moderator** | 1 | Sets up the room once; clicks Reveal + Next Round each round. Rarely changes settings, almost never transfers host. | A small persistent action bar + a deep settings drawer. |
+| **Voter** | 2–20+ | Picks one card per round. Stares at results during discussion. | The voting deck and the results chart. That's the entire UI for them. |
+| **Spectator** | 0–5 | Watches. No interaction. | Same results view as voters. No deck. |
+
+### Time/click frequency table
+
+The basis for all weighting decisions. "Per round" means per story estimate.
+
+| Action | Role(s) | Per round | Per session (10 rounds) | Per week |
+|---|---|---|---|---|
+| Click vote card | Voter | 1 | 10 | 10–30 |
+| Click Reveal | Moderator | 1 | 10 | 10–30 |
+| Click Next round | Moderator | 1 | 10 | 10–30 |
+| View results chart | All | 1 (then 30s–5min staring) | 10 | 10–30 |
+| Discuss outliers | All | 0–1 | 5 | 5–15 |
+| Set timer duration | Moderator | 0 | 0–1 | 0–1 |
+| Start/Pause/Reset timer | Moderator | 0–1 | 0–3 | 0–3 |
+| Hit Beep | Moderator | ≤0.1 | 0–1 | 0–1 |
+| Toggle sound | Anyone | 0 | 0–1 (once ever) | 0 |
+| Change room settings | Moderator | 0 | 0 (set at create) | 0–1 |
+| Transfer host | Moderator | 0 | 0 | ~0 |
+| Copy room link | Moderator | 0 | 1 (at start) | 1–3 |
+| Re-vote / change vote | Voter | 0–0.3 | 0–3 | 0–3 |
+| Leave room | All | 0 | 1 (end) | 1–3 |
+
+**Reading this table**: voting + revealing + viewing results account for ~95%
+of all interactions. Everything else is one-shot setup or near-zero. The UI
+currently allocates space inversely — moderator settings are large and
+permanent, the deck and results are crammed into a sidebar.
+
+### Where users spend time (not clicks — *eye time*)
+
+Clicks are spiky; gaze is continuous. Eye time per round, roughly:
+
+- **Voting phase (15s–2min)**: voters stare at the deck deciding what to
+  pick. Moderator stares at "who's voted". Spectators stare at the
+  participants list.
+- **Reveal phase (30s–5min)**: everyone stares at the results chart while
+  discussing why estimates differ. *This is the longest single state per
+  round.*
+- **Between rounds (≤5s)**: brief; whoever moderates clicks Next.
+
+So the **results view** quietly wins the most attention per session, even
+though it has the fewest interactions. It's also where the worst UX leverage
+is right now — the chart is a small horizontal-list in the sidebar.
+
+### What this means for the UI
+
+Five conclusions that should govern every layout choice from here on:
+
+1. **The stage is the deck or the chart, never the moderator panel.**
+   Whatever phase we're in, the largest, brightest element on screen should
+   be the thing voters/spectators are looking at.
+
+2. **Moderator chrome is optional UI for one person.** It should be a thin
+   action bar (Reveal/Next + timer countdown), with the rest behind a gear.
+   Non-moderators should never see most of it.
+
+3. **Participants list is a *peripheral awareness* widget, not the main
+   event.** Compact avatar row that shows status at a glance; doesn't need
+   prime real estate.
+
+4. **Empty/lobby state is a separate concern.** When the room has 1 person,
+   the entire screen should say "share this link." Once 2+ people are
+   present, the room enters its operational mode.
+
+5. **Optimize for the long stares, not the rare clicks.** Settings panels
+   can be ugly. The results chart cannot.
+
+### Layout patterns considered
+
+These are the candidate shapes we evaluated for the *operational room view*
+(post-lobby, in-session). Each evaluated against: moderator workload,
+voter clarity, results-staring quality, and mobile feasibility.
+
+#### A. Single-screen no-scroll (current)
+Everything visible: topbar + moderator panel + participants + (deck OR
+results) all crammed into one viewport.
+
+- Pros: ambient awareness; never need to scroll.
+- Cons: nothing dominates; the prime action is small; cramped on small
+  screens; vast empty space on large screens.
+- **Verdict: this is what we have. The plan rejects it.**
+
+#### B. Stage layout (recommended)
+A central "stage" element (deck or chart) takes the dominant column.
+Participants live in a compact aside or rail. Moderator gets a slim action
+bar above the stage. Non-deck/chart UI shrinks to the edges.
+
+- Pros: clear focus per phase; scales from mobile to wide; matches what
+  mobile compact mode already looks like (which was visibly better).
+- Cons: requires layout swap (moderate effort); need to define what
+  participants UI looks like when small.
+- **Verdict: this is the recommended direction. Phases 2–4 implement it.**
+
+#### C. Tab pattern (Vote / Discuss / Results)
+Explicit tabs for each phase. Big stage per tab.
+
+- Pros: very clear what to do; can present each phase in its ideal shape.
+- Cons: hides ambient awareness ("who's voted?" requires a tab switch);
+  loses the calm "everyone in one room" feeling that's a core product
+  value; extra clicks.
+- **Verdict: rejected. YASP is a live meeting tool, not a wizard.**
+
+#### D. Tabletop metaphor (avatars around a virtual table)
+Round table with participant avatars positioned around it; cards face-down
+in the middle until reveal.
+
+- Pros: evocative, fun, clearly a "poker" thing.
+- Cons: doesn't scale beyond ~8 people without weird zoom math; demands
+  custom layout code; novelty wears off; ignores the fact that the
+  product is about the *chart*, not the table.
+- **Verdict: rejected. Cute, not useful.**
+
+#### E. Spotlight / now-showing
+Layout dynamically promotes whatever is most relevant *right now*: deck
+during voting, "waiting on Bob" during last-vote, results chart on reveal,
+"consensus reached" celebration on perfect agreement.
+
+- Pros: always shows the right thing; feels alive.
+- Cons: more state-driven UI = more visual flicker risk; harder to
+  implement correctly; users can lose orientation if things move too much.
+- **Verdict: layer this on top of B over time. Don't build it from
+  scratch. Phase 9 (new) sketches a path.**
+
+### Voting deck shape
+
+The deck itself deserves separate consideration — it's the second most
+stared-at element after results.
+
+| Shape | Pros | Cons | Recommendation |
+|---|---|---|---|
+| **Grid (current)** | Familiar; works for any deck size; scales responsively | Feels like a button menu, not "playing a card" | Keep as default |
+| **Hand-of-cards arc** | Tactile, evocative of poker; fun | Doesn't scale beyond ~10 cards; awkward responsive behavior; harder a11y | Rejected |
+| **Number pad** | Fast tap target; phone-keypad familiar | Doesn't work for T-shirt or custom decks; just a renamed grid | Rejected |
+| **Slider** | Quick continuous picking | Conflicts with discrete-deck model; doesn't work for non-numeric decks | Rejected |
+| **Big grid + keyboard hint** | Same as current but with the shortcut key visible *on each card* (e.g. small `5` glyph in a corner) | Tiny extra design work | **Adopt as deck enhancement** |
+
+### Results chart shape
+
+The single highest-leverage display change. Considered shapes:
+
+| Shape | Pros | Cons | Recommendation |
+|---|---|---|---|
+| **Horizontal list (current)** | Simple; sorted by popularity is intuitive | Feels like a leaderboard, not a distribution; no spatial sense of "where did people land" | Reject |
+| **Vertical column chart** | Genre convention; instantly readable; spatial intuition (left = low, right = high); mode is the tallest column | Trivial CSS, no library needed | **Adopt** |
+| **Beeswarm / dot plot** | Each vote a dot; shows individuals | Custom rendering work; cluttered with >10 votes | Defer; nice-to-have |
+| **Box-and-whisker** | Shows median + spread + outliers in one viz | Boxplots feel academic; most people don't read them fluently | Reject |
+| **Player faces under each column** | Combines distribution + "who voted what" | Genuine UX win — voters often want to know *who* picked the outlier | **Adopt** as Phase 5 enhancement: each column has the avatars of voters who picked it stacked underneath |
+
+### Discussion-phase enhancements (new territory)
+
+The reveal-and-discuss phase is where YASP could differentiate. Brief ideas
+worth keeping on the radar — not committed phases, just options:
+
+- **Outlier highlighting**: when one or two votes are far from the mode,
+  surface them: "Alice picked 13, others picked 5. Discuss?"
+- **Re-vote affordance**: after discussion, moderator can "re-open voting"
+  and the deck swaps back in. Currently you Reset the round, which feels
+  destructive.
+- **"Talk to Bob" prompt**: when consensus is *almost* reached (e.g. one
+  outlier), name the person who differs.
+- **Story labels / queue**: many teams estimate 5–15 stories. Letting the
+  moderator type a story title at the top of each round (and showing the
+  list of estimated stories at the end) would make YASP usable as the
+  *only* tool for an estimation meeting, not just one tab among many.
+
+These are explicitly out-of-scope for this plan but should land in
+[`open-questions.md`](open-questions.md) for follow-up.
+
+### Mobile / tablet / desktop posture
+
+Observed usage shape (assumption — verify with analytics if you add them):
+
+- **Desktop**: ~50% of voters. Sitting at their dev machine.
+- **Mobile**: ~30%. Walking standup, bathroom, "I'll join from my phone"
+  during a meeting.
+- **Tablet**: ~20%. Conference room iPads / large touch screens.
+
+Implications:
+
+- **Mobile-first** for the deck and results. Big tap targets. The compact
+  layout we already have is the win.
+- **Desktop should not be "mobile + sidebar"**. Use the extra width for a
+  larger results chart and avatar stack — not for piling more chrome onto
+  the page.
+- **Tablet (768–1024) is the most-broken breakpoint right now** (V1, V2).
+  When fixing the layout, test 768 explicitly.
+
+### What this means for the existing phases
+
+The strategic direction reframes the existing phase priorities slightly:
+
+- **Phase 2 (action button to stage) and Phase 3 (stage swap)** become
+  the *load-bearing* phases. They implement Conclusion 1.
+- **Phase 4 (moderator drawer)** implements Conclusion 2. It depends on
+  Phase 3.
+- **Phase 5 (results)** is much higher leverage than it appears — it
+  improves the longest-staring view.
+- **Phase 6 (invite hero)** implements Conclusion 4 — empty-room becomes
+  its own state, not a sparse version of operational room.
+- **Phase 1 (quick wins) and Phase 8 (compliance)** stay parallel; they're
+  small surgical fixes that don't depend on the strategic direction.
+- **New: Phase 9 (spotlight enhancements)** is added at the end as a
+  catch-all for state-driven niceties (waiting-on-Bob, almost-consensus,
+  outlier highlighting).
+
+---
+
 ## Goals
 
-1. Make the **current phase action** (vote, then reveal/next round) the
-   unmistakable focus of the screen.
-2. Demote moderator configuration to a drawer/popover — most rounds nobody
-   touches it.
-3. Free the topbar to do one job: identity + utilities.
-4. Improve scan-ability of results (chart shape, stat strip, hierarchy).
-5. Keep every change small, observable in the preview, and behind a single
-   commit so we can revert a step without unwinding the whole plan.
+Derived from the strategic direction above. Each goal traces back to the
+role/frequency analysis.
+
+1. **Stage > chrome.** Make the current phase action (vote → reveal → next)
+   the unmistakable focus. Voters and spectators should never wonder what
+   they're supposed to look at.
+2. **Role-aware UI weight.** A moderator's settings panel is one person's
+   tool used rarely; it should not occupy 30% of every voter's screen.
+   Demote moderator chrome to a slim action bar + drawer.
+3. **Optimize the long stares.** The results chart is what everyone looks
+   at the longest, even though it's clicked the least. Treat it as the
+   star of the show.
+4. **Lobby vs. operational state are distinct.** A 1-person room is a
+   lobby — show the invite, hide the operational chrome.
+5. **Topbar = identity + utilities only.** Strip out session status; it
+   belongs near the stage.
+6. **Preserve the ambient/calm feel.** YASP's value is "everyone in one
+   live room." Don't add tabs, wizards, or modals that fragment that
+   feeling.
+7. **Surgical, reversible changes.** Each phase = one commit, one revert
+   path, one verifiable improvement.
 
 ## Non-goals
 
@@ -340,6 +586,39 @@ Bundled by topic:
 besides intentionally deferred items (e.g. URL-state for filters, which
 isn't applicable here).
 
+### Phase 9 — Spotlight enhancements (state-driven niceties)
+
+Catch-all for the layered "now-showing" pattern (option E from the
+strategic direction). All entries here are individually optional —
+ship them à la carte once Phase 3 is in place. None are commitments.
+
+- **P9.1 Waiting-on-Bob**: when N–1 of N voters have voted, gently
+  highlight the missing voter's avatar and replace the "X/N voted" pill
+  with "Waiting on Bob…". Calm, not naggy.
+- **P9.2 Outlier callout**: post-reveal, when one or two votes are >2
+  cards from the mode, surface a one-line prompt above the chart:
+  "Alice picked 13, others picked 5. Discuss?"
+- **P9.3 Re-open voting**: after reveal, moderator gets a "Re-open vote"
+  affordance distinct from "Reset round" — keeps existing votes visible
+  as defaults, lets people change without destroying the round state.
+- **P9.4 Almost-consensus prompt**: when one outlier is the only
+  difference, surface "One outlier — talk to {name}?" Subtle, not
+  shaming.
+- **P9.5 Story labels**: optional text input at the top of each round
+  for the story being estimated. Carries through to the round report.
+  Enables the "single tool for the whole meeting" use case.
+- **P9.6 Consensus celebration**: when everyone votes the same, a brief
+  positive flourish (existing consensus chip + maybe a soft confetti
+  burst respecting `prefers-reduced-motion`). Keep tasteful.
+
+*Files*: `RoomPage.tsx`, `ResultsPanel.tsx`, `ParticipantsBoard.tsx`,
+new `components/RoundSpotlight.tsx` for the meta-prompts above the
+chart.
+
+**Exit criteria** (per sub-feature): visibly improves the discussion
+phase without adding clutter. Each item should be removable without
+breaking layout.
+
 ---
 
 ## Sequencing & rollback
@@ -348,7 +627,10 @@ isn't applicable here).
   the new layout to make sense), and **P2 should land before P3** (so the
   stage already owns its primary button when the columns swap).
 - **Phase 8** is fully independent — can land any time, even before
-  Phase 1. Recommended order: P1 → P8 → P2 → P3 → P4 → P5 → P6 → P7.
+  Phase 1. Recommended order: P1 → P8 → P2 → P3 → P4 → P5 → P6 → P7,
+  then individually pick Phase 9 sub-features as desired.
+- **Phase 9** items each depend on Phase 3 (stage layout) being in
+  place, but are otherwise independent and à la carte.
 - Skip P6 if QR generation needs a dependency we don't want.
 - Each phase ends in a green CI run + a passing `npm run i18n:check`.
 

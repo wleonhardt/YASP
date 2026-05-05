@@ -2,7 +2,21 @@
 
 ## Open
 
-- No active open questions right now. The current scaling and deployment
+- **UI: discussion-phase enhancements.** The reveal-and-discuss phase is
+  where YASP could differentiate. Out of scope for the current
+  [`ui-upgrade.md`](ui-upgrade.md) plan but worth deciding before/after
+  Phase 9 lands:
+  - Outlier highlighting ("Alice picked 13, others 5. Discuss?")
+  - Re-open voting affordance distinct from "Reset round"
+  - Almost-consensus prompt naming the outlier
+  - Story labels per round + end-of-session story queue (would let YASP
+    be the *only* tool for an estimation meeting, not just one tab)
+  - Consensus celebration flourish (motion-aware)
+- **UI: viewport mix.** We currently assume desktop ~50% / mobile ~30% /
+  tablet ~20% based on intuition, not data. Worth verifying via analytics
+  if/when added — Phase 4 (drawer) and tablet-breakpoint priorities should
+  follow real numbers, not guesses.
+- No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.
 
