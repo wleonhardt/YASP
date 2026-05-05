@@ -16,6 +16,13 @@ for the audit that motivated each change.
   mobile hints, vote-card shortcut associations, touch hygiene, and modal
   scroll containment. Remaining layout work still starts with Phase 1 quick
   wins, then Phase 2 `RoundActionBar`.
+- 2026-05-05: Landed the low-risk Phase 1 visual cleanup subset, excluding
+  sound relocation. The topbar now carries identity/utilities only,
+  Participants and Revealed votes dropped redundant eyebrows, Start carries
+  primary visual weight, Reset/Beep remain quieter actions, and the duration
+  minutes/seconds inputs read as one grouped control. Next Phase 1 slice is
+  the sound-toggle relocation into the utility menu, then Phase 2
+  `RoundActionBar`.
 
 ---
 

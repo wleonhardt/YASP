@@ -42,7 +42,6 @@ export function ResultsPanel({
       <section className="app-panel results-panel" aria-labelledby={headingId}>
         <div className="section-header">
           <div>
-            <div className="section-label">{t("room.results")}</div>
             <h2 id={headingId}>{t("room.noVotesYet")}</h2>
           </div>
         </div>
@@ -56,7 +55,6 @@ export function ResultsPanel({
   const distribution = Object.entries(stats.distribution).sort(([, a], [, b]) => b - a);
   const highestCount = distribution[0]?.[1] ?? 1;
   const notAvailableLabel = t("room.notAvailable");
-  const resultsLabel = t("room.results");
   const distributionLabel = t("room.distribution");
   const keyStatsLabel = t("room.keyStats");
   const averageLabel = t("room.average");
@@ -92,7 +90,6 @@ export function ResultsPanel({
         headingId={headingId}
         consensus={stats.consensus}
         consensusStateLabel={consensusStateLabel}
-        resultsLabel={resultsLabel}
         revealedVotesLabel={t("room.revealedVotes")}
       />
       <KeyStatsCard
@@ -175,19 +172,16 @@ function ResultsHeader({
   consensus,
   consensusStateLabel,
   headingId,
-  resultsLabel,
   revealedVotesLabel,
 }: {
   consensus: boolean;
   consensusStateLabel: string;
   headingId: string;
-  resultsLabel: string;
   revealedVotesLabel: string;
 }) {
   return (
     <div className="section-header results-panel__header">
       <div>
-        <div className="section-label">{resultsLabel}</div>
         <h2 id={headingId}>{revealedVotesLabel}</h2>
       </div>
       <div

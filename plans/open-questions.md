@@ -19,6 +19,8 @@
 - 2026-05-05 review: Phase 8 foundation work did not create new open
   questions. The existing discussion-phase and viewport-mix questions remain
   the active UI uncertainties.
+- 2026-05-05 review: Phase 1 visual cleanup did not create new open questions.
+  Sound relocation is still implementation work, not a product decision.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.

@@ -43,7 +43,6 @@ export function ParticipantsBoard({ state }: Props) {
     <section className="app-panel participants-board" aria-labelledby={headingId}>
       <div className="section-header">
         <div>
-          <div className="section-label">{t("room.liveBoard")}</div>
           <h2 id={headingId}>{t("room.participants")}</h2>
         </div>
         <div className="participants-board__summary ui-chip ui-chip--neutral">

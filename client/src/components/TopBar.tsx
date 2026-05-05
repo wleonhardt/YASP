@@ -1,9 +1,7 @@
 import type { PublicRoomState } from "@yasp/shared";
 import { useTranslation } from "react-i18next";
-import { getDeckLabel } from "../i18n/decks";
 import type { ConnectionStatus } from "../lib/connectionRecovery";
 import { RoomCodeShare } from "./RoomCodeShare";
-import { RoomStatus } from "./RoomStatus";
 import { RoomUtilityMenu } from "./RoomUtilityMenu";
 
 type Props = {
@@ -28,8 +26,6 @@ export function TopBar({
   return (
     <header className="topbar app-panel">
       <RoomCodeShare roomId={state.id} onCopyError={onCopyFeedback} />
-
-      <RoomStatus state={state} deckLabel={getDeckLabel(t, state.deck)} />
 
       <div className="topbar__actions">
         <button

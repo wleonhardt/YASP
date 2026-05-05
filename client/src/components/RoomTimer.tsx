@@ -511,7 +511,7 @@ export function RoomTimer({
         </button>
       ) : (
         <button
-          className="button button--secondary room-timer__toggle"
+          className="button button--primary room-timer__toggle"
           type="button"
           onClick={() => void handleStart()}
           disabled={disabled}

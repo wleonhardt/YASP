@@ -5,8 +5,8 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  Phase 1 quick wins, with the sound-toggle relocation kept separate from
-  the lighter CSS/JSX cleanup.
+  finish Phase 1 by relocating the sound toggle into the utility menu, then
+  move on to Phase 2 (`RoundActionBar`).
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -26,6 +26,12 @@
   mobile input attributes for timer duration controls, vote-card shortcut
   descriptions, mobile touch hygiene, and modal scroll containment. No backend,
   shared-package, persistence, or dependency changes were introduced.
+- 2026-05-05: Landed the low-risk Phase 1 UI cleanup subset. The topbar now
+  carries only room identity and utilities, Participants/Revealed votes no
+  longer duplicate their headings with eyebrows, the timer Start action has
+  primary weight while Reset/Beep stay quiet, and the duration minutes/seconds
+  fields are visually grouped as one control. Sound relocation remains queued
+  as the last Phase 1 slice because it changes timer sound state ownership.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy
