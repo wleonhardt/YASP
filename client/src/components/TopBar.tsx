@@ -36,7 +36,6 @@ export function TopBar({
           className="button button--ghost topbar__leave-button"
           onClick={onLeave}
           disabled={disabled}
-          aria-label={t("room.leaveRoom")}
           title={t("room.leaveRoom")}
         >
           <span className="topbar__leave-label">{t("room.leave")}</span>

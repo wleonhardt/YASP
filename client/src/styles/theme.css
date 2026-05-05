@@ -10,6 +10,8 @@
 }
 
 :root {
+  color-scheme: dark;
+
   --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: "SFMono-Regular", "IBM Plex Mono", "Menlo", "Consolas", monospace;
 
@@ -77,6 +79,8 @@
 /* ─── Light theme ─────────────────────────────────────────── */
 
 [data-theme="light"] {
+  color-scheme: light;
+
   --color-bg-base: #f0f2f5;
   --color-bg: #f5f7fa;
   --color-bg-elevated: #ffffff;

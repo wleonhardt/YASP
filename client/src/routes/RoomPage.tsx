@@ -633,13 +633,16 @@ export function RoomPage() {
   if (roomUnavailable) {
     return (
       <div className="page-shell page-shell--centered">
+        <a className="skip-link" href="#main">
+          {t("common.skipToContent")}
+        </a>
         <header className="status-corner" aria-label={t("room.sessionStatus")}>
           <ConnectionBadge status={connection.status} compatibilityMode={connection.compatibilityMode} />
           <LanguageSwitcher compact />
           <ThemeToggle />
         </header>
 
-        <main className="app-panel empty-state">
+        <main id="main" className="app-panel empty-state">
           <div className="section-label">{t("room.roomUnavailable")}</div>
           <h1>{t("room.roomMissing")}</h1>
           <p>
@@ -656,13 +659,16 @@ export function RoomPage() {
   if (needsManualJoin && !roomState) {
     return (
       <div className="page-shell page-shell--centered">
+        <a className="skip-link" href="#main">
+          {t("common.skipToContent")}
+        </a>
         <header className="status-corner" aria-label={t("room.sessionStatus")}>
           <ConnectionBadge status={connection.status} compatibilityMode={connection.compatibilityMode} />
           <LanguageSwitcher compact />
           <ThemeToggle />
         </header>
 
-        <main className="app-panel empty-state empty-state--form">
+        <main id="main" className="app-panel empty-state empty-state--form">
           <form className="empty-state__form-body" onSubmit={handleManualJoin}>
             <div className="section-label">{t("room.manualJoin")}</div>
             <h1>{t("room.joinRoomTitle", { roomId })}</h1>
@@ -732,12 +738,15 @@ export function RoomPage() {
   if (!roomState) {
     return (
       <div className="page-shell page-shell--centered">
+        <a className="skip-link" href="#main">
+          {t("common.skipToContent")}
+        </a>
         <header className="status-corner" aria-label={t("room.sessionStatus")}>
           <ConnectionBadge status={connection.status} compatibilityMode={connection.compatibilityMode} />
           <LanguageSwitcher compact />
           <ThemeToggle />
         </header>
-        <main className="app-panel empty-state">
+        <main id="main" className="app-panel empty-state">
           <div className="section-label">{t("room.connecting")}</div>
           <h1>{t("room.joiningRoom")}</h1>
           <p>{t("room.waitingSnapshot")}</p>
@@ -753,6 +762,9 @@ export function RoomPage() {
 
   return (
     <div className="page-shell room-page">
+      <a className="skip-link" href="#main">
+        {t("common.skipToContent")}
+      </a>
       <TopBar
         state={state}
         connectionStatus={connection.status}
@@ -762,7 +774,7 @@ export function RoomPage() {
         disabled={actionsDisabled}
       />
 
-      <main>
+      <main id="main">
         <h1 className="sr-only">{t("room.roomHeading", { roomId })}</h1>
         {connection.showRecoveryNotice && <ConnectionStatusNotice connection={connection} />}
 

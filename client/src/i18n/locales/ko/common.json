@@ -4,7 +4,8 @@
     "github": "GitHub"
   },
   "common": {
-    "anonymous": "익명"
+    "anonymous": "익명",
+    "skipToContent": "본문으로 건너뛰기"
   },
   "language": {
     "label": "언어",

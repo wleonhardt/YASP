@@ -14,13 +14,20 @@ export function DeckToken({ token, className, variant = "inline", coffeeText }: 
   const { t } = useTranslation();
 
   if (!isCoffeeCardToken(token)) {
-    return <span className={className}>{token}</span>;
+    return (
+      <span className={className} translate="no">
+        {token}
+      </span>
+    );
   }
 
   const resolvedCoffeeText = coffeeText ?? t("deck.coffee");
 
   return (
-    <span className={["deck-token", `deck-token--${variant}`, className ?? ""].filter(Boolean).join(" ")}>
+    <span
+      className={["deck-token", `deck-token--${variant}`, className ?? ""].filter(Boolean).join(" ")}
+      translate="no"
+    >
       <CoffeeIcon className="deck-token__icon" aria-hidden="true" />
       <span className="deck-token__text">{resolvedCoffeeText}</span>
     </span>

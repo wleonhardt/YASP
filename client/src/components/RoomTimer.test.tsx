@@ -40,7 +40,7 @@ describe("RoomTimer", () => {
   it("renders moderator timer controls", () => {
     render(<RoomTimer state={makePublicRoomState()} {...handlers()} />);
 
-    expect(screen.getByRole("heading", { name: "00:10" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "01:00" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /start/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /reset/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /beep/i })).toBeInTheDocument();
@@ -116,7 +116,7 @@ describe("RoomTimer", () => {
     expect(beepButton.textContent).toMatch(/\(\d\)/);
   });
 
-  it("disables duration select while timer is running", () => {
+  it("disables duration inputs while timer is running", () => {
     render(
       <RoomTimer
         state={makePublicRoomState({
@@ -134,7 +134,22 @@ describe("RoomTimer", () => {
       />
     );
 
-    expect(screen.getByRole("combobox")).toBeDisabled();
+    expect(screen.getByRole("spinbutton", { name: /minutes/i })).toBeDisabled();
+    expect(screen.getByRole("spinbutton", { name: /seconds/i })).toBeDisabled();
+  });
+
+  it("uses numeric input hints for duration fields", () => {
+    render(<RoomTimer state={makePublicRoomState()} {...handlers()} />);
+
+    const minutes = screen.getByRole("spinbutton", { name: /minutes/i });
+    const seconds = screen.getByRole("spinbutton", { name: /seconds/i });
+
+    expect(minutes).toHaveAttribute("inputmode", "numeric");
+    expect(minutes).toHaveAttribute("autocomplete", "off");
+    expect(minutes).toHaveAttribute("pattern", "[0-9]*");
+    expect(seconds).toHaveAttribute("inputmode", "numeric");
+    expect(seconds).toHaveAttribute("autocomplete", "off");
+    expect(seconds).toHaveAttribute("pattern", "[0-9]*");
   });
 
   it("synchronizes countdown immediately when a timer starts after mount", () => {

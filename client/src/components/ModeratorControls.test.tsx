@@ -64,7 +64,7 @@ describe("ModeratorControls", () => {
     const panel = screen.getByRole("region", { name: /moderator controls/i });
     const scope = within(panel);
 
-    expect(scope.getByRole("heading", { name: "00:10" })).toBeInTheDocument();
+    expect(scope.getByRole("heading", { name: "01:00" })).toBeInTheDocument();
     expect(scope.getByRole("button", { name: /start/i })).toBeInTheDocument();
     expect(scope.getByRole("button", { name: /sound on/i })).toBeInTheDocument();
     expect(scope.queryByRole("button", { name: /timer & pacing/i })).not.toBeInTheDocument();
@@ -94,7 +94,7 @@ describe("ModeratorControls", () => {
     expect(panel.querySelectorAll(".controls-panel__status-row .ui-chip")).toHaveLength(1);
     expect(scope.queryByRole("button", { name: /start/i })).not.toBeInTheDocument();
     expect(scope.getByRole("button", { name: /^reveal votes$/i })).toBeInTheDocument();
-    expect(scope.getByText(/duration 10s • sound on/i)).toBeInTheDocument();
+    expect(scope.getByText(/duration 1m • sound on/i)).toBeInTheDocument();
 
     await user.click(timerToggle);
 
@@ -190,7 +190,7 @@ describe("ModeratorControls", () => {
     const panel = screen.getByRole("region", { name: /moderator controls/i });
     const scope = within(panel);
 
-    expect(scope.getByText(/duration 10s • sound off/i)).toBeInTheDocument();
+    expect(scope.getByText(/duration 1m • sound off/i)).toBeInTheDocument();
   });
 
   it("shows next round and reset inline on desktop after reveal", () => {

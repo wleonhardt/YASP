@@ -198,6 +198,8 @@ function ResultsHeader({
         ]
           .filter(Boolean)
           .join(" ")}
+        role="status"
+        aria-live="polite"
       >
         {consensus && (
           <span className="results-panel__consensus-icon" aria-hidden="true">

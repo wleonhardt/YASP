@@ -4,7 +4,8 @@
     "github": "GitHub"
   },
   "common": {
-    "anonymous": "Anónimo"
+    "anonymous": "Anónimo",
+    "skipToContent": "Saltar para o conteúdo"
   },
   "language": {
     "label": "Idioma",

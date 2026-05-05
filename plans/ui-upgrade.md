@@ -1,12 +1,21 @@
 # UI Upgrade Plan
 
-Status: `proposed`
+Status: `in progress`
 Date: 2026-05-04
 
 A staged plan to rework the room UI hierarchy so the *current action* is the
 visual centerpiece, moderator chrome recedes, and the topbar carries identity
 only. Driven by a hands-on review of the live app — see the "Findings" section
 for the audit that motivated each change.
+
+## Implementation progress
+
+- 2026-05-05: Started with the independent Phase 8 foundation pass. Landed
+  skip links, native color-scheme hints, language-switcher focus restoration,
+  deck-token translate guards, timer/status live announcements, duration input
+  mobile hints, vote-card shortcut associations, touch hygiene, and modal
+  scroll containment. Remaining layout work still starts with Phase 1 quick
+  wins, then Phase 2 `RoundActionBar`.
 
 ---
 

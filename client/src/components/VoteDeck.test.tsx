@@ -42,7 +42,11 @@ describe("VoteDeck shortcuts hint", () => {
       <VoteDeck state={makePublicRoomState()} selectedCard={null} onVote={vi.fn()} onClearVote={vi.fn()} />
     );
 
-    expect(screen.getByText(/shortcuts:/i)).toBeInTheDocument();
+    const shortcutHint = screen.getByText(/shortcuts:/i);
+    const voteCard = screen.getByRole("button", { name: "1" });
+
+    expect(shortcutHint).toBeInTheDocument();
+    expect(voteCard).toHaveAccessibleDescription(/shortcuts:/i);
   });
 
   it("hides keyboard shortcuts on touch-oriented layouts", () => {

@@ -141,7 +141,10 @@ export function LandingPage() {
 
   return (
     <div className="page-shell page-shell--centered">
-      <main className="landing-page">
+      <a className="skip-link" href="#main">
+        {t("common.skipToContent")}
+      </a>
+      <main id="main" className="landing-page">
         <div className="landing-page__status">
           <ConnectionBadge status={connection.status} compatibilityMode={connection.compatibilityMode} />
           <LanguageSwitcher compact />

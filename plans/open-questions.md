@@ -16,6 +16,9 @@
   tablet ~20% based on intuition, not data. Worth verifying via analytics
   if/when added — Phase 4 (drawer) and tablet-breakpoint priorities should
   follow real numbers, not guesses.
+- 2026-05-05 review: Phase 8 foundation work did not create new open
+  questions. The existing discussion-phase and viewport-mix questions remain
+  the active UI uncertainties.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.

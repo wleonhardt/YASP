@@ -4,8 +4,9 @@
 
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
-  [ui-upgrade.md](ui-upgrade.md). Status: `proposed`. Start with Phase 1
-  (quick wins) when prioritised.
+  [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
+  Phase 1 quick wins, with the sound-toggle relocation kept separate from
+  the lighter CSS/JSX cleanup.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -18,6 +19,13 @@
 
 ## Done
 
+- 2026-05-05: Started the UI upgrade with the independent Phase 8 foundation
+  pass. The app now has skip links on landing/room states, restored visible
+  focus for the language switcher, native dark/light form chrome hints,
+  deck-token translate guards, timer and consensus live-region hints, numeric
+  mobile input attributes for timer duration controls, vote-card shortcut
+  descriptions, mobile touch hygiene, and modal scroll containment. No backend,
+  shared-package, persistence, or dependency changes were introduced.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

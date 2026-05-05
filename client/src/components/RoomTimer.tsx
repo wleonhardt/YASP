@@ -428,6 +428,7 @@ export function RoomTimer({
           className={["ui-chip", timerStatus === "complete" ? "ui-chip--success" : "ui-chip--neutral"].join(
             " "
           )}
+          aria-live="polite"
         >
           {timerStateLabel}
         </div>
@@ -456,13 +457,19 @@ export function RoomTimer({
             max={Math.floor(TIMER_MAX / 60)}
             step={1}
             value={durationMinutes}
+            inputMode="numeric"
+            autoComplete="off"
+            pattern="[0-9]*"
             onChange={(e) => {
               const m = Math.max(0, Math.min(Math.floor(TIMER_MAX / 60), Number(e.target.value) | 0));
               commitDuration(m, durationSecondsRemainder);
             }}
+            onWheel={(event) => event.currentTarget.blur()}
             aria-label={t("room.timerMinutes")}
           />
-          <span className="room-timer__duration-unit" aria-hidden="true">m</span>
+          <span className="room-timer__duration-unit" aria-hidden="true">
+            m
+          </span>
         </label>
         <label className="room-timer__duration-field">
           <input
@@ -472,13 +479,19 @@ export function RoomTimer({
             max={59}
             step={5}
             value={durationSecondsRemainder}
+            inputMode="numeric"
+            autoComplete="off"
+            pattern="[0-9]*"
             onChange={(e) => {
               const s = Math.max(0, Math.min(59, Number(e.target.value) | 0));
               commitDuration(durationMinutes, s);
             }}
+            onWheel={(event) => event.currentTarget.blur()}
             aria-label={t("room.timerSeconds")}
           />
-          <span className="room-timer__duration-unit" aria-hidden="true">s</span>
+          <span className="room-timer__duration-unit" aria-hidden="true">
+            s
+          </span>
         </label>
       </div>
     </fieldset>

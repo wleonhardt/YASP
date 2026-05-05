@@ -18,6 +18,7 @@ const HIDE_SHORTCUTS_QUERY = "(hover: none), (pointer: coarse), (max-width: 720p
 export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }: Props) {
   const { t } = useTranslation();
   const headingId = useId();
+  const shortcutHintId = useId();
   const self = getSelf(state);
   const isVoter = self?.role === "voter";
   const canVote = isVoter && !state.revealed && !disabled;
@@ -86,6 +87,7 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
               }}
               className={["vote-card", isSelected ? "vote-card--selected" : ""].filter(Boolean).join(" ")}
               aria-pressed={isSelected}
+              aria-describedby={isVoter && !state.revealed && showShortcutHint ? shortcutHintId : undefined}
             >
               <span className="vote-card__value">
                 <DeckToken token={card} variant="card" />
@@ -96,7 +98,9 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
       </div>
 
       {isVoter && !state.revealed && showShortcutHint ? (
-        <div className="vote-deck__shortcut">{t("room.shortcuts")}</div>
+        <div className="vote-deck__shortcut" id={shortcutHintId}>
+          {t("room.shortcuts")}
+        </div>
       ) : null}
     </section>
   );
