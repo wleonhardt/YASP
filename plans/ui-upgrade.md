@@ -54,6 +54,12 @@ for the audit that motivated each change.
   promotes the room code and a primary copy-link action, keeps spectators in
   the invite state until a voter joins, and skips QR generation to avoid a new
   dependency. Next implementation slice is Phase 7: visual hierarchy polish.
+- 2026-05-05: Completed Phase 7 by making default panels recede to the
+  surface token, giving the stage deck/results panel the stronger
+  border/background treatment, and keeping room/participant progress bars on
+  the same shared styling. The header audit found no remaining redundant
+  operational panel eyebrows to remove. Next implementation slice is optional
+  Phase 9 spotlight enhancements.
 
 ---
 

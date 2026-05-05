@@ -5,8 +5,9 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  Phase 7 visual hierarchy polish, giving the stage a slightly stronger
-  treatment and unifying the remaining progress-bar styling.
+  optional Phase 9 spotlight enhancements. First candidate: P9.1
+  Waiting-on-Bob, which gently highlights the last connected voter who has not
+  voted without adding more moderator chrome.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -62,6 +63,10 @@
   hero makes the room code and copy-link action prominent, keeps
   moderator-plus-spectator rooms in the invite state, and intentionally skips
   QR generation to avoid a new dependency.
+- 2026-05-05: Completed Phase 7 by making non-stage panels recede to the
+  shared surface token, promoting only the stage deck/results panel with the
+  stronger border/background treatment, and confirming the remaining
+  operational section labels are not redundant panel headers.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy
