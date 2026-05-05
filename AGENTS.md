@@ -43,6 +43,13 @@
 3. Check `plans/decisions/` before proposing structural changes
 4. Check `plans/open-questions.md` for unresolved threads
 
+## Generated repo context
+
+- `repomix-output.xml` is generated agent context, not hand-authored project
+  source. Use it for a fast repository overview when helpful.
+- Regenerate it from the repository root with `repomix`. Do not manually edit
+  it; refresh it instead.
+
 ## Project overview
 
 Real-time scrum poker. No accounts. Default mode keeps active state in memory;
