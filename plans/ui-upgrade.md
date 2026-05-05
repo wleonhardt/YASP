@@ -353,13 +353,21 @@ a working, shippable state. Stop after any phase if priorities shift.
 Cluster of small CSS/JSX changes that don't move components, just reduce
 noise and fix weight.
 
-- **P1.1 Move Sound toggle to TopBar utility menu.** Addresses F4. Render the
-  existing `SoundOnIcon`/`SoundOffIcon` button in `RoomUtilityMenu.tsx`
-  alongside Theme/Language. Keep the audio-priming behaviour (it just runs
-  from a different mount point). Remove from `RoomTimer.tsx`.
-  - *Files*: `RoomUtilityMenu.tsx`, `RoomTimer.tsx`, `globals.css` (drop
-    `.room-timer__sound-toggle`).
-  - *Verify*: sound preference persists to `localStorage`, beep still fires.
+- **P1.1 Move Sound toggle to TopBar utility menu, keep tiny indicator
+  near timer.** Addresses F4. Render the existing
+  `SoundOnIcon`/`SoundOffIcon` button (interactive) inside
+  `RoomUtilityMenu.tsx` alongside Theme/Language. Keep the audio-priming
+  behaviour. Remove the *interactive* toggle from `RoomTimer.tsx` but
+  leave a small **read-only** sound-state glyph (no button, just an
+  `aria-hidden` icon with a tooltip) adjacent to the timer countdown so
+  users don't lose mid-meeting orientation ("did the sound just turn
+  off?"). Clicking the glyph is a no-op; the actual control lives in the
+  utility menu.
+  - *Files*: `RoomUtilityMenu.tsx`, `RoomTimer.tsx`, `globals.css`
+    (drop `.room-timer__sound-toggle`, add a small
+    `.room-timer__sound-indicator`).
+  - *Verify*: sound preference persists to `localStorage`, beep still
+    fires, indicator reflects state without being focusable.
 
 - **P1.2 Demote redundant section eyebrows.** Addresses F10. Remove the
   uppercase eyebrow on panels whose `<h2>` already names the panel:
@@ -405,12 +413,19 @@ are buttons rendered by `ModeratorControls` (via `desktopRoundActions`).
 - **P2.3** Mount `<RoundActionBar>` directly above `<VoteDeck>` /
   `<ResultsPanel>` inside `room-layout__aside` (or wherever the stage lives
   after Phase 3).
+- **P2.4 UI invariant (codify here, enforce in review):** *There is
+  exactly one primary CTA per phase, and it must always live in the
+  stage-header zone above the deck/results. It must never be re-added
+  inside `ModeratorControls` or any meta panel.* Future PRs that violate
+  this rule should be rejected at review.
 
 *Files*: `RoomPage.tsx`, `ModeratorControls.tsx`, new
 `components/RoundActionBar.tsx`, `globals.css`.
 
 **Exit criteria**: ModeratorControls panel ~40% shorter; primary action sits
-adjacent to the deck/results so eye flow is "look at deck → click action."
+adjacent to the deck/results so eye flow is "look at deck → click action";
+"one primary CTA per phase in the stage zone" rule documented in code
+comment on `<RoundActionBar>`.
 
 ### Phase 3 — Stage swap (deck/results to centerpiece)
 
@@ -423,7 +438,12 @@ Addresses F1. The biggest visual change. Invert the room layout columns.
   `<ParticipantsBoard>`.
 - **P3.2** Restyle `<ParticipantsBoard>` as a compact stack suitable for the
   narrower aside: avatar + name + small status dot per row, no big "Not
-  voted" badges.
+  voted" badges. **Group-awareness guardrail**: the demoted board must
+  still let a moderator answer *"who hasn't voted yet?"* in under one
+  second of glance. Suggested treatment: 1-letter initial in a circle,
+  filled green when voted, hollow grey when not, dim grey when offline.
+  Keep names visible on hover/tap. The "missing" state must be the most
+  visible because it's the actionable one.
 - **P3.3** Restyle `<VoteDeck>` cards for the now-wider centerpiece: bigger
   cards, more breathing room, hover/active states feel tactile.
 - **P3.4** Mobile (`< 640px`) stays single-column; just stack stage above
@@ -433,7 +453,10 @@ Addresses F1. The biggest visual change. Invert the room layout columns.
 `globals.css` (`.room-layout`, `.vote-deck`, `.participants-board`).
 
 **Exit criteria**: deck visibly the focal point on first glance; no
-horizontal scroll at any breakpoint; participant info still scannable.
+horizontal scroll at any breakpoint; participant info still scannable;
+**acceptance test**: in a 4-person room with 3 voted and 1 not, a
+moderator can identify the un-voted person within one second of looking
+at the demoted participants rail.
 
 ### Phase 4 — Moderator drawer
 
@@ -465,6 +488,13 @@ Addresses F7, F8.
   column chart. One column per card value (in deck order, not sorted by
   count); height proportional to count; mode card highlighted via
   `--color-accent`. Pure CSS grid + `height: %` — no library.
+  **Non-numeric tokens**: `?` and `☕` (and any custom-deck non-numeric
+  values) must each render as their own column at the right end of the
+  chart, in the order they appear in the deck. Never silently drop
+  votes. If the deck contains both numeric and non-numeric values, add
+  a thin vertical separator between the numeric region and the
+  non-numeric region so the chart still reads as "scale of estimates +
+  bucket of meta-votes."
 - **P5.2** Replace `<KeyStatsCard>` + `<SecondaryStats>` 2×2 grid with a
   single horizontal stat strip:
   `Average · Median · Mode · Spread`. Each as a compact figure with
@@ -477,8 +507,14 @@ on desktop.
 
 ### Phase 6 — Empty-state invite hero
 
-Addresses F6, F11. When the room has 1 participant (just the moderator),
-swap the participants panel for an invite hero:
+Addresses F6, F11. **Trigger**: show the invite hero when the room has
+**no other connected voters** — i.e. either it's just the moderator,
+or it's the moderator plus one or more spectators with no voters yet.
+A "moderator + 3 spectators" room is still functionally empty for
+estimation purposes and should keep prompting for voter invites.
+Hide the hero as soon as a connected voter (other than the moderator,
+if the moderator is also a voter) is present. Swap the participants
+panel for an invite hero containing:
 
 - Big readable room code (existing `--font-mono`)
 - Copy room link button (primary)
@@ -596,14 +632,19 @@ ship them à la carte once Phase 3 is in place. None are commitments.
   highlight the missing voter's avatar and replace the "X/N voted" pill
   with "Waiting on Bob…". Calm, not naggy.
 - **P9.2 Outlier callout**: post-reveal, when one or two votes are >2
-  cards from the mode, surface a one-line prompt above the chart:
-  "Alice picked 13, others picked 5. Discuss?"
+  cards from the mode, surface a one-line prompt above the chart.
+  **Tone-safe phrasing only**: default copy reads
+  *"One estimate differs — worth a quick check?"* (no name shown). The
+  outlier's name appears only on hover/click/expand of the prompt, not
+  in the headline. Never shame, never default-spotlight; the goal is
+  facilitating discussion, not calling people out.
 - **P9.3 Re-open voting**: after reveal, moderator gets a "Re-open vote"
   affordance distinct from "Reset round" — keeps existing votes visible
   as defaults, lets people change without destroying the round state.
 - **P9.4 Almost-consensus prompt**: when one outlier is the only
-  difference, surface "One outlier — talk to {name}?" Subtle, not
-  shaming.
+  difference, surface a tone-safe prompt: *"Almost there — one
+  estimate differs."* Same rule as P9.2: the differing person's name
+  is revealed only on click/expand, never in the headline.
 - **P9.5 Story labels**: optional text input at the top of each round
   for the story being estimated. Carries through to the round report.
   Enables the "single tool for the whole meeting" use case.
@@ -627,8 +668,14 @@ breaking layout.
   the new layout to make sense), and **P2 should land before P3** (so the
   stage already owns its primary button when the columns swap).
 - **Phase 8** is fully independent — can land any time, even before
-  Phase 1. Recommended order: P1 → P8 → P2 → P3 → P4 → P5 → P6 → P7,
+  Phase 1. Recommended order: **P1 → P8 → P2 → P3 → P4 → P5 → P6 → P7**,
   then individually pick Phase 9 sub-features as desired.
+  **Why P8 lands before P2 (not after)**: once layout starts moving
+  (Phase 2 onward), it's easy to accidentally regress focus traps,
+  aria-live announcements, scroll containment, and tab order. Landing
+  the compliance pass against the *current stable* layout means later
+  phases inherit the fixes and any regressions become more obvious in
+  review.
 - **Phase 9** items each depend on Phase 3 (stage layout) being in
   place, but are otherwise independent and à la carte.
 - Skip P6 if QR generation needs a dependency we don't want.
