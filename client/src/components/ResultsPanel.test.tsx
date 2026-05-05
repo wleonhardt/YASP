@@ -24,11 +24,13 @@ function buildDistribution(votes: string[]): Record<string, number> {
 }
 
 function makeRevealedState({
+  consensus = false,
   deck,
   mostCommon,
   numericAverage = 4,
   votes,
 }: {
+  consensus?: boolean;
   deck: Deck;
   mostCommon: string | null;
   numericAverage?: number | null;
@@ -43,7 +45,7 @@ function makeRevealedState({
       totalVotes: votes.length,
       numericAverage,
       distribution: buildDistribution(votes),
-      consensus: false,
+      consensus,
       mostCommon,
     },
   });
@@ -189,5 +191,38 @@ describe("ResultsPanel", () => {
     expect(details).toHaveAttribute("open");
     expect(screen.getByText("Shared estimate: 5")).toBeInTheDocument();
     expect(screen.getByText("Player 3")).toBeInTheDocument();
+  });
+
+  it("renders a decorative consensus flourish only when everyone agrees", () => {
+    const deck: Deck = {
+      type: "custom",
+      label: "Planning",
+      cards: ["1", "2", "3", "5"],
+    };
+
+    const { rerender } = render(
+      <ResultsPanel
+        state={makeRevealedState({ consensus: true, deck, mostCommon: "5", votes: ["5", "5", "5"] })}
+      />
+    );
+
+    const consensusStatus = screen.getByText("Consensus reached").closest('[role="status"]') as HTMLElement;
+    expect(consensusStatus).not.toBeNull();
+    const burst = consensusStatus.querySelector(".results-panel__consensus-burst");
+
+    expect(burst).not.toBeNull();
+    expect(burst).toHaveAttribute("aria-hidden", "true");
+    expect(burst?.querySelectorAll("span")).toHaveLength(3);
+
+    rerender(
+      <ResultsPanel
+        state={makeRevealedState({ consensus: false, deck, mostCommon: "5", votes: ["5", "5", "3"] })}
+      />
+    );
+
+    const splitStatus = screen.getByText("No consensus").closest('[role="status"]') as HTMLElement;
+    expect(splitStatus).not.toBeNull();
+    expect(splitStatus).not.toHaveClass("results-panel__consensus--celebrate");
+    expect(document.querySelector(".results-panel__consensus-burst")).toBeNull();
   });
 });

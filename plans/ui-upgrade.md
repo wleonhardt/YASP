@@ -75,6 +75,10 @@ for the audit that motivated each change.
   the shared estimate, the results panel now reuses the round spotlight
   disclosure with "Almost there — one estimate differs." Names remain hidden
   from the headline and appear only after expansion.
+- 2026-05-05: Continued Phase 9 with P9.6 Consensus celebration. Consensus
+  results now add a small decorative spark flourish to the existing consensus
+  chip. The flourish is `aria-hidden`, adds no new copy, and disables
+  animation for reduced-motion users.
 
 ---
 

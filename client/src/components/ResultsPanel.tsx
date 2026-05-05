@@ -237,6 +237,7 @@ function ResultsHeader({
           "ui-chip",
           "results-panel__consensus",
           consensus ? "ui-chip--success" : "ui-chip--neutral",
+          consensus ? "results-panel__consensus--celebrate" : "",
         ]
           .filter(Boolean)
           .join(" ")}
@@ -244,9 +245,16 @@ function ResultsHeader({
         aria-live="polite"
       >
         {consensus && (
-          <span className="results-panel__consensus-icon" aria-hidden="true">
-            ✓
-          </span>
+          <>
+            <span className="results-panel__consensus-burst" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+            <span className="results-panel__consensus-icon" aria-hidden="true">
+              ✓
+            </span>
+          </>
         )}
         <span>{consensusStateLabel}</span>
       </div>

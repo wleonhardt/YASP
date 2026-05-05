@@ -5,10 +5,9 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  optional Phase 9 spotlight enhancements. Next candidate: P9.6 consensus
-  celebration, kept motion-aware and tasteful if implemented. P9.3 re-open
-  voting and P9.5 story labels need deeper product/state decisions before
-  implementation.
+  optional Phase 9 wrap-up/selection. P9.3 re-open voting and P9.5 story
+  labels need deeper product/state decisions before implementation, so they
+  should not be treated as automatic UI-only follow-ups.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -82,6 +81,10 @@
   least three voters participated and exactly one voter differs from the
   shared estimate. The headline stays name-free and the differing voter only
   appears after expansion.
+- 2026-05-05: Continued optional Phase 9 with P9.6 Consensus celebration.
+  The revealed-results consensus chip now gets a small decorative spark
+  flourish when everyone agrees. The flourish is hidden from assistive tech
+  and disables animation under reduced-motion preferences.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy
