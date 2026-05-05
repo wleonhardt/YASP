@@ -5,8 +5,8 @@
 - **UI upgrade** — staged plan to make the phase action the centerpiece,
   shrink moderator chrome, and improve results presentation. See
   [ui-upgrade.md](ui-upgrade.md). Status: `in progress`. Next slice:
-  Phase 6 empty-state invite hero, showing the room code and copy-link action
-  prominently while the room has no other connected voters.
+  Phase 7 visual hierarchy polish, giving the stage a slightly stronger
+  treatment and unifying the remaining progress-bar styling.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -57,6 +57,11 @@
   chart preserves non-deck vote tokens, keeps non-numeric tokens at the right,
   and adds a separator when numeric and non-numeric card buckets appear
   together.
+- 2026-05-05: Completed Phase 6 by replacing the participant rail with an
+  invite hero whenever the room has no connected non-moderator voters. The
+  hero makes the room code and copy-link action prominent, keeps
+  moderator-plus-spectator rooms in the invite state, and intentionally skips
+  QR generation to avoid a new dependency.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

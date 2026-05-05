@@ -204,6 +204,12 @@
     "copySuccess": "Link da sala copiado",
     "copyError": "Não foi possível copiar o link da sala",
     "copyFailed": "Falha ao copiar",
+    "inviteHero": {
+      "title": "Convida a tua equipa",
+      "tagline": "À espera de colegas…",
+      "helper": "Partilha este link da sala com votantes para começar a estimar.",
+      "copyLink": "Copiar link da sala"
+    },
     "leave": "Sair",
     "leaveRoom": "Sair da sala",
     "preferences": "Preferências da sessão",

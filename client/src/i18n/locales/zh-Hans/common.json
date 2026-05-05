@@ -204,6 +204,12 @@
     "copySuccess": "已复制房间链接",
     "copyError": "无法复制房间链接",
     "copyFailed": "复制失败",
+    "inviteHero": {
+      "title": "邀请你的团队",
+      "tagline": "正在等待队友…",
+      "helper": "将此房间链接分享给投票者即可开始估算。",
+      "copyLink": "复制房间链接"
+    },
     "leave": "离开",
     "leaveRoom": "离开房间",
     "preferences": "偏好设置",

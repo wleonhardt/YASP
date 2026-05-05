@@ -691,6 +691,7 @@ code {
 .vote-deck,
 .controls-panel,
 .results-panel,
+.invite-hero,
 .participants-board,
 .distribution-list,
 .distribution-row,
@@ -719,6 +720,7 @@ code {
 .identity-panel,
 .action-card,
 .participants-board,
+.invite-hero,
 .room-timer,
 .vote-deck,
 .results-panel,
@@ -744,6 +746,65 @@ code {
 .empty-state--form {
   text-align: left;
   align-items: stretch;
+}
+
+.invite-hero {
+  gap: var(--space-4);
+  text-align: left;
+}
+
+.invite-hero__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.invite-hero__copy h2,
+.invite-hero__copy p,
+.invite-hero__helper {
+  margin: 0;
+}
+
+.invite-hero__copy h2 {
+  font-size: var(--text-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+.invite-hero__copy p,
+.invite-hero__helper {
+  color: var(--color-text-secondary);
+}
+
+.invite-hero__code {
+  display: block;
+  width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: rgba(6, 10, 16, 0.72);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: clamp(2rem, 7vw, 3rem);
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.invite-hero__button {
+  width: 100%;
+  min-height: 48px;
+}
+
+.invite-hero__button--copied {
+  border-color: rgba(61, 216, 152, 0.3);
+  background: linear-gradient(135deg, rgba(61, 216, 152, 0.95), rgba(106, 173, 255, 0.9));
+}
+
+.invite-hero__helper {
+  font-size: var(--text-meta);
 }
 
 .empty-state__form-body {
@@ -3797,6 +3858,10 @@ select.input {
 
 [data-theme="light"] .room-code-share__code {
   background: var(--color-surface-soft);
+}
+
+[data-theme="light"] .invite-hero__code {
+  background: var(--color-surface-strong);
 }
 
 [data-theme="light"] .participants-board__summary {

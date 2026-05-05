@@ -204,6 +204,12 @@
     "copySuccess": "ルームリンクをコピーしました",
     "copyError": "ルームリンクをコピーできませんでした",
     "copyFailed": "コピーに失敗しました",
+    "inviteHero": {
+      "title": "チームを招待",
+      "tagline": "チームメンバーを待っています…",
+      "helper": "見積もりを始めるために、このルームリンクを投票者に共有してください。",
+      "copyLink": "ルームリンクをコピー"
+    },
     "leave": "退出",
     "leaveRoom": "ルームを退出",
     "preferences": "セッション設定",

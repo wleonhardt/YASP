@@ -204,6 +204,12 @@
     "copySuccess": "Lien de la salle copié",
     "copyError": "Impossible de copier le lien de la salle",
     "copyFailed": "La copie a échoué",
+    "inviteHero": {
+      "title": "Inviter votre équipe",
+      "tagline": "En attente des coéquipiers…",
+      "helper": "Partagez ce lien de salle avec les votants pour commencer l’estimation.",
+      "copyLink": "Copier le lien de la salle"
+    },
     "leave": "Quitter",
     "leaveRoom": "Quitter la salle",
     "preferences": "Préférences de la session",

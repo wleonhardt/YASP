@@ -204,6 +204,12 @@
     "copySuccess": "已複製房間連結",
     "copyError": "無法複製房間連結",
     "copyFailed": "複製失敗",
+    "inviteHero": {
+      "title": "邀請你的團隊",
+      "tagline": "正在等待隊友…",
+      "helper": "將此房間連結分享給投票者即可開始估算。",
+      "copyLink": "複製房間連結"
+    },
     "leave": "離開",
     "leaveRoom": "離開房間",
     "preferences": "偏好設定",

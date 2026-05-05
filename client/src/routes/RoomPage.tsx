@@ -5,6 +5,7 @@ import type { ParticipantRole, RoomSettings } from "@yasp/shared";
 import { Banner } from "../components/Banner";
 import { ConnectionBadge } from "../components/ConnectionBadge";
 import { ConnectionStatusNotice } from "../components/ConnectionStatusNotice";
+import { InviteHero } from "../components/InviteHero";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { ModeratorControls } from "../components/ModeratorControls";
 import { ParticipantsBoard } from "../components/ParticipantsBoard";
@@ -30,7 +31,7 @@ import {
   toPlainTextSummary,
   writeTextToClipboard,
 } from "../lib/roundReport";
-import { getConnectedVoterCounts, getSelf, isMeModerator } from "../lib/room";
+import { getConnectedVoterCounts, getSelf, isMeModerator, shouldShowInviteHero } from "../lib/room";
 import { getRoomShortcutAction } from "../lib/roomShortcuts";
 import { getStoredDisplayName, getStoredRole, setStoredDisplayName, setStoredRole } from "../lib/storage";
 
@@ -843,7 +844,11 @@ export function RoomPage() {
           </div>
 
           <aside className="room-layout__aside room-layout__participants">
-            <ParticipantsBoard state={state} variant="rail" />
+            {shouldShowInviteHero(state) ? (
+              <InviteHero roomId={state.id} onCopyError={showToast} />
+            ) : (
+              <ParticipantsBoard state={state} variant="rail" />
+            )}
           </aside>
         </div>
       </main>

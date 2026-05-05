@@ -204,6 +204,12 @@
     "copySuccess": "Room link copied",
     "copyError": "Couldn't copy the room link",
     "copyFailed": "Copy failed",
+    "inviteHero": {
+      "title": "Invite your team",
+      "tagline": "Waiting for teammates…",
+      "helper": "Share this room link with voters to start estimating.",
+      "copyLink": "Copy room link"
+    },
     "leave": "Leave",
     "leaveRoom": "Leave room",
     "preferences": "Session preferences",

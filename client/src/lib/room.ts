@@ -24,6 +24,12 @@ export function getConnectedVoterCounts(state: PublicRoomState) {
   };
 }
 
+export function shouldShowInviteHero(state: PublicRoomState): boolean {
+  return !state.participants.some(
+    (participant) => participant.role === "voter" && participant.connected && !participant.isModerator
+  );
+}
+
 export function getRoomPhase(state: PublicRoomState): RoomPhase {
   if (state.revealed) {
     return "revealed";

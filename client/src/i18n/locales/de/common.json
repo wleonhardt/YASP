@@ -204,6 +204,12 @@
     "copySuccess": "Raumlink kopiert",
     "copyError": "Der Raumlink konnte nicht kopiert werden",
     "copyFailed": "Kopieren fehlgeschlagen",
+    "inviteHero": {
+      "title": "Team einladen",
+      "tagline": "Warte auf Teammitglieder…",
+      "helper": "Teile diesen Raumlink mit Abstimmenden, um mit dem Schätzen zu beginnen.",
+      "copyLink": "Raumlink kopieren"
+    },
     "leave": "Verlassen",
     "leaveRoom": "Raum verlassen",
     "preferences": "Sitzungseinstellungen",

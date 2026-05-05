@@ -49,6 +49,11 @@ for the audit that motivated each change.
   tokens, separating non-numeric card buckets when mixed with numeric cards,
   and collapsing the results stats into a compact Average / Median / Mode /
   Spread strip. Next implementation slice is Phase 6: empty-state invite hero.
+- 2026-05-05: Completed Phase 6 by replacing the participant rail with an
+  invite hero while a room has no connected non-moderator voters. The hero
+  promotes the room code and a primary copy-link action, keeps spectators in
+  the invite state until a voter joins, and skips QR generation to avoid a new
+  dependency. Next implementation slice is Phase 7: visual hierarchy polish.
 
 ---
 

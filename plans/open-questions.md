@@ -39,6 +39,10 @@
   or architecture questions. Phase 6 should use the existing empty-room trigger
   definition in `ui-upgrade.md`; the viewport-mix question remains the main
   manual verification risk for the next UI slice.
+- 2026-05-05 review: Phase 6 empty-state invite hero did not create new
+  product or architecture questions. QR generation remains intentionally
+  omitted under the existing no-new-dependency constraint rather than being a
+  new open decision.
 - No other active open questions right now. The current scaling and deployment
   posture is recorded in ADR 0004, and the remaining multi-instance Redis work
   is intentionally deferred until operator requirements justify Phase 4.
