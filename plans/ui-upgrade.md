@@ -128,6 +128,12 @@ for the audit that motivated each change.
   and utility. The room code chip also dropped the redundant visible "ROOM"
   eyebrow. Next implementation slice is P10.15/P10.16/P10.17: story-action
   visibility plus room heading and eyebrow audit.
+- 2026-05-05: Completed Phase 10 with P10.15/P10.16/P10.17. Story agenda
+  now hides the Save action until the current-story input has a real change
+  and hides Start next story when the queue is empty. The room main has a
+  visible compact `<h1>` using the current story label or round number, and
+  the vote deck no longer repeats "Your vote" as an eyebrow above the
+  actionable heading.
 
 ---
 

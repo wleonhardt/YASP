@@ -40,6 +40,7 @@ export function StoryAgenda({
   const [bulkLabels, setBulkLabels] = useState("");
   const canEdit = isModerator && !disabled;
   const hasQueue = state.storyQueue.length > 0;
+  const storyLabelChanged = storyLabel.trim() !== (state.currentStoryLabel ?? "").trim();
 
   useEffect(() => {
     setStoryLabel(state.currentStoryLabel ?? "");
@@ -47,7 +48,7 @@ export function StoryAgenda({
 
   const handleStorySubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!canEdit) {
+    if (!canEdit || !storyLabelChanged) {
       return;
     }
 
@@ -102,13 +103,15 @@ export function StoryAgenda({
                 onChange={(event) => setStoryLabel(event.target.value)}
                 disabled={disabled}
               />
-              <button
-                className="button button--secondary story-agenda__save"
-                type="submit"
-                disabled={disabled}
-              >
-                {t("room.story.save")}
-              </button>
+              {storyLabelChanged ? (
+                <button
+                  className="button button--secondary story-agenda__save"
+                  type="submit"
+                  disabled={disabled}
+                >
+                  {t("room.story.save")}
+                </button>
+              ) : null}
             </form>
           ) : (
             <div className="story-agenda__current-readonly">
@@ -117,12 +120,12 @@ export function StoryAgenda({
           )}
         </div>
 
-        {isModerator ? (
+        {isModerator && hasQueue ? (
           <button
             className="button button--primary story-agenda__next"
             type="button"
             onClick={() => void onStartNextStory()}
-            disabled={disabled || !hasQueue}
+            disabled={disabled}
           >
             {t("room.story.startNext")}
           </button>

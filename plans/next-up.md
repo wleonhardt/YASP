@@ -2,18 +2,9 @@
 
 ## Queue
 
-- **UI upgrade — Phase 10 subtraction pass.** Phases 1–9 added a panel
-  per phase and never removed anything; the cumulative effect is a
-  visually dense room where nothing dominates. Phase 10 is a ruthless
-  subtraction pass: lazy-mount the story-agenda and timer-strip,
-  trim the round-action-bar, swap the drawer trigger icon (currently
-  visually collides with the theme toggle), de-duplicate the drawer
-  heading and stale "Sound on" copy, hide zero-count distribution
-  columns, shrink InviteHero after the local user votes, and audit
-  eyebrows. Eight focused commits; each independently revertable.
-  Full spec under "Phase 10 — Subtraction pass" in
-  [`ui-upgrade.md`](ui-upgrade.md). Recommended next slice:
-  P10.15+P10.16+P10.17 ("Eyebrow + heading audit").
+- No active UI implementation phase is queued. The Phase 10 subtraction pass
+  is implemented through P10.17; the next UI work should start from a fresh
+  manual moderator/voter smoke pass rather than another additive slice.
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -133,6 +124,10 @@
   sit inside the session preferences utility menu for moderators, reducing the
   topbar to room code, Leave, and utility, and the room code chip no longer
   carries the redundant visible "ROOM" eyebrow.
+- 2026-05-05: Completed Phase 10 with P10.15/P10.16/P10.17. Story agenda
+  actions now render only when actionable, the room main has a visible compact
+  heading based on story label or round number, and the vote deck no longer
+  repeats its heading with a "Your vote" eyebrow.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

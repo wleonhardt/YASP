@@ -679,6 +679,15 @@ code {
   min-height: 0;
 }
 
+.room-main-heading {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text);
+  font-size: var(--text-section);
+  font-weight: 650;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
 /* Shared flex-column layout (components that are just vertical stacks) */
 .landing-page,
 .landing-page__hero,

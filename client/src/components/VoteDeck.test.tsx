@@ -45,6 +45,8 @@ describe("VoteDeck shortcuts hint", () => {
     const shortcutHint = screen.getByText(/shortcuts:/i);
     const voteCard = screen.getByRole("button", { name: "1" });
 
+    expect(screen.getByRole("heading", { name: /choose a card/i })).toBeInTheDocument();
+    expect(screen.queryByText(/^Your vote$/i)).not.toBeInTheDocument();
     expect(shortcutHint).toBeInTheDocument();
     expect(voteCard).toHaveAccessibleDescription(/shortcuts:/i);
   });

@@ -56,7 +56,6 @@ export function VoteDeck({ state, selectedCard, onVote, onClearVote, disabled }:
     <section className="app-panel vote-deck" aria-labelledby={headingId}>
       <div className="section-header">
         <div>
-          <div className="section-label">{t("room.yourVote")}</div>
           <h2 id={headingId}>{voteLabel}</h2>
         </div>
       </div>

@@ -849,6 +849,7 @@ export function RoomPage() {
   const inviteHeroCompact = inviteHeroVisible && localUserHasVoted;
   const storyAgendaVisible = shouldShowStoryAgenda(state, trackStories);
   const timerStripVisible = timerStripActivated || isTimerStripRelevant(state);
+  const roomMainHeading = state.currentStoryLabel?.trim() || t("room.round", { count: state.roundNumber });
 
   return (
     <div className="page-shell room-page">
@@ -886,7 +887,7 @@ export function RoomPage() {
       />
 
       <main id="main">
-        <h1 className="sr-only">{t("room.roomHeading", { roomId })}</h1>
+        <h1 className="room-main-heading">{roomMainHeading}</h1>
         {connection.showRecoveryNotice && <ConnectionStatusNotice connection={connection} />}
 
         {error?.code === "NOT_ALLOWED" && (

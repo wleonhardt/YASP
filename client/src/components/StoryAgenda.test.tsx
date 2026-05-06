@@ -29,6 +29,8 @@ describe("StoryAgenda", () => {
       />
     );
 
+    expect(screen.queryByRole("button", { name: /save/i })).not.toBeInTheDocument();
+
     const input = screen.getByRole("textbox", { name: /current story label/i });
     await user.clear(input);
     await user.type(input, "Guest checkout");
@@ -37,6 +39,33 @@ describe("StoryAgenda", () => {
 
     expect(props.onUpdateStoryLabel).toHaveBeenCalledWith("Guest checkout");
     expect(props.onStartNextStory).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides moderator story actions until they are actionable", async () => {
+    const user = userEvent.setup();
+    const props = handlers();
+
+    render(
+      <StoryAgenda
+        state={makePublicRoomState({
+          currentStoryLabel: "Checkout total",
+          storyQueue: [],
+        })}
+        {...props}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: /save/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /start next story/i })).not.toBeInTheDocument();
+
+    const input = screen.getByRole("textbox", { name: /current story label/i });
+    await user.clear(input);
+    await user.type(input, "Guest checkout");
+
+    await user.click(screen.getByRole("button", { name: /save/i }));
+
+    expect(props.onUpdateStoryLabel).toHaveBeenCalledWith("Guest checkout");
+    expect(props.onStartNextStory).not.toHaveBeenCalled();
   });
 
   it("supports adding, bulk-adding, reordering, and removing queued stories", async () => {
