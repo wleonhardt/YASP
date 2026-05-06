@@ -1,6 +1,6 @@
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
-import type { PublicRoomState } from "@yasp/shared";
+import { ROOM_TIMER_MAX_SECONDS, ROOM_TIMER_MIN_SECONDS, type PublicRoomState } from "@yasp/shared";
 import { playTimerHonk, playTimerStart, primeRoomAudio } from "../lib/audio";
 import { isMeModerator } from "../lib/room";
 import { useTimerSoundPreference } from "../hooks/useTimerSoundPreference";
@@ -11,7 +11,9 @@ type Props = {
   onReveal: () => void;
   onReopenVoting: () => void;
   onNextRound: () => void;
+  onSetTimerDuration?: (durationSeconds: number) => Promise<unknown> | unknown;
   onStartTimer?: () => Promise<boolean> | boolean;
+  onPauseTimer?: () => Promise<unknown> | unknown;
   onHonkTimer?: () => Promise<boolean> | boolean;
   serverClockOffsetMs?: number;
   disabled?: boolean;
@@ -22,7 +24,9 @@ export function RoundActionBar({
   onReveal,
   onReopenVoting,
   onNextRound,
+  onSetTimerDuration,
   onStartTimer,
+  onPauseTimer,
   onHonkTimer,
   serverClockOffsetMs = 0,
   disabled = false,
@@ -34,7 +38,10 @@ export function RoundActionBar({
   const isModerator = isMeModerator(state);
   const revealAllowed = !disabled && (state.settings.revealPolicy === "anyone" || isModerator);
   const resetAllowed = !disabled && (state.settings.resetPolicy === "anyone" || isModerator);
-  const showTimerShortcuts = isModerator && !state.revealed && onStartTimer && onHonkTimer;
+  const showTimerShortcuts =
+    isModerator && !state.revealed && onSetTimerDuration && onStartTimer && onPauseTimer && onHonkTimer;
+  const durationMinutes = Math.floor(state.timer.durationSeconds / 60);
+  const durationSeconds = state.timer.durationSeconds % 60;
   const honkLabel =
     honkCooldownSeconds > 0 ? `${t("room.timerHonk")} (${honkCooldownSeconds})` : t("room.timerHonk");
   const actionHint =
@@ -48,6 +55,23 @@ export function RoundActionBar({
 
   const primaryDisabled = state.revealed ? !resetAllowed : !revealAllowed;
 
+  const commitTimerDuration = (minutes: number, seconds: number) => {
+    if (!onSetTimerDuration) {
+      return;
+    }
+
+    const nextDuration = Math.max(
+      ROOM_TIMER_MIN_SECONDS,
+      Math.min(ROOM_TIMER_MAX_SECONDS, minutes * 60 + seconds)
+    );
+    void onSetTimerDuration(nextDuration);
+  };
+
+  const parseDurationPart = (value: string): number => {
+    const numeric = value.replace(/\D/g, "");
+    return numeric ? Number(numeric) : 0;
+  };
+
   const handleStartTimer = async () => {
     if (!onStartTimer) {
       return;
@@ -58,6 +82,14 @@ export function RoundActionBar({
     if (ok && soundEnabled && audioReady) {
       void playTimerStart();
     }
+  };
+
+  const handlePauseTimer = async () => {
+    if (!onPauseTimer) {
+      return;
+    }
+
+    await onPauseTimer();
   };
 
   const handleHonkTimer = async () => {
@@ -73,7 +105,12 @@ export function RoundActionBar({
   };
 
   return (
-    <section className="round-action-bar" aria-label={t("room.nextStep")}>
+    <section
+      className={["round-action-bar", showTimerShortcuts ? "round-action-bar--with-timer-shortcuts" : ""]
+        .filter(Boolean)
+        .join(" ")}
+      aria-label={t("room.nextStep")}
+    >
       {/* Invariant: the current round phase has one primary CTA; timer shortcuts stay secondary. */}
       <div
         className={["round-action-bar__actions", state.revealed ? "round-action-bar__actions--revealed" : ""]
@@ -105,13 +142,60 @@ export function RoundActionBar({
           <>
             {showTimerShortcuts ? (
               <div className="round-action-bar__timer-shortcuts" role="group" aria-label={t("room.timer")}>
+                <fieldset
+                  className="round-action-bar__duration"
+                  disabled={disabled || state.timer.running}
+                  aria-label={t("room.timerDuration")}
+                >
+                  <label className="round-action-bar__duration-part">
+                    <span className="sr-only">{t("room.timerMinutes")}</span>
+                    <input
+                      className="round-action-bar__duration-input"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={2}
+                      value={String(durationMinutes).padStart(2, "0")}
+                      onChange={(event) =>
+                        commitTimerDuration(
+                          Math.min(
+                            Math.floor(ROOM_TIMER_MAX_SECONDS / 60),
+                            parseDurationPart(event.target.value)
+                          ),
+                          durationSeconds
+                        )
+                      }
+                      onWheel={(event) => event.currentTarget.blur()}
+                    />
+                    <span aria-hidden="true">m</span>
+                  </label>
+                  <label className="round-action-bar__duration-part">
+                    <span className="sr-only">{t("room.timerSeconds")}</span>
+                    <input
+                      className="round-action-bar__duration-input"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={2}
+                      value={String(durationSeconds).padStart(2, "0")}
+                      onChange={(event) =>
+                        commitTimerDuration(
+                          durationMinutes,
+                          Math.min(59, parseDurationPart(event.target.value))
+                        )
+                      }
+                      onWheel={(event) => event.currentTarget.blur()}
+                    />
+                    <span aria-hidden="true">s</span>
+                  </label>
+                </fieldset>
                 <button
                   className="button button--ghost round-action-bar__shortcut"
                   type="button"
-                  onClick={() => void handleStartTimer()}
-                  disabled={disabled || state.timer.running}
+                  onClick={() => void (state.timer.running ? handlePauseTimer() : handleStartTimer())}
+                  disabled={disabled}
                 >
-                  {t("room.timerStart")}
+                  {state.timer.running ? t("room.timerPause") : t("room.timerStart")}
                 </button>
                 <button
                   className="button button--ghost round-action-bar__shortcut"

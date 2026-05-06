@@ -133,9 +133,10 @@
   preferences now closes preferences first instead of stacking the sheet
   underneath the drawer.
 - 2026-05-05: Added moderator-only timer shortcuts to the voting-stage action
-  bar. Moderators can start the timer or send a beep from beside Reveal votes;
-  non-moderators still see only the round action, and the shortcuts reuse the
-  existing timer permissions and honk cooldown.
+  bar. Moderators can adjust the timer duration, start/pause the countdown,
+  or send a beep from beside Reveal votes; non-moderators still see only the
+  round action, and the shortcuts reuse the existing timer permissions and
+  honk cooldown.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

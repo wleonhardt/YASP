@@ -140,9 +140,10 @@ for the audit that motivated each change.
   Moderator controls now open as a controlled drawer after closing
   preferences, so only one active overlay is visible.
 - 2026-05-05: Added a post-Phase-10 moderator shortcut follow-up. During the
-  voting phase, moderators now get secondary Start and Beep timer actions
-  beside the primary Reveal votes CTA. The shortcuts stay hidden from
-  non-moderators and reuse the existing timer permission/cooldown behavior.
+  voting phase, moderators now get a compact duration editor plus secondary
+  Start/Pause and Beep timer actions beside the primary Reveal votes CTA. The
+  shortcuts stay hidden from non-moderators and reuse the existing timer
+  permission/cooldown behavior.
 
 ---
 

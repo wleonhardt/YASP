@@ -120,10 +120,10 @@
   or architecture questions. The discovered stacked-overlay issue was a
   client-only polish bug and is fixed by closing preferences before opening
   the moderator drawer.
-- 2026-05-05 review: Moderator-only Start/Beep shortcuts beside Reveal votes
-  did not create new product or architecture questions. They reuse the
-  existing moderator-only timer actions, honk cooldown, and ephemeral timer
-  state.
+- 2026-05-05 review: Moderator-only timer duration, Start/Pause, and Beep
+  shortcuts beside Reveal votes did not create new product or architecture
+  questions. They reuse the existing moderator-only timer actions, honk
+  cooldown, and ephemeral timer state.
 - No new backend/state open questions are active right now. The current scaling
   and deployment posture is recorded in ADR 0004, and the remaining
   multi-instance Redis work is intentionally deferred until operator

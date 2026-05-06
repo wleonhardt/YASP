@@ -938,7 +938,9 @@ export function RoomPage() {
               onReveal={handleReveal}
               onReopenVoting={handleReopenVoting}
               onNextRound={handleNextRound}
+              onSetTimerDuration={handleSetTimerDuration}
               onStartTimer={handleStartTimer}
+              onPauseTimer={handlePauseTimer}
               onHonkTimer={handleHonkTimer}
               serverClockOffsetMs={serverClockOffsetMs}
               disabled={actionsDisabled}

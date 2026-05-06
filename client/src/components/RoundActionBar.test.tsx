@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { RoundActionBar } from "./RoundActionBar";
@@ -31,14 +31,18 @@ describe("RoundActionBar", () => {
   it("shows moderator-only timer shortcuts alongside Reveal votes", async () => {
     const user = userEvent.setup();
     const props = handlers();
+    const onSetTimerDuration = vi.fn();
     const onStartTimer = vi.fn().mockResolvedValue(true);
+    const onPauseTimer = vi.fn();
     const onHonkTimer = vi.fn().mockResolvedValue(true);
 
     render(
       <RoundActionBar
         state={makePublicRoomState()}
         {...props}
+        onSetTimerDuration={onSetTimerDuration}
         onStartTimer={onStartTimer}
+        onPauseTimer={onPauseTimer}
         onHonkTimer={onHonkTimer}
       />
     );
@@ -48,7 +52,53 @@ describe("RoundActionBar", () => {
 
     expect(onStartTimer).toHaveBeenCalledTimes(1);
     expect(onHonkTimer).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText(/minutes/i)).toHaveValue("01");
+    expect(screen.getByLabelText(/seconds/i)).toHaveValue("00");
     expect(screen.getByRole("button", { name: /reveal votes/i })).toBeInTheDocument();
+  });
+
+  it("lets moderators adjust the shortcut timer duration", async () => {
+    const onSetTimerDuration = vi.fn();
+
+    const { rerender } = render(
+      <RoundActionBar
+        state={makePublicRoomState()}
+        {...handlers()}
+        onSetTimerDuration={onSetTimerDuration}
+        onStartTimer={vi.fn()}
+        onPauseTimer={vi.fn()}
+        onHonkTimer={vi.fn()}
+      />
+    );
+
+    const minutes = screen.getByLabelText(/minutes/i);
+
+    fireEvent.change(minutes, { target: { value: "02" } });
+    expect(onSetTimerDuration).toHaveBeenLastCalledWith(120);
+
+    rerender(
+      <RoundActionBar
+        state={makePublicRoomState({
+          timer: {
+            durationSeconds: 120,
+            remainingSeconds: 120,
+            running: false,
+            endsAt: null,
+            completedAt: null,
+            lastHonkAt: null,
+            honkAvailableAt: null,
+          },
+        })}
+        {...handlers()}
+        onSetTimerDuration={onSetTimerDuration}
+        onStartTimer={vi.fn()}
+        onPauseTimer={vi.fn()}
+        onHonkTimer={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/seconds/i), { target: { value: "30" } });
+    expect(onSetTimerDuration).toHaveBeenLastCalledWith(150);
   });
 
   it("hides timer shortcuts from non-moderators", () => {
@@ -68,16 +118,22 @@ describe("RoundActionBar", () => {
           ],
         })}
         {...handlers()}
+        onSetTimerDuration={vi.fn()}
         onStartTimer={vi.fn()}
+        onPauseTimer={vi.fn()}
         onHonkTimer={vi.fn()}
       />
     );
 
     expect(screen.queryByRole("button", { name: /^start$/i })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/minutes/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /beep/i })).not.toBeInTheDocument();
   });
 
-  it("disables timer shortcuts when the timer state prevents the action", () => {
+  it("switches Start to Pause and locks duration while the timer is running", async () => {
+    const user = userEvent.setup();
+    const onPauseTimer = vi.fn();
+
     render(
       <RoundActionBar
         state={makePublicRoomState({
@@ -92,12 +148,18 @@ describe("RoundActionBar", () => {
           },
         })}
         {...handlers()}
+        onSetTimerDuration={vi.fn()}
         onStartTimer={vi.fn()}
+        onPauseTimer={onPauseTimer}
         onHonkTimer={vi.fn()}
       />
     );
 
-    expect(screen.getByRole("button", { name: /^start$/i })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: /^pause$/i }));
+
+    expect(onPauseTimer).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText(/minutes/i)).toBeDisabled();
+    expect(screen.getByLabelText(/seconds/i)).toBeDisabled();
     expect(screen.getByRole("button", { name: /beep/i })).toBeDisabled();
   });
 

@@ -2712,6 +2712,50 @@ select.input {
   flex-wrap: wrap;
 }
 
+.round-action-bar__duration {
+  flex: 0 1 auto;
+  min-width: 5.75rem;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.round-action-bar__duration:disabled {
+  opacity: 0.55;
+}
+
+.round-action-bar__duration-part {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.1rem;
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.round-action-bar__duration-input {
+  width: 2ch;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.round-action-bar__duration-input:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
 .round-action-bar__shortcut {
   min-height: 40px;
   padding-inline: 0.85rem;
@@ -3972,6 +4016,10 @@ select.input {
     box-shadow: var(--shadow-3);
   }
 
+  .round-action-bar--with-timer-shortcuts + .vote-deck {
+    position: static;
+  }
+
   .vote-deck__grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -4012,6 +4060,11 @@ select.input {
 
   .round-action-bar__timer-shortcuts {
     flex: 1 1 100%;
+  }
+
+  .round-action-bar__duration {
+    flex: 1 1 0;
+    justify-content: center;
   }
 
   .round-action-bar__shortcut {
