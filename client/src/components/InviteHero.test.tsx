@@ -32,6 +32,16 @@ describe("InviteHero", () => {
     expect(screen.getByRole("button", { name: /copy room link/i })).toBeInTheDocument();
   });
 
+  it("renders as a slim share banner when compact", () => {
+    render(<InviteHero roomId="ROOM01" compact onCopyError={vi.fn()} />);
+
+    expect(screen.getByRole("heading", { name: /share to invite voters/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /invite your team/i })).not.toBeInTheDocument();
+    expect(screen.queryByText("ROOM01")).not.toBeInTheDocument();
+    expect(screen.queryByText(/waiting for teammates/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /copy room link/i })).toBeInTheDocument();
+  });
+
   it("copies the room URL and announces success", async () => {
     const user = userEvent.setup();
     const writeText = mockClipboard();

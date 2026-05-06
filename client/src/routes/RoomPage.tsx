@@ -845,6 +845,8 @@ export function RoomPage() {
 
   const state = roomState;
   const inviteHeroVisible = shouldShowInviteHero(state);
+  const localUserHasVoted = Boolean(getSelf(state)?.hasVoted || state.me.ownVote !== null || selectedCard);
+  const inviteHeroCompact = inviteHeroVisible && localUserHasVoted;
   const storyAgendaVisible = shouldShowStoryAgenda(state, trackStories);
   const timerStripVisible = timerStripActivated || isTimerStripRelevant(state);
 
@@ -966,7 +968,7 @@ export function RoomPage() {
 
           <aside className="room-layout__aside room-layout__participants">
             {inviteHeroVisible ? (
-              <InviteHero roomId={state.id} onCopyError={showToast} />
+              <InviteHero roomId={state.id} compact={inviteHeroCompact} onCopyError={showToast} />
             ) : (
               <ParticipantsBoard state={state} variant="rail" />
             )}

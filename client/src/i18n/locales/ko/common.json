@@ -206,6 +206,7 @@
     "copyFailed": "복사에 실패했습니다",
     "inviteHero": {
       "title": "팀 초대",
+      "compactTitle": "투표자 초대",
       "tagline": "팀원을 기다리는 중…",
       "helper": "추정을 시작하려면 이 룸 링크를 투표자에게 공유하세요.",
       "copyLink": "룸 링크 복사"

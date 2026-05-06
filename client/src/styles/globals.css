@@ -900,6 +900,13 @@ code {
   text-align: left;
 }
 
+.invite-hero--compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 .invite-hero__copy {
   display: flex;
   flex-direction: column;
@@ -943,6 +950,11 @@ code {
 .invite-hero__button {
   width: 100%;
   min-height: 48px;
+}
+
+.invite-hero--compact .invite-hero__button {
+  width: auto;
+  min-width: 8.5rem;
 }
 
 .invite-hero__button--copied {
@@ -3704,6 +3716,15 @@ select.input {
 
   .room-layout__aside {
     position: static;
+  }
+
+  .invite-hero--compact {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .invite-hero--compact .invite-hero__button {
+    width: 100%;
   }
 
   .room-code-share {

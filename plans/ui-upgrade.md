@@ -113,6 +113,11 @@ for the audit that motivated each change.
   numeric/non-numeric decks keep the explicit separator before the first
   non-numeric bucket. Next implementation slice is P10.11: shrink InviteHero
   post-vote.
+- 2026-05-05: Continued Phase 10 with P10.11. InviteHero now switches to a
+  compact share banner once the local user has voted while the room still has
+  no other connected voters, keeping copy-link access without keeping the
+  full invite hero in the sticky aside. Next implementation slice is P10.12:
+  drawer animation + close icon.
 
 ---
 

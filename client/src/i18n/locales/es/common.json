@@ -206,6 +206,7 @@
     "copyFailed": "La copia falló",
     "inviteHero": {
       "title": "Invita a tu equipo",
+      "compactTitle": "Invita votantes",
       "tagline": "Esperando a tus compañeros…",
       "helper": "Comparte este enlace de sala con votantes para empezar a estimar.",
       "copyLink": "Copiar enlace de la sala"

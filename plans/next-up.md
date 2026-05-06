@@ -13,7 +13,7 @@
   eyebrows. Eight focused commits; each independently revertable.
   Full spec under "Phase 10 — Subtraction pass" in
   [`ui-upgrade.md`](ui-upgrade.md). Recommended next slice:
-  P10.11 ("Shrink InviteHero post-vote").
+  P10.12 ("Drawer animation + close icon").
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -121,6 +121,10 @@
   distribution columns now stay in deck order but render as subdued half-height
   context columns without a visible `0`, while the numeric/non-numeric chart
   separator remains explicit for mixed decks.
+- 2026-05-05: Continued Phase 10 with P10.11. When the room is still in the
+  invite state but the local user has already cast a vote, InviteHero now
+  collapses to a slim share banner with the copy-link action instead of the
+  full room-code hero.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

@@ -206,6 +206,7 @@
     "copyFailed": "Copy failed",
     "inviteHero": {
       "title": "Invite your team",
+      "compactTitle": "Share to invite voters",
       "tagline": "Waiting for teammates…",
       "helper": "Share this room link with voters to start estimating.",
       "copyLink": "Copy room link"

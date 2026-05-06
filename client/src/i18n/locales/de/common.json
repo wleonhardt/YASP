@@ -206,6 +206,7 @@
     "copyFailed": "Kopieren fehlgeschlagen",
     "inviteHero": {
       "title": "Team einladen",
+      "compactTitle": "Abstimmende einladen",
       "tagline": "Warte auf Teammitglieder…",
       "helper": "Teile diesen Raumlink mit Abstimmenden, um mit dem Schätzen zu beginnen.",
       "copyLink": "Raumlink kopieren"

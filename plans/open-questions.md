@@ -101,6 +101,10 @@
   architecture questions. The distribution chart still preserves deck-order
   context and mixed-token separation; zero-count buckets are only visually
   demoted.
+- 2026-05-05 review: Phase 10 P10.11 did not create new product or
+  architecture questions. InviteHero compact mode is client-only presentation
+  driven by the existing local vote state and does not change room state or
+  invite semantics.
 - No new backend/state open questions are active right now. The current scaling
   and deployment posture is recorded in ADR 0004, and the remaining
   multi-instance Redis work is intentionally deferred until operator
