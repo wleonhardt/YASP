@@ -1665,6 +1665,7 @@ select.input {
   box-shadow: var(--shadow-3);
   overflow-y: auto;
   overscroll-behavior: contain;
+  animation: moderator-drawer-enter 150ms var(--ease-out) both;
 }
 
 .moderator-drawer__header {
@@ -1686,7 +1687,10 @@ select.input {
   min-height: 40px;
   padding: 0;
   border-radius: var(--radius-pill);
-  font-size: 1.3rem;
+}
+
+.moderator-drawer__close svg {
+  flex-shrink: 0;
 }
 
 .moderator-drawer__body {
@@ -3707,6 +3711,15 @@ select.input {
   }
 }
 
+@keyframes moderator-drawer-enter {
+  0% {
+    transform: translateX(32px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 /* ─── Responsive ──────────────────────────────────────────── */
 
 @media (max-width: 960px) {
@@ -4494,6 +4507,11 @@ select.input {
   .results-panel__consensus-burst span {
     animation: none !important;
     opacity: 0.55;
+    transform: none;
+  }
+
+  .moderator-drawer__surface {
+    animation: none !important;
     transform: none;
   }
 }

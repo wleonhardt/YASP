@@ -118,6 +118,10 @@ for the audit that motivated each change.
   no other connected voters, keeping copy-link access without keeping the
   full invite hero in the sticky aside. Next implementation slice is P10.12:
   drawer animation + close icon.
+- 2026-05-05: Continued Phase 10 with P10.12. The moderator drawer now enters
+  with a 150ms `translateX` animation that is disabled under reduced-motion
+  preferences, and the close affordance is a proper SVG X icon rather than a
+  text glyph. Next implementation slice is P10.13/P10.14: topbar trim.
 
 ---
 

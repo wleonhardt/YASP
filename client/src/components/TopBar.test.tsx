@@ -29,7 +29,12 @@ describe("TopBar", () => {
     const dialog = screen.getByRole("dialog", { name: /moderator controls/i });
     expect(within(dialog).getByText("Timer settings live here")).toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole("button", { name: /close/i }));
+    const closeButton = within(dialog).getByRole("button", { name: /close/i });
+    expect(closeButton).toHaveTextContent("");
+    expect(closeButton.querySelector("svg[aria-hidden='true']")).toBeInTheDocument();
+    expect(closeButton.querySelectorAll("line")).toHaveLength(2);
+
+    await user.click(closeButton);
 
     expect(screen.queryByRole("dialog", { name: /moderator controls/i })).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();

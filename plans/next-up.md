@@ -13,7 +13,7 @@
   eyebrows. Eight focused commits; each independently revertable.
   Full spec under "Phase 10 — Subtraction pass" in
   [`ui-upgrade.md`](ui-upgrade.md). Recommended next slice:
-  P10.12 ("Drawer animation + close icon").
+  P10.13+P10.14 ("Topbar trim").
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -125,6 +125,10 @@
   invite state but the local user has already cast a vote, InviteHero now
   collapses to a slim share banner with the copy-link action instead of the
   full room-code hero.
+- 2026-05-05: Continued Phase 10 with P10.12. The moderator drawer surface
+  now has a 150ms reduced-motion-aware slide-in animation, and the close
+  button uses a real SVG X icon instead of a text glyph while keeping the same
+  accessible label and hit target.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy
