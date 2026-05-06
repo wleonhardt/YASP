@@ -2705,6 +2705,18 @@ select.input {
   min-width: min(13rem, 100%);
 }
 
+.round-action-bar__timer-shortcuts {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.round-action-bar__shortcut {
+  min-height: 40px;
+  padding-inline: 0.85rem;
+}
+
 .round-action-bar__text-action {
   border: 0;
   padding: 0;
@@ -3996,6 +4008,14 @@ select.input {
 
   .round-action-bar__actions {
     justify-content: stretch;
+  }
+
+  .round-action-bar__timer-shortcuts {
+    flex: 1 1 100%;
+  }
+
+  .round-action-bar__shortcut {
+    flex: 1 1 0;
   }
 
   .round-action-bar__actions--revealed,

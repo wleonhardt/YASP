@@ -938,6 +938,9 @@ export function RoomPage() {
               onReveal={handleReveal}
               onReopenVoting={handleReopenVoting}
               onNextRound={handleNextRound}
+              onStartTimer={handleStartTimer}
+              onHonkTimer={handleHonkTimer}
+              serverClockOffsetMs={serverClockOffsetMs}
               disabled={actionsDisabled}
             />
             {state.revealed ? (

@@ -1,22 +1,42 @@
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import type { PublicRoomState } from "@yasp/shared";
+import { playTimerHonk, playTimerStart, primeRoomAudio } from "../lib/audio";
 import { isMeModerator } from "../lib/room";
+import { useTimerSoundPreference } from "../hooks/useTimerSoundPreference";
+import { useRoomTimerCountdown } from "./RoomTimer";
 
 type Props = {
   state: PublicRoomState;
   onReveal: () => void;
   onReopenVoting: () => void;
   onNextRound: () => void;
+  onStartTimer?: () => Promise<boolean> | boolean;
+  onHonkTimer?: () => Promise<boolean> | boolean;
+  serverClockOffsetMs?: number;
   disabled?: boolean;
 };
 
-export function RoundActionBar({ state, onReveal, onReopenVoting, onNextRound, disabled = false }: Props) {
+export function RoundActionBar({
+  state,
+  onReveal,
+  onReopenVoting,
+  onNextRound,
+  onStartTimer,
+  onHonkTimer,
+  serverClockOffsetMs = 0,
+  disabled = false,
+}: Props) {
   const { t } = useTranslation();
   const hintId = useId();
+  const [soundEnabled] = useTimerSoundPreference();
+  const { honkCooldownSeconds } = useRoomTimerCountdown(state.timer, serverClockOffsetMs);
   const isModerator = isMeModerator(state);
   const revealAllowed = !disabled && (state.settings.revealPolicy === "anyone" || isModerator);
   const resetAllowed = !disabled && (state.settings.resetPolicy === "anyone" || isModerator);
+  const showTimerShortcuts = isModerator && !state.revealed && onStartTimer && onHonkTimer;
+  const honkLabel =
+    honkCooldownSeconds > 0 ? `${t("room.timerHonk")} (${honkCooldownSeconds})` : t("room.timerHonk");
   const actionHint =
     !isModerator &&
     ((state.revealed && state.settings.resetPolicy === "moderator_only") ||
@@ -28,9 +48,33 @@ export function RoundActionBar({ state, onReveal, onReopenVoting, onNextRound, d
 
   const primaryDisabled = state.revealed ? !resetAllowed : !revealAllowed;
 
+  const handleStartTimer = async () => {
+    if (!onStartTimer) {
+      return;
+    }
+
+    const audioReady = soundEnabled ? await primeRoomAudio() : false;
+    const ok = await onStartTimer();
+    if (ok && soundEnabled && audioReady) {
+      void playTimerStart();
+    }
+  };
+
+  const handleHonkTimer = async () => {
+    if (!onHonkTimer) {
+      return;
+    }
+
+    const audioReady = await primeRoomAudio();
+    const ok = await onHonkTimer();
+    if (ok && audioReady) {
+      void playTimerHonk();
+    }
+  };
+
   return (
     <section className="round-action-bar" aria-label={t("room.nextStep")}>
-      {/* Invariant: the current round phase has exactly one primary CTA, and it lives in this stage bar. */}
+      {/* Invariant: the current round phase has one primary CTA; timer shortcuts stay secondary. */}
       <div
         className={["round-action-bar__actions", state.revealed ? "round-action-bar__actions--revealed" : ""]
           .filter(Boolean)
@@ -58,15 +102,38 @@ export function RoundActionBar({ state, onReveal, onReopenVoting, onNextRound, d
             </button>
           </>
         ) : (
-          <button
-            className="button button--primary round-action-bar__primary"
-            type="button"
-            onClick={onReveal}
-            disabled={primaryDisabled}
-            aria-describedby={primaryDisabled && actionHint ? hintId : undefined}
-          >
-            {t("room.revealVotes")}
-          </button>
+          <>
+            {showTimerShortcuts ? (
+              <div className="round-action-bar__timer-shortcuts" role="group" aria-label={t("room.timer")}>
+                <button
+                  className="button button--ghost round-action-bar__shortcut"
+                  type="button"
+                  onClick={() => void handleStartTimer()}
+                  disabled={disabled || state.timer.running}
+                >
+                  {t("room.timerStart")}
+                </button>
+                <button
+                  className="button button--ghost round-action-bar__shortcut"
+                  type="button"
+                  onClick={() => void handleHonkTimer()}
+                  disabled={disabled || honkCooldownSeconds > 0}
+                  aria-label={honkLabel}
+                >
+                  {honkLabel}
+                </button>
+              </div>
+            ) : null}
+            <button
+              className="button button--primary round-action-bar__primary"
+              type="button"
+              onClick={onReveal}
+              disabled={primaryDisabled}
+              aria-describedby={primaryDisabled && actionHint ? hintId : undefined}
+            >
+              {t("room.revealVotes")}
+            </button>
+          </>
         )}
       </div>
 
