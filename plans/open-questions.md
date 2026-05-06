@@ -116,6 +116,10 @@
 - 2026-05-05 review: Phase 10 P10.15/P10.16/P10.17 did not create new product
   or architecture questions. The story agenda action visibility, visible room
   heading, and vote-deck eyebrow removal are client-only presentation cleanup.
+- 2026-05-05 review: Manual Phase 10 smoke testing did not create new product
+  or architecture questions. The discovered stacked-overlay issue was a
+  client-only polish bug and is fixed by closing preferences before opening
+  the moderator drawer.
 - No new backend/state open questions are active right now. The current scaling
   and deployment posture is recorded in ADR 0004, and the remaining
   multi-instance Redis work is intentionally deferred until operator

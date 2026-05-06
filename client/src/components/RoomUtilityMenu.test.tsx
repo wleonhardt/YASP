@@ -196,6 +196,8 @@ describe("RoomUtilityMenu", () => {
 
     await user.click(trigger);
 
+    expect(screen.queryByRole("dialog", { name: /session preferences/i })).not.toBeInTheDocument();
+
     const moderatorDialog = screen.getByRole("dialog", { name: /moderator controls/i });
     expect(within(moderatorDialog).getByText("Timer settings live here")).toBeInTheDocument();
   });

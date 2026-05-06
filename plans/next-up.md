@@ -128,6 +128,10 @@
   actions now render only when actionable, the room main has a visible compact
   heading based on story label or round number, and the vote deck no longer
   repeats its heading with a "Your vote" eyebrow.
+- 2026-05-05: Follow-up manual Phase 10 smoke testing fixed the only
+  identified overlay polish bug: opening Moderator controls from session
+  preferences now closes preferences first instead of stacking the sheet
+  underneath the drawer.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

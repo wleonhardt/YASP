@@ -33,6 +33,7 @@ export function RoomUtilityMenu({
 }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [moderatorDrawerOpen, setModeratorDrawerOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const surfaceRef = useRef<HTMLElement | null>(null);
   const [surfaceStyle, setSurfaceStyle] = useState<CSSProperties>({});
@@ -45,6 +46,12 @@ export function RoomUtilityMenu({
   const titleId = useId();
   const labels = getConnectionLabels(t, status);
   const [timerSoundEnabled, setTimerSoundEnabled] = useTimerSoundPreference();
+
+  useEffect(() => {
+    if (!moderatorControls) {
+      setModeratorDrawerOpen(false);
+    }
+  }, [moderatorControls]);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
@@ -137,6 +144,11 @@ export function RoomUtilityMenu({
   const closeMenu = () => {
     setOpen(false);
     triggerRef.current?.focus();
+  };
+
+  const openModeratorDrawer = () => {
+    setOpen(false);
+    setModeratorDrawerOpen(true);
   };
 
   const handleToggleTimerSound = async () => {
@@ -269,9 +281,37 @@ export function RoomUtilityMenu({
               {moderatorControls ? (
                 <div className="room-utility__section">
                   <div className="section-label">{t("room.moderatorControls")}</div>
-                  <ModeratorDrawer disabled={moderatorControlsDisabled} triggerVariant="menu">
-                    {moderatorControls}
-                  </ModeratorDrawer>
+                  <button
+                    type="button"
+                    className="button button--ghost moderator-drawer__trigger moderator-drawer__trigger--menu"
+                    aria-haspopup="dialog"
+                    onClick={openModeratorDrawer}
+                    disabled={moderatorControlsDisabled}
+                  >
+                    <span className="moderator-drawer__trigger-label">{t("room.moderatorControls")}</span>
+                    <svg
+                      className="moderator-drawer__trigger-icon"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <line x1="21" y1="4" x2="14" y2="4" />
+                      <line x1="10" y1="4" x2="3" y2="4" />
+                      <line x1="21" y1="12" x2="12" y2="12" />
+                      <line x1="8" y1="12" x2="3" y2="12" />
+                      <line x1="21" y1="20" x2="16" y2="20" />
+                      <line x1="12" y1="20" x2="3" y2="20" />
+                      <line x1="14" y1="2" x2="14" y2="6" />
+                      <line x1="8" y1="10" x2="8" y2="14" />
+                      <line x1="16" y1="18" x2="16" y2="22" />
+                    </svg>
+                  </button>
                 </div>
               ) : null}
 
@@ -302,6 +342,16 @@ export function RoomUtilityMenu({
           </>,
           document.body
         )}
+      {moderatorControls ? (
+        <ModeratorDrawer
+          open={moderatorDrawerOpen}
+          onOpenChange={setModeratorDrawerOpen}
+          returnFocusRef={triggerRef}
+          showTrigger={false}
+        >
+          {moderatorControls}
+        </ModeratorDrawer>
+      ) : null}
     </div>
   );
 }

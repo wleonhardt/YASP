@@ -42,7 +42,7 @@ describe("TopBar", () => {
     await user.click(closeButton);
 
     expect(screen.queryByRole("dialog", { name: /moderator controls/i })).not.toBeInTheDocument();
-    expect(trigger).toHaveFocus();
+    expect(screen.getByRole("button", { name: /open session preferences/i })).toHaveFocus();
   });
 
   it("does not show moderator controls in the utility menu for non-moderators", async () => {

@@ -134,6 +134,11 @@ for the audit that motivated each change.
   visible compact `<h1>` using the current story label or round number, and
   the vote deck no longer repeats "Your vote" as an eyebrow above the
   actionable heading.
+- 2026-05-05: Manual Phase 10 smoke testing found one overlay polish bug:
+  opening Moderator controls from the session preferences menu left the
+  preferences sheet visible underneath the drawer, especially on mobile.
+  Moderator controls now open as a controlled drawer after closing
+  preferences, so only one active overlay is visible.
 
 ---
 
