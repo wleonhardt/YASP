@@ -107,6 +107,12 @@ for the audit that motivated each change.
   drawer controls hide their duplicate "Moderator controls" heading, and the
   compact timer disclosure summary no longer repeats Sound on/off. Next
   implementation slice is P10.9/P10.10: chart cleanup.
+- 2026-05-05: Continued Phase 10 with P10.9/P10.10. Distribution chart
+  columns with zero votes now remain available as deck-order context but are
+  visually demoted to shorter, subdued columns with no visible `0`, and mixed
+  numeric/non-numeric decks keep the explicit separator before the first
+  non-numeric bucket. Next implementation slice is P10.11: shrink InviteHero
+  post-vote.
 
 ---
 

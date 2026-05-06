@@ -82,7 +82,8 @@ describe("ResultsPanel", () => {
     const columns = distributionColumns();
 
     expect(distributionLabels()).toEqual(["1", "2", "3", "5", "?"]);
-    expect(within(columns[1]).getByText("0")).toBeInTheDocument();
+    expect(columns[1]).toHaveClass("distribution-column--empty");
+    expect(columns[1].querySelector(".distribution-column__count > .sr-only")).toHaveTextContent("0");
     expect(columns[3]).toHaveClass("distribution-column--mode");
   });
 

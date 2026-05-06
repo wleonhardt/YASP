@@ -3530,6 +3530,16 @@ select.input {
   background: var(--color-border-strong);
 }
 
+.distribution-column--empty {
+  grid-template-rows: auto minmax(66px, 0.5fr) auto;
+  opacity: 0.52;
+}
+
+.distribution-column--empty .distribution-column__track {
+  min-height: 66px;
+  background: rgba(255, 255, 255, 0.028);
+}
+
 .distribution-column__count {
   color: var(--color-text-secondary);
   font-size: var(--text-meta);
@@ -4146,8 +4156,16 @@ select.input {
     grid-template-rows: auto minmax(112px, 1fr) auto;
   }
 
+  .distribution-column--empty {
+    grid-template-rows: auto minmax(56px, 0.5fr) auto;
+  }
+
   .distribution-column__track {
     min-height: 112px;
+  }
+
+  .distribution-column--empty .distribution-column__track {
+    min-height: 56px;
   }
 
   .participant-card--compact {

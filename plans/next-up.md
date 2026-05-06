@@ -13,7 +13,7 @@
   eyebrows. Eight focused commits; each independently revertable.
   Full spec under "Phase 10 — Subtraction pass" in
   [`ui-upgrade.md`](ui-upgrade.md). Recommended next slice:
-  P10.9+P10.10 ("Chart cleanup").
+  P10.11 ("Shrink InviteHero post-vote").
 - No near-term Redis/CDK work is queued. Revisit Phase 4 only if operator
   needs justify it:
   - rolling deploys without losing active rooms
@@ -117,6 +117,10 @@
   style burst, embedded drawer controls suppress their duplicate
   "Moderator controls" heading, and the collapsed timer summary no longer
   repeats the timer sound preference.
+- 2026-05-05: Continued Phase 10 with P10.9/P10.10 chart cleanup. Zero-count
+  distribution columns now stay in deck order but render as subdued half-height
+  context columns without a visible `0`, while the numeric/non-numeric chart
+  separator remains explicit for mixed decks.
 - 2026-04-16: Fixed the AWS deploy failure mode that was presenting as a
   health-check timeout but was actually Docker disk exhaustion on the EC2
   origin (`failed to register layer ... no space left on device`). The deploy

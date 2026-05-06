@@ -97,6 +97,10 @@
   architecture questions. The drawer trigger icon, duplicate heading removal,
   and timer summary copy change are client-only chrome cleanup; drawer
   discoverability remains the only related open UX validation thread.
+- 2026-05-05 review: Phase 10 P10.9/P10.10 did not create new product or
+  architecture questions. The distribution chart still preserves deck-order
+  context and mixed-token separation; zero-count buckets are only visually
+  demoted.
 - No new backend/state open questions are active right now. The current scaling
   and deployment posture is recorded in ADR 0004, and the remaining
   multi-instance Redis work is intentionally deferred until operator

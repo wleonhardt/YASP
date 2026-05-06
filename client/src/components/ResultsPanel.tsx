@@ -334,6 +334,7 @@ function DistributionSection({
         {distribution.map((entry, index) => {
           const barHeight = entry.count === 0 ? 0 : Math.max(12, (entry.count / highestCount) * 100);
           const isSeparatorColumn = hasNumericRegion && hasNonNumericRegion && index === firstNonNumericIndex;
+          const isEmptyColumn = entry.count === 0;
 
           return (
             <div
@@ -341,13 +342,16 @@ function DistributionSection({
               className={[
                 "distribution-column",
                 entry.isMode ? "distribution-column--mode" : "",
+                isEmptyColumn ? "distribution-column--empty" : "",
                 isSeparatorColumn ? "distribution-column--separator" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
               role="listitem"
             >
-              <span className="distribution-column__count">{entry.count}</span>
+              <span className="distribution-column__count">
+                {isEmptyColumn ? <span className="sr-only">{entry.count}</span> : entry.count}
+              </span>
               <div className="distribution-column__track" aria-hidden="true">
                 <div className="distribution-column__bar" style={{ height: `${barHeight}%` }} />
               </div>
