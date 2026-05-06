@@ -42,7 +42,6 @@ export function RoomCodeShare({ roomId, onCopyError, copyEnabled = true }: Props
 
   return (
     <div className="room-code-share">
-      <div className="topbar__label">{t("room.room")}</div>
       {copyEnabled ? (
         <button
           className={[

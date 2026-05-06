@@ -5,12 +5,13 @@ import { useTranslation } from "react-i18next";
 type Props = {
   children: ReactNode;
   disabled?: boolean;
+  triggerVariant?: "icon" | "menu";
 };
 
 const FOCUSABLE_SELECTOR =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function ModeratorDrawer({ children, disabled = false }: Props) {
+export function ModeratorDrawer({ children, disabled = false, triggerVariant = "icon" }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const titleId = useId();
@@ -82,7 +83,12 @@ export function ModeratorDrawer({ children, disabled = false }: Props) {
     <>
       <button
         ref={triggerRef}
-        className="button button--ghost moderator-drawer__trigger"
+        className={[
+          "button",
+          "button--ghost",
+          "moderator-drawer__trigger",
+          `moderator-drawer__trigger--${triggerVariant}`,
+        ].join(" ")}
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -91,7 +97,9 @@ export function ModeratorDrawer({ children, disabled = false }: Props) {
         onClick={() => setOpen(true)}
         disabled={disabled}
       >
-        <span className="sr-only">{t("room.moderatorControls")}</span>
+        <span className={triggerVariant === "menu" ? "moderator-drawer__trigger-label" : "sr-only"}>
+          {t("room.moderatorControls")}
+        </span>
         <svg
           className="moderator-drawer__trigger-icon"
           width="16"

@@ -122,6 +122,12 @@ for the audit that motivated each change.
   with a 150ms `translateX` animation that is disabled under reduced-motion
   preferences, and the close affordance is a proper SVG X icon rather than a
   text glyph. Next implementation slice is P10.13/P10.14: topbar trim.
+- 2026-05-05: Continued Phase 10 with P10.13/P10.14. Moderator controls now
+  live inside the session preferences utility menu for moderators instead of
+  occupying their own topbar target, leaving the topbar as room code, Leave,
+  and utility. The room code chip also dropped the redundant visible "ROOM"
+  eyebrow. Next implementation slice is P10.15/P10.16/P10.17: story-action
+  visibility plus room heading and eyebrow audit.
 
 ---
 

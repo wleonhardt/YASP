@@ -109,6 +109,10 @@
   architecture questions. Drawer animation and close-icon cleanup are
   client-only chrome changes and remain covered by the existing reduced-motion
   guardrail.
+- 2026-05-05 review: Phase 10 P10.13/P10.14 did not create new product or
+  architecture questions. Moderator controls still use the existing
+  moderator-only visibility model; only the topbar placement and redundant
+  room-code eyebrow changed.
 - No new backend/state open questions are active right now. The current scaling
   and deployment posture is recorded in ADR 0004, and the remaining
   multi-instance Redis work is intentionally deferred until operator

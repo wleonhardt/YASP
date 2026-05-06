@@ -5,7 +5,7 @@ import { TopBar } from "./TopBar";
 import { makePublicRoomState } from "../test/roomState";
 
 describe("TopBar", () => {
-  it("opens moderator controls from a moderator-only drawer trigger", async () => {
+  it("opens moderator controls from the utility menu for moderators", async () => {
     const user = userEvent.setup();
 
     render(
@@ -19,7 +19,12 @@ describe("TopBar", () => {
       />
     );
 
-    const trigger = screen.getByRole("button", { name: /moderator controls/i });
+    expect(screen.queryByRole("button", { name: /moderator controls/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /open session preferences/i }));
+
+    const preferencesDialog = screen.getByRole("dialog", { name: /session preferences/i });
+    const trigger = within(preferencesDialog).getByRole("button", { name: /moderator controls/i });
     const icon = trigger.querySelector(".moderator-drawer__trigger-icon");
     expect(icon?.querySelectorAll("line")).toHaveLength(9);
     expect(icon?.querySelector("circle")).toBeNull();
@@ -40,7 +45,9 @@ describe("TopBar", () => {
     expect(trigger).toHaveFocus();
   });
 
-  it("does not show the moderator drawer trigger to non-moderators", () => {
+  it("does not show moderator controls in the utility menu for non-moderators", async () => {
+    const user = userEvent.setup();
+
     render(
       <TopBar
         state={makePublicRoomState({
@@ -65,6 +72,13 @@ describe("TopBar", () => {
     );
 
     expect(screen.queryByRole("button", { name: /moderator controls/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /open session preferences/i }));
+
+    const preferencesDialog = screen.getByRole("dialog", { name: /session preferences/i });
+    expect(
+      within(preferencesDialog).queryByRole("button", { name: /moderator controls/i })
+    ).not.toBeInTheDocument();
   });
 
   it("renders the room code without a copy action when sharing is owned elsewhere", () => {
@@ -81,6 +95,7 @@ describe("TopBar", () => {
     );
 
     expect(screen.getByText("ROOM01")).toBeInTheDocument();
+    expect(screen.queryByText("Room")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /copy link/i })).not.toBeInTheDocument();
   });
 });

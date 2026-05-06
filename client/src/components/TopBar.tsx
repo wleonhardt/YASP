@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { ConnectionStatus } from "../lib/connectionRecovery";
 import { isMeModerator } from "../lib/room";
-import { ModeratorDrawer } from "./ModeratorDrawer";
 import { RoomCodeShare } from "./RoomCodeShare";
 import { RoomUtilityMenu } from "./RoomUtilityMenu";
 
@@ -36,9 +35,6 @@ export function TopBar({
       <RoomCodeShare roomId={state.id} onCopyError={onCopyFeedback} copyEnabled={roomCodeCopyEnabled} />
 
       <div className="topbar__actions">
-        {showModeratorDrawer ? (
-          <ModeratorDrawer disabled={disabled}>{moderatorControls}</ModeratorDrawer>
-        ) : null}
         <button
           className="button button--ghost topbar__leave-button"
           onClick={onLeave}
@@ -63,7 +59,12 @@ export function TopBar({
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
         </button>
-        <RoomUtilityMenu status={connectionStatus} compatibilityMode={compatibilityMode} />
+        <RoomUtilityMenu
+          status={connectionStatus}
+          compatibilityMode={compatibilityMode}
+          moderatorControls={showModeratorDrawer ? moderatorControls : null}
+          moderatorControlsDisabled={disabled}
+        />
       </div>
     </header>
   );

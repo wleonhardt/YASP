@@ -1631,6 +1631,19 @@ select.input {
   border-radius: var(--radius-pill);
 }
 
+.moderator-drawer__trigger--menu {
+  width: 100%;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-md);
+}
+
+.moderator-drawer__trigger-label {
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
 .moderator-drawer__trigger svg {
   width: 1rem;
   height: 1rem;
@@ -3814,10 +3827,6 @@ select.input {
     align-self: start;
     gap: 6px;
     flex-wrap: nowrap;
-  }
-
-  .topbar__label {
-    display: none;
   }
 
   .room-code-share__button {

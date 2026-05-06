@@ -183,6 +183,23 @@ describe("RoomUtilityMenu", () => {
     expect(within(dialog).getByText("Compatibility mode active")).toBeInTheDocument();
   });
 
+  it("opens optional moderator controls from the session preferences dialog", async () => {
+    const user = userEvent.setup();
+
+    render(<RoomUtilityMenu status="connected" moderatorControls={<div>Timer settings live here</div>} />);
+
+    await user.click(screen.getByRole("button", { name: /open session preferences/i }));
+
+    const preferencesDialog = screen.getByRole("dialog", { name: /session preferences/i });
+    const trigger = within(preferencesDialog).getByRole("button", { name: /moderator controls/i });
+    expect(trigger).toHaveClass("moderator-drawer__trigger--menu");
+
+    await user.click(trigger);
+
+    const moderatorDialog = screen.getByRole("dialog", { name: /moderator controls/i });
+    expect(within(moderatorDialog).getByText("Timer settings live here")).toBeInTheDocument();
+  });
+
   it("toggles timer sound preference from the session preferences dialog", async () => {
     const user = userEvent.setup();
     setStoredTimerSoundEnabled(false);

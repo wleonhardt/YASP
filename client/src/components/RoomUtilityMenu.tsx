@@ -1,10 +1,19 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { primeRoomAudio } from "../lib/audio";
 import type { ConnectionStatus } from "../lib/connectionRecovery";
 import { useTimerSoundPreference } from "../hooks/useTimerSoundPreference";
 import { ConnectionBadge, getConnectionLabels } from "./ConnectionBadge";
+import { ModeratorDrawer } from "./ModeratorDrawer";
 import { SoundIcon } from "./icons/SoundIcon";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
@@ -12,9 +21,16 @@ import { ThemeToggle } from "./ThemeToggle";
 type Props = {
   status: ConnectionStatus;
   compatibilityMode?: boolean;
+  moderatorControls?: ReactNode;
+  moderatorControlsDisabled?: boolean;
 };
 
-export function RoomUtilityMenu({ status, compatibilityMode = false }: Props) {
+export function RoomUtilityMenu({
+  status,
+  compatibilityMode = false,
+  moderatorControls = null,
+  moderatorControlsDisabled = false,
+}: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -249,6 +265,15 @@ export function RoomUtilityMenu({ status, compatibilityMode = false }: Props) {
                 <div className="section-label">{t("theme.appearance")}</div>
                 <ThemeToggle showLabel className="room-utility__theme-toggle" />
               </div>
+
+              {moderatorControls ? (
+                <div className="room-utility__section">
+                  <div className="section-label">{t("room.moderatorControls")}</div>
+                  <ModeratorDrawer disabled={moderatorControlsDisabled} triggerVariant="menu">
+                    {moderatorControls}
+                  </ModeratorDrawer>
+                </div>
+              ) : null}
 
               <div className="room-utility__section">
                 <div className="section-label">{t("room.timer")}</div>
