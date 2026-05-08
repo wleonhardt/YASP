@@ -1,0 +1,12 @@
+{
+  "name": "@yasp/fuzz",
+  "private": true,
+  "description": "Jazzer.js fuzz targets for YASP utility functions",
+  "license": "MIT",
+  "devDependencies": {
+    "@jazzer.js/core": "^2.1.0"
+  },
+  "scripts": {
+    "fuzz:utils": "jazzer fuzz-utils.js -- -max_total_time=60"
+  }
+}
