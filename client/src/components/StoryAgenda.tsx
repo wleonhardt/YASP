@@ -135,7 +135,23 @@ export function StoryAgenda({
       {(isModerator || hasQueue) && (
         <details className="story-agenda__details">
           <summary className="story-agenda__summary">
-            <span>{t("room.story.agenda")}</span>
+            <span className="story-agenda__summary-left">
+              <svg
+                className="story-agenda__chevron"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+              {t("room.story.agenda")}
+            </span>
             <span className="ui-chip ui-chip--neutral">
               {t("room.story.queueCount", { count: state.storyQueue.length })}
             </span>
