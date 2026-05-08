@@ -40,10 +40,13 @@ export function RoomUtilityMenu({
   const [open, setOpen] = useState(false);
   const [uncontrolledDrawerOpen, setUncontrolledDrawerOpen] = useState(false);
   const moderatorDrawerOpen = controlledDrawerOpen ?? uncontrolledDrawerOpen;
-  const setModeratorDrawerOpen = useCallback((next: boolean) => {
-    setUncontrolledDrawerOpen(next);
-    onModeratorDrawerOpenChange?.(next);
-  }, [onModeratorDrawerOpenChange]);
+  const setModeratorDrawerOpen = useCallback(
+    (next: boolean) => {
+      setUncontrolledDrawerOpen(next);
+      onModeratorDrawerOpenChange?.(next);
+    },
+    [onModeratorDrawerOpenChange]
+  );
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const surfaceRef = useRef<HTMLElement | null>(null);
   const [surfaceStyle, setSurfaceStyle] = useState<CSSProperties>({});

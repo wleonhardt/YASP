@@ -74,6 +74,7 @@ describe("RoundActionBar", () => {
     const minutes = screen.getByLabelText(/minutes/i);
 
     fireEvent.change(minutes, { target: { value: "02" } });
+    fireEvent.blur(minutes);
     expect(onSetTimerDuration).toHaveBeenLastCalledWith(120);
 
     rerender(
@@ -97,7 +98,9 @@ describe("RoundActionBar", () => {
       />
     );
 
-    fireEvent.change(screen.getByLabelText(/seconds/i), { target: { value: "30" } });
+    const seconds = screen.getByLabelText(/seconds/i);
+    fireEvent.change(seconds, { target: { value: "30" } });
+    fireEvent.blur(seconds);
     expect(onSetTimerDuration).toHaveBeenLastCalledWith(150);
   });
 
