@@ -286,6 +286,7 @@
       "moveUp": "{{label}} を上へ移動",
       "moveDown": "{{label}} を下へ移動",
       "removeLabel": "{{label}} を削除",
+      "nextUp": "Next: {{label}}",
       "track": "ストーリーを管理",
       "trackHint": "このルームにストーリーアジェンダを表示します。"
     },
