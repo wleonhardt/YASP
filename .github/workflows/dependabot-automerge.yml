@@ -51,7 +51,6 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            const core = require('@actions/core');
 
             // Fail closed on any metadata we cannot reason about safely.
             const ecosystem = (process.env.PACKAGE_ECOSYSTEM || '').trim();
@@ -188,7 +187,6 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            const core = require('@actions/core');
 
             try {
               await github.graphql(
@@ -225,7 +223,6 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            const core = require('@actions/core');
 
             if (!pr.auto_merge) {
               core.info('Auto-merge was not enabled, nothing to disable.');
