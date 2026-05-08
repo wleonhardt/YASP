@@ -5,12 +5,13 @@
       "entry": [
         "scripts/**/*.mjs",
         "scripts/**/*.js",
+        "fuzz/**/*.js",
         "tests/**/*.{ts,mts,mjs,js}",
         "playwright.a11y.config.ts",
         "simulate.mjs",
         "eslint.config.mjs"
       ],
-      "project": ["scripts/**/*.{ts,mts,js,mjs}", "tests/**/*.{ts,mts,js,mjs}"],
+      "project": ["scripts/**/*.{ts,mts,js,mjs}", "tests/**/*.{ts,mts,js,mjs}", "fuzz/**/*.js"],
       "ignoreDependencies": [
         "@axe-core/playwright",
         "@playwright/test",
