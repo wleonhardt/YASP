@@ -285,6 +285,10 @@ export function RoomTimer({
       return;
     }
 
+    if (soundEnabled) {
+      audioReadyRef.current = audioReadyRef.current || isRoomAudioPrimed();
+    }
+
     if (!soundEnabled || !audioReadyRef.current) {
       syncPreviousTimerSnapshot(
         {

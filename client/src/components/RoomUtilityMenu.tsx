@@ -23,6 +23,8 @@ type Props = {
   compatibilityMode?: boolean;
   moderatorControls?: ReactNode;
   moderatorControlsDisabled?: boolean;
+  moderatorDrawerOpen?: boolean;
+  onModeratorDrawerOpenChange?: (open: boolean) => void;
 };
 
 export function RoomUtilityMenu({
@@ -30,10 +32,17 @@ export function RoomUtilityMenu({
   compatibilityMode = false,
   moderatorControls = null,
   moderatorControlsDisabled = false,
+  moderatorDrawerOpen: controlledDrawerOpen,
+  onModeratorDrawerOpenChange,
 }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [moderatorDrawerOpen, setModeratorDrawerOpen] = useState(false);
+  const [uncontrolledDrawerOpen, setUncontrolledDrawerOpen] = useState(false);
+  const moderatorDrawerOpen = controlledDrawerOpen ?? uncontrolledDrawerOpen;
+  const setModeratorDrawerOpen = (next: boolean) => {
+    setUncontrolledDrawerOpen(next);
+    onModeratorDrawerOpenChange?.(next);
+  };
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const surfaceRef = useRef<HTMLElement | null>(null);
   const [surfaceStyle, setSurfaceStyle] = useState<CSSProperties>({});
