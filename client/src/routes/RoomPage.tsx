@@ -13,7 +13,6 @@ import { ResultsPanel } from "../components/ResultsPanel";
 import { RoundActionBar } from "../components/RoundActionBar";
 import { RoundReportModal } from "../components/RoundReportModal";
 import { SessionReportModal } from "../components/SessionReportModal";
-import { StoryAgenda } from "../components/StoryAgenda";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { TimerStrip } from "../components/TimerStrip";
 import { Toast, type ToastState } from "../components/Toast";
@@ -38,7 +37,6 @@ import {
   isMeModerator,
   isTimerStripRelevant,
   shouldShowInviteHero,
-  shouldShowStoryAgenda,
 } from "../lib/room";
 import { getRoomShortcutAction } from "../lib/roomShortcuts";
 import { getStoredDisplayName, getStoredRole, setStoredDisplayName, setStoredRole } from "../lib/storage";
@@ -848,7 +846,6 @@ export function RoomPage() {
   const inviteHeroVisible = shouldShowInviteHero(state);
   const localUserHasVoted = Boolean(getSelf(state)?.hasVoted || state.me.ownVote !== null || selectedCard);
   const inviteHeroCompact = inviteHeroVisible && localUserHasVoted;
-  const storyAgendaVisible = shouldShowStoryAgenda(state, trackStories);
   const timerStripVisible = timerStripActivated || isTimerStripRelevant(state);
   const roomMainHeading = state.currentStoryLabel?.trim() || t("room.round", { count: state.roundNumber });
 
@@ -883,6 +880,11 @@ export function RoomPage() {
             onResetRound={handleReset}
             trackStories={trackStories}
             onTrackStoriesChange={setTrackStories}
+            onUpdateStoryLabel={handleUpdateStoryLabel}
+            onAddStoryAgendaItems={handleAddStoryAgendaItems}
+            onRemoveStoryAgendaItem={handleRemoveStoryAgendaItem}
+            onMoveStoryAgendaItem={handleMoveStoryAgendaItem}
+            onStartNextStory={handleStartNextStory}
             disabled={actionsDisabled}
           />
         }
@@ -891,6 +893,9 @@ export function RoomPage() {
 
       <main id="main">
         <h1 className="room-main-heading">{roomMainHeading}</h1>
+        {state.storyQueue.length > 0 ? (
+          <p className="room-next-story">{t("room.story.nextUp", { label: state.storyQueue[0].label })}</p>
+        ) : null}
         {connection.showRecoveryNotice && <ConnectionStatusNotice connection={connection} />}
 
         {error?.code === "NOT_ALLOWED" && (
@@ -922,17 +927,6 @@ export function RoomPage() {
 
         <div className="room-layout">
           <div className="room-layout__main room-layout__stage">
-            {storyAgendaVisible ? (
-              <StoryAgenda
-                state={state}
-                disabled={actionsDisabled}
-                onUpdateStoryLabel={handleUpdateStoryLabel}
-                onAddStoryAgendaItems={handleAddStoryAgendaItems}
-                onRemoveStoryAgendaItem={handleRemoveStoryAgendaItem}
-                onMoveStoryAgendaItem={handleMoveStoryAgendaItem}
-                onStartNextStory={handleStartNextStory}
-              />
-            ) : null}
             {timerStripVisible ? (
               <TimerStrip state={state} serverClockOffsetMs={serverClockOffsetMs} />
             ) : null}
