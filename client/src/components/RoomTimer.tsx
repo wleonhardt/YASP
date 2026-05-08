@@ -58,7 +58,11 @@ export function formatCountdown(totalSeconds: number): string {
 }
 
 export function formatTimerDuration(totalSeconds: number): string {
-  return totalSeconds < 60 ? `${totalSeconds}s` : `${totalSeconds / 60}m`;
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  if (m === 0) return `${s}s`;
+  if (s === 0) return `${m}m`;
+  return `${m}m ${s}s`;
 }
 
 export function getRoomTimerStatus(

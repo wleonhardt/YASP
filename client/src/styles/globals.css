@@ -3253,6 +3253,12 @@ select.input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.controls-panel--compact .room-timer--compact-actions .timerControlsGrid .button--primary {
+  color: #fff;
 }
 
 .controls-panel--compact .room-timer--compact-actions .room-timer__button-label {
