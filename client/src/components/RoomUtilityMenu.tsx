@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -39,10 +40,10 @@ export function RoomUtilityMenu({
   const [open, setOpen] = useState(false);
   const [uncontrolledDrawerOpen, setUncontrolledDrawerOpen] = useState(false);
   const moderatorDrawerOpen = controlledDrawerOpen ?? uncontrolledDrawerOpen;
-  const setModeratorDrawerOpen = (next: boolean) => {
+  const setModeratorDrawerOpen = useCallback((next: boolean) => {
     setUncontrolledDrawerOpen(next);
     onModeratorDrawerOpenChange?.(next);
-  };
+  }, [onModeratorDrawerOpenChange]);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const surfaceRef = useRef<HTMLElement | null>(null);
   const [surfaceStyle, setSurfaceStyle] = useState<CSSProperties>({});
@@ -60,7 +61,7 @@ export function RoomUtilityMenu({
     if (!moderatorControls) {
       setModeratorDrawerOpen(false);
     }
-  }, [moderatorControls]);
+  }, [moderatorControls, setModeratorDrawerOpen]);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
