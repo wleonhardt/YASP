@@ -10,6 +10,7 @@ import {
   useRoomTimerCountdown,
 } from "./RoomTimer";
 import { RoomSettingsPanel } from "./RoomSettingsPanel";
+import { StoryAgenda } from "./StoryAgenda";
 
 type Props = {
   compact: boolean;
@@ -27,6 +28,11 @@ type Props = {
   onResetRound?: () => Promise<unknown> | unknown;
   trackStories?: boolean;
   onTrackStoriesChange?: (enabled: boolean) => void;
+  onUpdateStoryLabel?: (label: string) => Promise<boolean> | boolean;
+  onAddStoryAgendaItems?: (labels: string[]) => Promise<boolean> | boolean;
+  onRemoveStoryAgendaItem?: (itemId: string) => Promise<boolean> | boolean;
+  onMoveStoryAgendaItem?: (itemId: string, direction: "up" | "down") => Promise<boolean> | boolean;
+  onStartNextStory?: () => Promise<boolean> | boolean;
   disabled?: boolean;
 };
 
@@ -324,6 +330,11 @@ export function ModeratorControls({
   onResetRound,
   trackStories = false,
   onTrackStoriesChange,
+  onUpdateStoryLabel,
+  onAddStoryAgendaItems,
+  onRemoveStoryAgendaItem,
+  onMoveStoryAgendaItem,
+  onStartNextStory,
   disabled = false,
 }: Props) {
   const { t } = useTranslation();
@@ -530,6 +541,22 @@ export function ModeratorControls({
               <small id={trackStoriesDescriptionId}>{t("room.story.trackHint")}</small>
             </span>
           </label>
+          {trackStories &&
+          onUpdateStoryLabel &&
+          onAddStoryAgendaItems &&
+          onRemoveStoryAgendaItem &&
+          onMoveStoryAgendaItem &&
+          onStartNextStory ? (
+            <StoryAgenda
+              state={state}
+              disabled={disabled}
+              onUpdateStoryLabel={onUpdateStoryLabel}
+              onAddStoryAgendaItems={onAddStoryAgendaItems}
+              onRemoveStoryAgendaItem={onRemoveStoryAgendaItem}
+              onMoveStoryAgendaItem={onMoveStoryAgendaItem}
+              onStartNextStory={onStartNextStory}
+            />
+          ) : null}
         </div>
       ) : null}
 

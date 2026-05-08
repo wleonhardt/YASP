@@ -286,6 +286,7 @@
       "moveUp": "Subir {{label}}",
       "moveDown": "Bajar {{label}}",
       "removeLabel": "Quitar {{label}}",
+      "nextUp": "Next: {{label}}",
       "track": "Seguir historias",
       "trackHint": "Muestra la agenda de historias en esta sala."
     },

@@ -286,6 +286,7 @@
       "moveUp": "{{label}} nach oben verschieben",
       "moveDown": "{{label}} nach unten verschieben",
       "removeLabel": "{{label}} entfernen",
+      "nextUp": "Next: {{label}}",
       "track": "Storys verfolgen",
       "trackHint": "Zeigt die Story-Agenda für diesen Raum."
     },

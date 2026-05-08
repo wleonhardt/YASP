@@ -286,6 +286,7 @@
       "moveUp": "上移 {{label}}",
       "moveDown": "下移 {{label}}",
       "removeLabel": "移除 {{label}}",
+      "nextUp": "Next: {{label}}",
       "track": "追蹤故事",
       "trackHint": "在此房間顯示故事議程。"
     },
