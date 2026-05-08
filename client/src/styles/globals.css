@@ -827,6 +827,21 @@ code {
   display: none;
 }
 
+.story-agenda__summary-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.story-agenda__chevron {
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.story-agenda__details[open] .story-agenda__chevron {
+  transform: rotate(180deg);
+}
+
 .story-agenda__body {
   margin-top: var(--space-3);
 }
