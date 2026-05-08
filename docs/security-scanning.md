@@ -1,266 +1,272 @@
-# Security scanning
+# Security Scanning
 
-YASP runs a layered set of scanners using GitHub-native security
-features and a few low-maintenance open-source tools. Everything here
-is either part of free GitHub Advanced Security for public repos or
-self-hosted in CI — no paid SaaS, no external tokens to rotate.
+```
+  ┌──────────────────────────────────────────────────────────────────┐
+  │   Layered security scanning — all GitHub-native or open-source. │
+  │   No paid SaaS. No external tokens to rotate.                   │
+  └──────────────────────────────────────────────────────────────────┘
+```
 
-## Post-remediation status
+---
 
-As of commit `73babea`, the code-fixable GitHub code scanning backlog from the
-2026-04-16 remediation pass is complete. The remaining open alerts are not
-runtime-code defects in the shipped app; they are repo settings, maintainer
-process, or dismissal candidates.
+## Scanning Architecture at a Glance
+
+```
+  Every PR
+  ├── CodeQL (JS/TS, security-extended)          ← BLOCKING
+  ├── Docker build + healthcheck                  ← BLOCKING
+  ├── Validate (build · test · lint · i18n)       ← BLOCKING
+  ├── Accessibility smoke (Playwright)            ← BLOCKING
+  ├── CDK synth  (when cdk/ changes)              ← BLOCKING
+  ├── npm audit (high/critical)                  ← advisory → planned blocker
+  ├── ESLint strict  (type-aware unsafe-*)        ← advisory → planned blocker
+  ├── Knip (unused files/exports/deps)            ← advisory → planned blocker
+  ├── Dependency Review                           ← advisory
+  └── Trivy (filesystem + IaC + secrets)          ← advisory
+
+  Weekly cron
+  ├── CodeQL re-scan of main  (Mon 06:00 UTC)
+  ├── Trivy re-scan  (Mon 07:00 UTC)
+  ├── OSSF Scorecard refresh  (Wed 08:00 UTC)
+  └── Dependabot (npm · actions · docker)  grouped PRs
+```
+
+---
+
+## Post-Remediation Status
+
+As of commit `73babea`, the code-fixable GitHub code scanning backlog from
+the 2026-04-16 remediation pass is complete. Remaining open alerts are
+repo settings, maintainer process, or dismissal candidates — not runtime
+defects.
 
 | Alert | Rule | Classification | Action |
 |---|---|---|---|
 | `#1` | `BranchProtectionID` | repo/settings issue | enable a `main` branch ruleset |
-| `#44` | `CodeReviewID` | process/policy issue | require PR review and stop direct pushes |
-| `#45` | `FuzzingID` | process/policy issue | optional future work; not a current code defect |
-| `#43` | `CIIBestPracticesID` | process/policy issue | optional posture work; not a runtime defect |
-| `#46` | `MaintainedID` | acceptable risk / heuristic-only | dismiss with recorded rationale below |
-| `#52` | `js/biased-cryptographic-random` | false positive | dismiss with recorded rationale below |
+| `#44` | `CodeReviewID` | process/policy issue | require PR review, stop direct pushes |
+| `#45` | `FuzzingID` | process/policy issue | optional future work |
+| `#43` | `CIIBestPracticesID` | process/policy issue | optional posture work |
+| `#46` | `MaintainedID` | acceptable risk / heuristic-only | dismiss — see rationale below |
+| `#52` | `js/biased-cryptographic-random` | false positive | dismiss — see rationale below |
 
-### Maintainer checklist for remaining governance alerts
+### Maintainer Checklist for Governance Alerts
 
-The full ruleset, required-checks list, and merge-queue guidance lives in
-[`docs/branch-protection.md`](./branch-protection.md). The short version:
+Full branch ruleset guidance lives in [`docs/branch-protection.md`](./branch-protection.md). Short version:
 
-- Open GitHub **Settings → Rules → Rulesets → New branch ruleset** and target
-  `refs/heads/main`.
-- Enable **Block force pushes** and **Restrict deletions** for `main`.
-- Enable **Require a pull request before merging** with at least `1`
-  approval, dismiss stale approvals, and require approval of the most recent
-  reviewable push.
-- Enable **Require status checks to pass before merging** and select the
-  blocking checks listed in
-  [`docs/branch-protection.md`](./branch-protection.md#required-status-checks-blocking-lanes).
-- Apply the ruleset to administrators too unless there is a deliberate,
-  documented bypass policy.
-- Stop pushing human changes directly to `main`; merge through reviewed pull
-  requests only.
-- Merge queue stays optional; turn it on only if `main` starts breaking from
-  serial-merge races.
+- Open **Settings → Rules → Rulesets → New branch ruleset**, target `refs/heads/main`
+- Enable **Block force pushes** and **Restrict deletions**
+- Enable **Require a pull request** with ≥ 1 approval, dismiss stale approvals
+- Enable **Require status checks to pass** with the blocking checks listed in branch-protection.md
+- Apply the ruleset to administrators too unless there is a documented bypass policy
+- Stop pushing directly to `main` — merge through reviewed pull requests only
 
-### Recorded dismissal rationale text
+### Dismissal Rationale
 
-Use the exact text below if those alerts remain open after rescans.
+Use these exact texts if those alerts remain open after rescans.
 
-#### `#52` `js/biased-cryptographic-random`
-
-```text
-False positive. server/src/utils/id.ts maps randomBytes() output into a 32-character alphabet (ABCDEFGHJKLMNPQRSTUVWXYZ23456789). Because 256 is evenly divisible by 32, byte % 32 is uniform here and does not introduce modulo bias. The current implementation does not have the reported cryptographic bias issue.
+**`#52` `js/biased-cryptographic-random`:**
+```
+False positive. server/src/utils/id.ts maps randomBytes() output into a
+32-character alphabet (ABCDEFGHJKLMNPQRSTUVWXYZ23456789). Because 256 is
+evenly divisible by 32, byte % 32 is uniform here and does not introduce
+modulo bias. The current implementation does not have the reported
+cryptographic bias issue.
 ```
 
-#### `#46` `MaintainedID`
-
-```text
-Acceptable risk / heuristic-only finding. This repository was created on 2026-03-25 and is still within Scorecard's first-90-days window, so the alert is driven solely by repository age rather than an outstanding code or configuration defect. The project is actively maintained, and this check should age out automatically once the repository is older than 90 days.
+**`#46` `MaintainedID`:**
+```
+Acceptable risk / heuristic-only finding. This repository was created on
+2026-03-25 and is still within Scorecard's first-90-days window, so the
+alert is driven solely by repository age rather than an outstanding code or
+configuration defect. The project is actively maintained, and this check
+should age out automatically once the repository is older than 90 days.
 ```
 
-## Merge blockers today
+---
 
-These checks currently fail the PR when they fail.
+## Blocking Checks
+
+These must pass before any PR merges.
 
 | Check | Workflow | Gate |
 |---|---|---|
-| Validate (build, test, lint, format, i18n) | `ci.yml` → `validate` | any failure |
+| Validate (build · test · lint · format · i18n) | `ci.yml` → `validate` | any failure |
 | CodeQL (JS/TS, `security-extended`) | `codeql.yml` | any security finding |
-| Docker build + health check | `ci.yml` → `docker-validation` | any failure |
+| Docker build + healthcheck | `ci.yml` → `docker-validation` | any failure |
 | Accessibility smoke | `ci.yml` → `a11y-smoke` | any failure |
 | CDK synth (when `cdk/` changed) | `ci.yml` → `cdk-synth` | any failure |
 
-## Advisory checks today
+---
 
-These run in CI and stay visible in the PR summary or security dashboards, but
-they are intentionally non-blocking until the stated promotion condition is
-met.
+## Advisory Checks
 
-| Check | Workflow | Current status | Promotion condition |
-|---|---|---|---|
-| Dependency review | `dependency-review.yml` | advisory | enable GitHub **Dependency graph** under Settings → Code security and analysis, then remove `continue-on-error` |
-| Trivy filesystem + IaC + secret scan | `trivy.yml` → `repo-scan` | advisory | burn down existing `HIGH` / `CRITICAL` baseline findings, then remove `continue-on-error` |
-| Trivy container image scan | `trivy.yml` → `image-scan` | advisory | burn down existing `HIGH` / `CRITICAL` image findings, then remove `continue-on-error` |
-| `npm audit --omit=dev --audit-level=high` | `ci.yml` → `validate` → `npm-audit` step | advisory | keep clean enough at `high` / `critical` to make the step blocking |
-| ESLint strict (type-aware `no-unsafe-*`) | `lint-strict.yml` | advisory | get `npm run lint:strict` clean on `main` |
-| Knip (unused files/exports/deps) | `knip.yml` | advisory | tune `knip.json` to zero meaningful false positives |
-| OSSF Scorecard | `scorecard.yml` | advisory | likely stays advisory; it is posture evidence, not a release gate |
+Visible in the PR summary and security dashboards. Not yet blocking.
 
-In practice:
+| Check | Workflow | Promotion condition |
+|---|---|---|
+| Dependency review | `dependency-review.yml` | Enable GitHub Dependency graph, remove `continue-on-error` |
+| Trivy filesystem + IaC + secrets | `trivy.yml` → `repo-scan` | Burn down existing `HIGH`/`CRITICAL` baseline, remove `continue-on-error` |
+| Trivy container image scan | `trivy.yml` → `image-scan` | Same as above |
+| `npm audit --omit=dev --audit-level=high` | `ci.yml` → `validate` | Keep clean enough at high/critical to gate |
+| ESLint strict (type-aware `no-unsafe-*`) | `lint-strict.yml` | Get `npm run lint:strict` clean on `main` |
+| Knip (unused files/exports/deps) | `knip.yml` | Tune `knip.json` to zero meaningful false positives |
+| OSSF Scorecard | `scorecard.yml` | Stays advisory — posture evidence, not a release gate |
 
-- the repo already has layered security coverage in CI
-- not every security lane is a merge blocker yet by design
+---
 
-## Planned promotion order for advisory lanes
+## Planned Blocker Promotion Order
 
-Advisory checks should only become blocking after they stay low-noise long
-enough to be dependable merge gates.
+Advisory checks become blocking after they stay low-noise long enough to
+be dependable merge gates. The order:
 
-For the newer repo-managed advisory lanes, the promotion order is:
+```
+  1.  npm audit --omit=dev --audit-level=high
+  2.  npm run lint:strict
+  3.  npm run knip
+```
 
-1. `npm audit --omit=dev --audit-level=high`
-2. `npm run lint:strict`
-3. `npm run knip`
+Dependency Review and Trivy have their own prerequisites and are governed
+separately from the above order.
 
-OSSF Scorecard stays advisory. It is useful posture evidence, but it is not a
-good merge blocker for day-to-day PRs.
+OSSF Scorecard stays advisory permanently.
 
-Dependency Review and Trivy remain advisory for now too, but they are governed
-by their own prerequisites:
+---
 
-- Dependency Review first needs GitHub Dependency Graph enabled and stable
-- Trivy first needs the current `HIGH` / `CRITICAL` baseline burned down
+## Scheduled Sweeps
 
-Those two lanes should not be treated as part of the immediate blocker rollout
-order above.
-
-## Scheduled sweeps
-
-Several scanners run on a weekly cron so newly published advisories
-surface against already-merged code without waiting for someone to
-open a PR.
+Scanners run on a weekly cron so newly published advisories surface against
+already-merged code without waiting for a PR.
 
 | Workflow | Cadence | Purpose |
 |---|---|---|
-| `codeql.yml` | Monday 06:00 UTC | Re-scan `main` against latest query pack. |
-| `trivy.yml` | Monday 07:00 UTC | Re-scan filesystem + image against fresh vulnerability DB. |
-| `scorecard.yml` | Wednesday 08:00 UTC | Refresh posture score + publish to public Scorecards dataset. |
-| Dependabot npm / actions / docker | Weekly | Grouped patch/minor PRs for root workspaces, `cdk/`, GitHub Actions, Dockerfile base image. |
+| `codeql.yml` | Monday 06:00 UTC | Re-scan `main` against latest query pack |
+| `trivy.yml` | Monday 07:00 UTC | Re-scan filesystem + image against fresh vulnerability DB |
+| `scorecard.yml` | Wednesday 08:00 UTC | Refresh posture score + publish to public Scorecards dataset |
+| Dependabot (npm · actions · docker) | Weekly | Grouped patch/minor PRs for all workspaces |
 
-## GitHub secret scanning
+---
 
-Secret scanning and push protection are enabled at the repo level
-under **Settings → Code security and analysis**. These are GitHub-
-native, not part of any workflow in this repo:
+## GitHub Secret Scanning
 
-- **Secret scanning** — GitHub inspects every push and every pull
-  request for known credential formats (AWS access keys, GitHub
-  tokens, npm publish tokens, Docker Hub PATs, etc.). Matches surface
-  under **Security → Secret scanning alerts** and trigger partner
-  revocation where supported.
-- **Push protection** — when enabled, pushes that introduce a new
-  secret of a supported type are rejected at the git transport layer
-  before they reach the repository. A contributor who sees the block
-  must either rotate the credential or bypass the block with a typed
-  justification.
-- **Trivy's `secret` scanner** in `trivy.yml` runs as belt-and-braces
-  coverage for secret formats GitHub does not recognize (e.g. custom
-  internal token shapes).
+Secret scanning and push protection are enabled at the repo level under
+**Settings → Code security and analysis**. These are GitHub-native — not
+part of any workflow file in this repo.
 
-To verify the repo-level toggles:
+- **Secret scanning** — GitHub inspects every push and every PR for known
+  credential formats (AWS access keys, GitHub tokens, npm publish tokens,
+  Docker Hub PATs, etc.). Matches surface under **Security → Secret scanning
+  alerts** and trigger partner revocation where supported.
+- **Push protection** — pushes introducing a new supported secret type are
+  rejected at the git transport layer. A contributor seeing the block must
+  either rotate the credential or bypass with a typed justification.
+- **Trivy secret scanner** — belt-and-braces coverage for secret formats
+  GitHub doesn't recognize (e.g. custom internal token shapes).
 
-```
+Verify the repo-level toggles:
+
+```bash
 gh api -H "Accept: application/vnd.github+json" \
   /repos/:owner/:repo \
   --jq '{secret_scanning: .security_and_analysis.secret_scanning.status,
          push_protection: .security_and_analysis.secret_scanning_push_protection.status}'
 ```
 
-Expected output:
-
+Expected:
 ```json
 {"secret_scanning": "enabled", "push_protection": "enabled"}
 ```
 
-If either is `disabled`, flip it on from the repository settings UI.
-There is no workflow knob for these — they live in repo settings.
+If either shows `disabled`, flip it on from the repository settings UI.
+These live in repo settings — there is no workflow knob for them.
 
-## Dependabot surface
+---
+
+## Dependabot Configuration
 
 `dependabot.yml` configures four ecosystems:
 
-- **npm (root)** — covers `shared/`, `server/`, and `client/` via the
-  single root `package-lock.json` that npm workspaces maintains.
-  Grouped into `production` and `dev` to keep PR volume sane.
-- **npm (`cdk/`)** — separate entry because the CDK app ships its own
-  lockfile. Grouped so `aws-cdk-lib` + `constructs` + `aws-cdk` land
-  together.
-- **github-actions** — pins third-party actions to the latest
-  version.
+- **npm (root)** — covers `shared/`, `server/`, `client/` via the single
+  root `package-lock.json`. Grouped into `production` and `dev`.
+- **npm (`cdk/`)** — separate entry because the CDK app has its own lockfile.
+  `aws-cdk-lib` + `constructs` + `aws-cdk` grouped together.
+- **github-actions** — pins third-party actions to latest version.
 - **docker** — bumps the Dockerfile base image.
 
-Several majors are deliberately pinned in `dependabot.yml`:
-`eslint` and friends (`eslint-plugin-jsx-a11y` peer range),
-`react` / `react-dom` / i18n (React 19 migration is its own work),
-and `eslint-plugin-react-hooks` (pre-existing rule fallout). Minor
-and patch updates still flow. Each pin documents its removal
-condition inline.
+Several majors are deliberately pinned: `eslint` and friends, `react` /
+`react-dom` / i18n (React 19 is its own migration), and
+`eslint-plugin-react-hooks`. Minor and patch updates still flow. Each pin
+documents its removal condition inline in `dependabot.yml`.
 
-## Dependabot auto-merge policy
+---
 
-YASP uses a separate conservative workflow,
-[`dependabot-automerge.yml`](../.github/workflows/dependabot-automerge.yml),
-that only **enables GitHub auto-merge** for low-risk Dependabot PRs.
+## Dependabot Auto-Merge Policy
 
-Important boundaries:
+[`dependabot-automerge.yml`](../.github/workflows/dependabot-automerge.yml)
+only **enables GitHub auto-merge** for low-risk Dependabot PRs. It does not
+merge directly and does not bypass branch protection — required checks still
+decide whether GitHub actually merges.
 
-- it only runs for `dependabot[bot]` PRs
-- it does **not** merge directly
-- it does **not** bypass branch protection
-- required checks still decide whether GitHub actually merges
+| PR type | Auto-merge eligible? |
+|---|---|
+| GitHub Actions update, patch/minor, single dep | ✅ if not in denylist |
+| npm devDependency update, patch/minor, single dep | ✅ if not in denylist |
+| Dependabot security update, patch/minor, single dep | ✅ if not in denylist |
+| Major update | ❌ always manual |
+| Docker ecosystem update | ❌ always manual |
+| Any PR touching `cdk/` | ❌ always manual |
+| Any PR touching deploy workflows | ❌ always manual |
+| Grouped / multi-dependency PR | ❌ always manual |
 
-Current allowlist:
+**Excluded dependencies** (always manual regardless of semver range):
+React / React DOM · Vite · Vitest · TypeScript · ESLint stack
+(`eslint`, `@eslint/*`, `@typescript-eslint/*`, `eslint-plugin-*`) ·
+i18next / react-i18next · Fastify core (`fastify`, `@fastify/*`) ·
+Socket.IO core (`socket.io`, `socket.io-client`, `@socket.io/*`)
 
-| PR type | Auto-merge eligible? | Notes |
-|---|---|---|
-| GitHub Actions update, patch/minor, single dependency | yes | only if the PR avoids risky paths |
-| npm devDependency update, patch/minor, single dependency | yes | only if the package is not denylisted |
-| Dependabot security update, patch/minor, single dependency | yes | only if the package/path is not excluded |
-| Major update | no | always manual |
-| Docker ecosystem update | no | always manual |
-| Any PR touching `cdk/` | no | always manual |
-| Any PR touching deploy workflows | no | always manual |
-| Grouped / multi-dependency PR | no | stays manual for now |
+**Excluded paths:** `cdk/**` · `Dockerfile` · deploy workflows
 
-Excluded dependency categories:
+This is intentionally conservative — the repo has recent history of bot PRs
+breaking lint, tests, and build. Coverage can expand once the false-positive
+and breakage rate stays low.
 
-- React / React DOM
-- Vite
-- Vitest
-- TypeScript
-- ESLint and the major lint stack (`eslint`, `@eslint/*`, `@typescript-eslint/*`, `eslint-plugin-*`)
-- `i18next` / `react-i18next`
-- Fastify core packages (`fastify`, `@fastify/*`)
-- Socket.IO core/runtime packages (`socket.io`, `socket.io-client`, `@socket.io/*`)
+---
 
-Excluded paths:
-
-- `cdk/**`
-- `Dockerfile`
-- `.github/workflows/deploy-aws.yml`
-- `.github/workflows/docker-publish.yml`
-
-This is intentionally conservative because the repo has recent history of bot
-PRs breaking lint, tests, and build. Coverage can expand later, but only after
-the false-positive and breakage rate stays low.
-
-## Triage workflow
-
-1. **Alert lands** — SARIF uploads route CodeQL, Trivy, and Scorecard
-   findings into **Security → Code scanning**; Dependabot and
-   Dependency Review findings land in **Security → Dependabot**;
-   secret scanning lands in **Security → Secret scanning**.
-2. **Assess severity** — honor the gate: high/critical get same-week
-   action, medium/low get queued alongside Dependabot PRs.
-3. **Suppress false positives at the scanner config level**, not by
-   deleting code. CodeQL supports query suppression; Trivy supports
-   `.trivyignore`; Knip config lives in `knip.json`.
-4. **Record decisions** — if a finding is accepted-risk, add a bullet
-   to the relevant plan doc (e.g. `SECURITY_REMEDIATION_PLAN.md`) or
-   an ADR under `plans/decisions/`.
-
-## Local runs
-
-The scanners that matter for iteration are all runnable locally:
+## Triage Workflow
 
 ```
-npm run lint            # default lint (blocking in CI)
-npm run lint:strict     # type-aware unsafe-* rules (advisory in CI)
-npm run knip            # unused files/exports/deps
-npm test                # unit + integration tests
-npm audit --omit=dev --audit-level=high
+  1.  Alert lands
+      ├── CodeQL / Trivy / Scorecard  →  Security → Code scanning
+      ├── Dependabot / Dep Review     →  Security → Dependabot
+      └── Secret scanning             →  Security → Secret scanning
+
+  2.  Assess severity
+      high/critical  →  same-week action
+      medium/low     →  queue alongside Dependabot PRs
+
+  3.  Suppress false positives at the scanner config level, not by deleting code
+      CodeQL  →  query suppression
+      Trivy   →  .trivyignore
+      Knip    →  knip.json
+
+  4.  Record decisions
+      Accepted-risk findings  →  SECURITY_REMEDIATION_PLAN.md
+      Architecture decisions  →  plans/decisions/
 ```
 
-CodeQL, Trivy, and Scorecard are heavier and are expected to run in
-CI only. Trivy can be run locally with `trivy fs .` and
-`trivy image yasp:dev` if you want to reproduce a CI finding.
+---
+
+## Local Runs
+
+Run these locally to iterate fast:
+
+```bash
+npm run lint                              # default lint (blocking in CI)
+npm run lint:strict                       # type-aware rules (advisory in CI)
+npm run knip                              # unused files/exports/deps
+npm test                                  # unit + integration tests
+npm audit --omit=dev --audit-level=high   # dependency audit
+```
+
+CodeQL, Trivy, and Scorecard are heavier and expected to run in CI only.
+Trivy can be run locally with `trivy fs .` and `trivy image yasp:dev` if
+you need to reproduce a CI finding.
