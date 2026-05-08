@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write # required for keyless cosign signing via GitHub OIDC
 
 concurrency:
   group: docker-publish-${{ github.event.workflow_run.head_branch }}
@@ -39,7 +40,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
+
       - name: Build and push
+        id: build
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7
         with:
           # Build directly from the immutable workflow_run commit instead of
@@ -50,3 +55,13 @@ jobs:
           tags: |
             ${{ env.DOCKERHUB_IMAGE }}:${{ steps.vars.outputs.short_sha }}
             ${{ env.DOCKERHUB_IMAGE }}:main
+
+      - name: Sign image with cosign (keyless via Sigstore)
+        # Signs the image digest so the signature is tag-independent.
+        # Verification: cosign verify \
+        #   --certificate-identity-regexp="github.com/wleonhardt/YASP" \
+        #   --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+        #   wleonhardt/yasp@<digest>
+        run: |
+          cosign sign --yes \
+            "${{ env.DOCKERHUB_IMAGE }}@${{ steps.build.outputs.digest }}"
