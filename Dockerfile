@@ -6,7 +6,9 @@ COPY package.json package-lock.json* ./
 COPY shared/package.json shared/
 COPY server/package.json server/
 COPY client/package.json client/
-RUN npm ci
+# --omit=optional skips @jazzer.js/core (fuzzing tool with native binaries
+# that require cmake — unnecessary for a production build on Alpine).
+RUN npm ci --omit=optional
 
 # Copy source
 COPY tsconfig.base.json .
