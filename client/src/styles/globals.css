@@ -2716,19 +2716,27 @@ select.input {
   flex: 0 1 auto;
   min-width: 5.75rem;
   min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
   margin: 0;
-  padding: 0 0.75rem;
+  padding: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-text-secondary);
+  cursor: text;
 }
 
 .round-action-bar__duration:disabled {
   opacity: 0.55;
+}
+
+.round-action-bar__duration-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 100%;
+  min-height: 38px;
+  padding: 0 0.75rem;
 }
 
 .round-action-bar__duration-part {
@@ -2759,6 +2767,32 @@ select.input {
 .round-action-bar__shortcut {
   min-height: 40px;
   padding-inline: 0.85rem;
+}
+
+.round-action-bar__shortcut--icon {
+  position: relative;
+  width: 40px;
+  min-width: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.round-action-bar__shortcut-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: var(--color-text-secondary);
+  color: var(--color-bg, #0a101a);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
 }
 
 .round-action-bar__text-action {
@@ -4064,11 +4098,18 @@ select.input {
 
   .round-action-bar__duration {
     flex: 1 1 0;
-    justify-content: center;
+  }
+
+  .round-action-bar__duration-inner {
+    min-height: 100%;
   }
 
   .round-action-bar__shortcut {
     flex: 1 1 0;
+  }
+
+  .round-action-bar__shortcut--icon {
+    flex: 0 0 40px;
   }
 
   .round-action-bar__actions--revealed,

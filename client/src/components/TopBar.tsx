@@ -13,6 +13,8 @@ type Props = {
   onLeave: () => void;
   onCopyFeedback: (intent: "success" | "error", message: string) => void;
   moderatorControls?: ReactNode;
+  moderatorDrawerOpen?: boolean;
+  onModeratorDrawerOpenChange?: (open: boolean) => void;
   roomCodeCopyEnabled?: boolean;
   disabled?: boolean;
 };
@@ -24,6 +26,8 @@ export function TopBar({
   onLeave,
   onCopyFeedback,
   moderatorControls = null,
+  moderatorDrawerOpen,
+  onModeratorDrawerOpenChange,
   roomCodeCopyEnabled = true,
   disabled = false,
 }: Props) {
@@ -64,6 +68,8 @@ export function TopBar({
           compatibilityMode={compatibilityMode}
           moderatorControls={showModeratorDrawer ? moderatorControls : null}
           moderatorControlsDisabled={disabled}
+          moderatorDrawerOpen={moderatorDrawerOpen}
+          onModeratorDrawerOpenChange={onModeratorDrawerOpenChange}
         />
       </div>
     </header>

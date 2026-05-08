@@ -100,6 +100,7 @@ export function RoomPage() {
   const sessionReportButtonRef = useRef<HTMLButtonElement | null>(null);
   const [trackStories, setTrackStories] = useState(false);
   const [timerStripActivated, setTimerStripActivated] = useState(false);
+  const [moderatorDrawerOpen, setModeratorDrawerOpen] = useState(false);
 
   const roomTitle = roomUnavailable
     ? t("documentTitle.roomUnavailable")
@@ -863,6 +864,8 @@ export function RoomPage() {
         onLeave={handleLeave}
         onCopyFeedback={showToast}
         roomCodeCopyEnabled={!inviteHeroVisible}
+        moderatorDrawerOpen={moderatorDrawerOpen}
+        onModeratorDrawerOpenChange={setModeratorDrawerOpen}
         moderatorControls={
           <ModeratorControls
             compact
@@ -942,6 +945,7 @@ export function RoomPage() {
               onStartTimer={handleStartTimer}
               onPauseTimer={handlePauseTimer}
               onHonkTimer={handleHonkTimer}
+              onOpenSettings={isMeModerator(state) ? () => setModeratorDrawerOpen(true) : undefined}
               serverClockOffsetMs={serverClockOffsetMs}
               disabled={actionsDisabled}
             />
