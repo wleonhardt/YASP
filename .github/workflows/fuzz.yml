@@ -1,0 +1,55 @@
+name: Fuzz
+
+on:
+  schedule:
+    # Nightly at 02:17 UTC (offset from the hour to avoid GitHub Actions congestion).
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+    inputs:
+      max_total_time:
+        description: "Max fuzzing time in seconds"
+        default: "60"
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fuzz:
+    name: Jazzer.js fuzz targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: fuzz/package-lock.json
+
+      - name: Install fuzz dependencies
+        working-directory: fuzz
+        run: npm install
+
+      - name: Run fuzz target
+        working-directory: fuzz
+        env:
+          MAX_TIME: ${{ inputs.max_total_time || '60' }}
+        run: npx jazzer fuzz-utils.js -- -max_total_time=$MAX_TIME -artifact_prefix=crash-
+
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes-${{ github.run_id }}
+          path: fuzz/crash-*
+          if-no-files-found: ignore
+          retention-days: 30
