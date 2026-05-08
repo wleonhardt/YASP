@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "ascii-art-diagram-creator": {
+      "source": "ComeOnOliver/skillshub",
+      "sourceType": "github",
+      "skillPath": "skills/jeremylongshore/claude-code-plugins-plus-skills/ascii-art-diagram-creator/SKILL.md",
+      "computedHash": "3a879627794bef9c1c632ca91ac7fcb708f1e6f700fe073e4b4d7d7456967c25"
+    },
+    "ascii-visualizer": {
+      "source": "ComeOnOliver/skillshub",
+      "sourceType": "github",
+      "skillPath": "skills/aiskillstore/marketplace/ariegoldkin/ascii-visualizer/SKILL.md",
+      "computedHash": "ae5fa7d778b7e0e15a231933321c0f835b8431c5b8ed62030dd48c746806017a"
+    },
+    "documentation": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/documentation/SKILL.md",
+      "computedHash": "1aecbc6119310005ec0781d5c7b842898d448edf3e9817eba39561fcae91adf0"
+    },
+    "documentation-lookup": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "skillPath": "skills/documentation-lookup/SKILL.md",
+      "computedHash": "7191a5a017a44a461d9bd0002b4ae85b69ff60858745a18a9b27b4aebf9ac551"
+    },
+    "git-workflow": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "skillPath": "skills/git-workflow/SKILL.md",
+      "computedHash": "39fe09042938edf9e2ae7e985c383f0c65d872a630f4f50a600b0a8efdd8deb4"
+    },
+    "github-ops": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "skillPath": "skills/github-ops/SKILL.md",
+      "computedHash": "8ab8c4050fc1d15e3bd1852deb33b6958ab605f68622ece949c29cd5fd21644d"
+    }
+  }
+}
