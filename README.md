@@ -15,6 +15,7 @@
 [![Image Size](https://img.shields.io/docker/image-size/wleonhardt/yasp/main?style=flat-square&color=6C63FF)](https://hub.docker.com/r/wleonhardt/yasp/tags)
 [![Node 20](https://img.shields.io/badge/node-20+-6C63FF?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![License MIT](https://img.shields.io/badge/license-MIT-6C63FF?style=flat-square)](./LICENSE)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/12783/badge)](https://www.bestpractices.dev/projects/12783)
 
 **Lightweight · Realtime · Self-hosted · Ephemeral by design**
 
