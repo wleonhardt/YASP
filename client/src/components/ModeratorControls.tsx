@@ -542,21 +542,21 @@ export function ModeratorControls({
             </span>
           </label>
           {trackStories &&
-            onUpdateStoryLabel &&
-            onAddStoryAgendaItems &&
-            onRemoveStoryAgendaItem &&
-            onMoveStoryAgendaItem &&
-            onStartNextStory ? (
-              <StoryAgenda
-                state={state}
-                disabled={disabled}
-                onUpdateStoryLabel={onUpdateStoryLabel}
-                onAddStoryAgendaItems={onAddStoryAgendaItems}
-                onRemoveStoryAgendaItem={onRemoveStoryAgendaItem}
-                onMoveStoryAgendaItem={onMoveStoryAgendaItem}
-                onStartNextStory={onStartNextStory}
-              />
-            ) : null}
+          onUpdateStoryLabel &&
+          onAddStoryAgendaItems &&
+          onRemoveStoryAgendaItem &&
+          onMoveStoryAgendaItem &&
+          onStartNextStory ? (
+            <StoryAgenda
+              state={state}
+              disabled={disabled}
+              onUpdateStoryLabel={onUpdateStoryLabel}
+              onAddStoryAgendaItems={onAddStoryAgendaItems}
+              onRemoveStoryAgendaItem={onRemoveStoryAgendaItem}
+              onMoveStoryAgendaItem={onMoveStoryAgendaItem}
+              onStartNextStory={onStartNextStory}
+            />
+          ) : null}
         </div>
       ) : null}
 
