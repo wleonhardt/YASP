@@ -6,6 +6,9 @@
     "build": "tsc",
     "cdk": "cdk"
   },
+  "overrides": {
+    "fast-uri": "^3.1.2"
+  },
   "dependencies": {
     "aws-cdk-lib": "^2.253.0",
     "constructs": "^10.4.2"

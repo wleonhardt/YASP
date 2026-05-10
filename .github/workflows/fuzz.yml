@@ -43,11 +43,11 @@ jobs:
         working-directory: fuzz
         env:
           MAX_TIME: ${{ inputs.max_total_time || '60' }}
-        run: npx jazzer fuzz-utils.js -- -max_total_time=$MAX_TIME -artifact_prefix=crash-
+        run: node_modules/.bin/jazzer fuzz-utils.js -- -max_total_time=$MAX_TIME -artifact_prefix=crash-
 
       - name: Upload crash artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: fuzz-crashes-${{ github.run_id }}
           path: fuzz/crash-*

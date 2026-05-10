@@ -27,6 +27,9 @@
     "start": "npm run start -w server",
     "clean": "rm -rf shared/dist server/dist client/dist node_modules"
   },
+  "overrides": {
+    "fast-uri": "^3.1.2"
+  },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
     "@eslint/js": "^9.23.0",
