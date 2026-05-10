@@ -1,7 +1,7 @@
 import type { RoomTimerState } from "@yasp/shared";
 
 export function createRoomTimerState(): RoomTimerState {
-  const defaultDurationSeconds = 60;
+  const defaultDurationSeconds = 10;
   return {
     durationSeconds: defaultDurationSeconds,
     remainingSeconds: defaultDurationSeconds,
