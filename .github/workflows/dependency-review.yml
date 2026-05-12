@@ -35,7 +35,7 @@ jobs:
       - name: Run dependency review (advisory until dep-graph enabled)
         id: dep-review
         continue-on-error: true
-        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v4
         with:
           # Hard gate once promoted: newly introduced high/critical
           # advisories block the PR. Moderate/low show in the summary
